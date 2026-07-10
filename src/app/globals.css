@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+/*
+  MJFIRD design tokens.
+  Direction: "the cypher floor" — underground battle-flyer graphics
+  (xerox/riso texture, gaffer-tape dividers, stencil type) crossed with
+  disciplined editorial-agency execution. One electric accent (riso
+  fluorescent pink), one motion-only "echo" color for freeze-frame
+  duotone mis-registration effects.
+*/
+
+:root {
+  /* ---- Color ---- */
+  --color-bg: #0c0b0d;
+  --color-bg-raised: #17151a;
+  --color-bg-raised-2: #201d24;
+  --color-ink: #f5f1e8;
+  --color-ink-muted: #9a9499;
+  --color-ink-faint: #827c86;
+  --color-accent: #ff2e88;
+  --color-accent-ink: #0c0b0d;
+  --color-accent-echo: #2ee6d6;
+  --color-line: #2a262d;
+  --color-success: #3ddc84;
+  --color-error: #ff5c5c;
+
+  /* ---- Type scale (fluid, clamp-based) ---- */
+  --text-display-xl: clamp(3.5rem, 3rem + 7vw, 11rem);
+  --text-display-lg: clamp(2.75rem, 2.2rem + 5vw, 7rem);
+  --text-display-md: clamp(2rem, 1.6rem + 3vw, 4rem);
+  --text-display-sm: clamp(1.5rem, 1.3rem + 1.5vw, 2.25rem);
+  --text-body-lg: clamp(1.125rem, 1.05rem + 0.3vw, 1.375rem);
+  --text-body: 1rem;
+  --text-body-sm: 0.875rem;
+  --text-label: 0.75rem;
+
+  /* ---- Spacing rhythm ---- */
+  --space-section: clamp(5rem, 4rem + 5vw, 9rem);
+  --space-block: clamp(2.5rem, 2rem + 2vw, 4rem);
+
+  /* ---- Radii: mostly square (flyer/stencil), circular only for signature marks ---- */
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 6px;
+  --radius-full: 999px;
+
+  /* ---- Motion: one physics family ---- */
+  --duration-fast: 180ms;
+  --duration-base: 380ms;
+  --duration-expressive: 680ms;
+  --ease-freeze: cubic-bezier(0.16, 1, 0.3, 1); /* snap-then-settle, like landing a freeze */
+  --ease-swing: cubic-bezier(0.65, 0, 0.35, 1); /* toprock sway, hover/quick response */
+  --ease-linear: linear;
+
+  /* ---- Z-index scale ---- */
+  --z-content: 10;
+  --z-nav: 40;
+  --z-cursor: 50;
+  --z-preloader: 60;
+  --z-modal: 70;
+  --z-toast: 80;
+
+  --cursor-visible: 1;
+}
+
+/* Reduced motion: collapse the whole physics family to near-instant */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 1ms;
+    --duration-base: 1ms;
+    --duration-expressive: 1ms;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-bg-raised: var(--color-bg-raised);
+  --color-bg-raised-2: var(--color-bg-raised-2);
+  --color-ink: var(--color-ink);
+  --color-ink-muted: var(--color-ink-muted);
+  --color-ink-faint: var(--color-ink-faint);
+  --color-accent: var(--color-accent);
+  --color-accent-ink: var(--color-accent-ink);
+  --color-accent-echo: var(--color-accent-echo);
+  --color-line: var(--color-line);
+  --color-success: var(--color-success);
+  --color-error: var(--color-error);
+
+  --font-display: var(--font-big-shoulders);
+  --font-body: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+
+  --text-display-xl: var(--text-display-xl);
+  --text-display-lg: var(--text-display-lg);
+  --text-display-md: var(--text-display-md);
+  --text-display-sm: var(--text-display-sm);
+  --text-body-lg: var(--text-body-lg);
+  --text-body-sm: var(--text-body-sm);
+  --text-label: var(--text-label);
+
+  --radius-none: var(--radius-none);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-full: var(--radius-full);
+
+  --z-content: var(--z-content);
+  --z-nav: var(--z-nav);
+  --z-cursor: var(--z-cursor);
+  --z-preloader: var(--z-preloader);
+  --z-modal: var(--z-modal);
+  --z-toast: var(--z-toast);
+
+  --breakpoint-3xl: 1920px;
+
+  --animate-marquee: marquee 45s linear infinite;
+  --animate-rise: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html {
+  scroll-behavior: auto;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+/* Visible focus ring everywhere, custom cursor never removes it */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* Hide native cursor only once the custom cursor is confirmed active (JS-driven) */
+html[data-cursor="custom"] {
+  cursor: none;
+}
+html[data-cursor="custom"] a,
+html[data-cursor="custom"] button {
+  cursor: none;
+}

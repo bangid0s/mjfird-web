@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": [
+        "-c",
+        "export PATH=\"/Users/flazhh/.nvm/versions/node/v20.20.2/bin:$PATH\"; exec node \"/Volumes/Files/Programs/MJFIRD web/node_modules/next/dist/bin/next\" dev --webpack"
+      ],
+      "port": 3000
+    }
+  ]
+}
