@@ -5,6 +5,7 @@ import { getLinkItems } from "@/lib/data/links";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { cn } from "@/lib/cn";
 import { SITE_HOST } from "@/lib/site-url";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "Links",
@@ -26,10 +27,14 @@ export default async function LinksPage() {
     settings.logoType === "text" ? settings.logoText : profile.name;
 
   return (
-    <div className="flex min-h-svh flex-col bg-bg text-ink">
+    <div className="relative flex min-h-svh flex-col bg-bg text-ink">
       {/* Signature tilted accent strip */}
       <div className="relative h-2 w-full overflow-hidden">
         <div className="absolute -inset-x-4 top-1/2 h-3 -translate-y-1/2 -rotate-1 bg-accent/90" />
+      </div>
+
+      <div className="absolute right-4 top-6">
+        <ThemeToggle />
       </div>
 
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 py-14">

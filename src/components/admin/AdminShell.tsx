@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/admin/auth-actions";
 import { cn } from "@/lib/cn";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import {
   DashboardIcon,
   ProjectsIcon,
@@ -85,15 +86,18 @@ function NavLinks({
 function SidebarFooter({ userEmail }: { userEmail?: string | null }) {
   return (
     <div className="mt-auto flex flex-col gap-4 border-t border-line pt-6">
-      <a
-        href="/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-2 font-mono text-label uppercase tracking-[0.1em] text-ink-faint transition-colors hover:text-ink"
-      >
-        <ExternalIcon className="h-3.5 w-3.5" />
-        View site
-      </a>
+      <div className="flex items-center justify-between">
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 font-mono text-label uppercase tracking-[0.1em] text-ink-faint transition-colors hover:text-ink"
+        >
+          <ExternalIcon className="h-3.5 w-3.5" />
+          View site
+        </a>
+        <ThemeToggle />
+      </div>
       <div className="flex items-center justify-between gap-2">
         {userEmail && (
           <span className="truncate font-mono text-[10px] text-ink-faint" title={userEmail}>

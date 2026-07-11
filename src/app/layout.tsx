@@ -56,8 +56,17 @@ export default async function RootLayout({
       lang="en"
       className={`${bigShoulders.variable} ${plexSans.variable} ${plexMono.variable} h-full`}
       style={{ "--color-accent": settings.accentColor } as React.CSSProperties}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-bg text-ink">{children}</body>
+      <body className="min-h-full flex flex-col bg-bg text-ink">
+        {/* Apply the saved theme before first paint so light-mode users don't get a dark flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem("mjfird:theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}`,
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

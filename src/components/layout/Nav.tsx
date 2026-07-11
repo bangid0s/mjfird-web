@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/cn";
 import { easeFreeze } from "@/lib/motion";
 import SoundToggle from "@/components/ui/SoundToggle";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 type NavLink = { label: string; href: string };
 
@@ -69,30 +70,36 @@ export default function Nav({
           ))}
         </nav>
 
-        <div className="hidden sm:block">
+        <div className="hidden items-center gap-3 sm:flex">
           <SoundToggle />
+          <ThemeToggle />
         </div>
 
-        <button
-          type="button"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-          className="relative z-[var(--z-nav)] flex h-8 w-8 flex-col items-center justify-center gap-1.5 md:hidden"
-        >
-          <span
-            className={cn(
-              "block h-px w-6 bg-ink transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)]",
-              open && "translate-y-[3.5px] rotate-45",
-            )}
-          />
-          <span
-            className={cn(
-              "block h-px w-6 bg-ink transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)]",
-              open && "-translate-y-[3.5px] -rotate-45",
-            )}
-          />
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <div className="sm:hidden">
+            <ThemeToggle />
+          </div>
+          <button
+            type="button"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            className="relative z-[var(--z-nav)] flex h-8 w-8 flex-col items-center justify-center gap-1.5"
+          >
+            <span
+              className={cn(
+                "block h-px w-6 bg-ink transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)]",
+                open && "translate-y-[3.5px] rotate-45",
+              )}
+            />
+            <span
+              className={cn(
+                "block h-px w-6 bg-ink transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)]",
+                open && "-translate-y-[3.5px] -rotate-45",
+              )}
+            />
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>

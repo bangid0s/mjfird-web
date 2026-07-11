@@ -63,6 +63,20 @@
   --cursor-visible: 1;
 }
 
+/* ---- Light theme: same system, riso paper instead of the dark floor ---- */
+[data-theme="light"] {
+  --color-bg: #f5f1e8;
+  --color-bg-raised: #ebe6d9;
+  --color-bg-raised-2: #e1dbca;
+  --color-ink: #17141a;
+  --color-ink-muted: #5c5662;
+  --color-ink-faint: #6e6875;
+  --color-line: #d7d0c0;
+  --color-success: #17904f;
+  --color-error: #d43535;
+  --color-accent-echo: #0d9488;
+}
+
 /* Reduced motion: collapse the whole physics family to near-instant */
 @media (prefers-reduced-motion: reduce) {
   :root {
@@ -141,11 +155,18 @@ html {
   color-scheme: dark;
 }
 
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  transition:
+    background-color var(--duration-base) var(--ease-freeze),
+    color var(--duration-base) var(--ease-freeze);
 }
 
 ::selection {

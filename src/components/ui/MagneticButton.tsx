@@ -18,7 +18,7 @@ type Props = {
 };
 
 const VARIANTS: Record<NonNullable<Props["variant"]>, string> = {
-  primary: "bg-accent text-accent-ink hover:bg-ink",
+  primary: "bg-accent text-accent-ink hover:bg-ink hover:text-bg",
   secondary: "border border-ink text-ink hover:border-accent hover:text-accent",
   ghost: "text-ink hover:text-accent",
 };
