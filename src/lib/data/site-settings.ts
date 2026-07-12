@@ -19,6 +19,9 @@ export type SiteSettings = {
   danceSectionTitle: string;
   danceIntro: string;
   aboutDescription: string;
+  linksBgType: "none" | "image" | "video" | "youtube";
+  linksBgUrl: string | null;
+  linksOverlayOpacity: number;
   navLinks: { label: string; href: string }[];
   heroEyebrow: string;
   heroIntro: string;
@@ -73,6 +76,9 @@ const placeholderSettings: SiteSettings = {
   danceIntro:
     "Breaking is where the design taste comes from. Here's the reel, the footage, and the battle record.",
   aboutDescription: "",
+  linksBgType: "none",
+  linksBgUrl: null,
+  linksOverlayOpacity: 70,
   navLinks: defaultNavLinks,
   heroEyebrow: "Breaker — Designer — Builder",
   heroIntro:
@@ -136,6 +142,12 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     danceSectionTitle: row.dance_section_title || placeholderSettings.danceSectionTitle,
     danceIntro: row.dance_intro || placeholderSettings.danceIntro,
     aboutDescription: row.about_description ?? "",
+    linksBgType: row.links_bg_type ?? "none",
+    linksBgUrl: row.links_bg_url,
+    linksOverlayOpacity:
+      typeof row.links_overlay_opacity === "number"
+        ? Math.min(100, Math.max(0, row.links_overlay_opacity))
+        : 70,
     heroOverlayOpacity:
       typeof row.hero_overlay_opacity === "number"
         ? Math.min(100, Math.max(0, row.hero_overlay_opacity))

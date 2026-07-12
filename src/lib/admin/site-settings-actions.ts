@@ -88,6 +88,12 @@ export async function saveSiteSettings(formData: FormData) {
     dance_section_title: String(formData.get("dance_section_title") ?? ""),
     dance_intro: String(formData.get("dance_intro") ?? ""),
     about_description: String(formData.get("about_description") ?? ""),
+    links_bg_type: String(formData.get("links_bg_type") ?? "none"),
+    links_bg_url: normalizeMediaUrl(String(formData.get("links_bg_url") ?? "")) || null,
+    links_overlay_opacity: Math.min(
+      100,
+      Math.max(0, Number(formData.get("links_overlay_opacity") ?? 70) || 0),
+    ),
     hero_overlay_opacity: Math.min(
       100,
       Math.max(0, Number(formData.get("hero_overlay_opacity") ?? 60) || 0),

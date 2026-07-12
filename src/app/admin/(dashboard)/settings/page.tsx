@@ -4,6 +4,7 @@ import { Field, fieldInputClasses } from "@/components/admin/Field";
 import HeroMediaPicker from "@/components/admin/HeroMediaPicker";
 import ImageUploader from "@/components/admin/ImageUploader";
 import LogoPicker from "@/components/admin/LogoPicker";
+import LinksBgPicker from "@/components/admin/LinksBgPicker";
 import { defaultNavLinks } from "@/lib/data/site-settings";
 import PageHeader from "@/components/admin/PageHeader";
 import type { SiteSettingsRow } from "@/lib/supabase/types";
@@ -286,6 +287,21 @@ export default async function AdminSettingsPage({
               className={fieldInputClasses}
             />
           </Field>
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
+          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">
+            Links page — /links
+          </legend>
+
+          <LinksBgPicker
+            initialType={settings?.links_bg_type}
+            initialUrl={settings?.links_bg_url}
+            initialOverlay={settings?.links_overlay_opacity}
+          />
+          <p className="font-mono text-label text-ink-faint">
+            The buttons themselves are managed under “Links Page” in the sidebar.
+          </p>
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">

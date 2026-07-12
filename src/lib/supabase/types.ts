@@ -139,6 +139,9 @@ export type SiteSettingsRow = {
   dance_section_title: string;
   dance_intro: string;
   about_description: string;
+  links_bg_type: "none" | "image" | "video" | "youtube";
+  links_bg_url: string | null;
+  links_overlay_opacity: number;
   nav_links: { label: string; href: string }[];
   hero_eyebrow: string;
   hero_intro: string;

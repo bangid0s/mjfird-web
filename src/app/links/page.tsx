@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { SITE_HOST } from "@/lib/site-url";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import ThemedLogo from "@/components/ui/ThemedLogo";
+import HeroMedia from "@/components/hero/HeroMedia";
 
 export const metadata: Metadata = {
   title: "Links",
@@ -29,16 +30,24 @@ export default async function LinksPage() {
 
   return (
     <div className="relative flex min-h-svh flex-col bg-bg text-ink">
+      {settings.linksBgType !== "none" && settings.linksBgUrl && (
+        <HeroMedia
+          type={settings.linksBgType}
+          url={settings.linksBgUrl}
+          overlayOpacity={settings.linksOverlayOpacity}
+        />
+      )}
+
       {/* Signature tilted accent strip */}
-      <div className="relative h-2 w-full overflow-hidden">
+      <div className="relative z-10 h-2 w-full overflow-hidden">
         <div className="absolute -inset-x-4 top-1/2 h-3 -translate-y-1/2 -rotate-1 bg-accent/90" />
       </div>
 
-      <div className="absolute right-4 top-6">
+      <div className="absolute right-4 top-6 z-10">
         <ThemeToggle />
       </div>
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 py-14">
+      <main className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col px-6 py-14">
         {/* Identity */}
         <header
           className="flex flex-col items-center gap-4 text-center motion-safe:animate-rise"
@@ -171,7 +180,7 @@ export default async function LinksPage() {
         </footer>
       </main>
 
-      <div className="relative h-2 w-full overflow-hidden">
+      <div className="relative z-10 h-2 w-full overflow-hidden">
         <div className="absolute -inset-x-4 top-1/2 h-3 -translate-y-1/2 rotate-1 bg-accent/90" />
       </div>
     </div>
