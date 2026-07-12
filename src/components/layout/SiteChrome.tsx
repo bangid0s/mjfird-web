@@ -16,6 +16,7 @@ export default function SiteChrome({
   footerSubtext,
   contactEmail,
   logoUrl,
+  logoUrlLight,
   logoType,
   logoText,
   navLinks,
@@ -27,6 +28,7 @@ export default function SiteChrome({
   footerSubtext: string;
   contactEmail: string;
   logoUrl?: string | null;
+  logoUrlLight?: string | null;
   logoType?: "text" | "image";
   logoText?: string;
   navLinks: { label: string; href: string }[];
@@ -45,6 +47,7 @@ export default function SiteChrome({
         <Nav
           availabilityStatus={availabilityStatus}
           logoUrl={logoUrl}
+          logoUrlLight={logoUrlLight}
           logoType={logoType}
           logoText={logoText}
           links={navLinks}

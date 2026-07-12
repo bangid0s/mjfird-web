@@ -4,6 +4,7 @@ import { fieldInputClasses } from "@/components/admin/Field";
 import DanceMediaList from "@/components/admin/DanceMediaList";
 import BattlesList from "@/components/admin/BattlesList";
 import PageHeader from "@/components/admin/PageHeader";
+import UploadInput from "@/components/admin/UploadInput";
 import type { DanceMediaRow, BattleRow } from "@/lib/supabase/types";
 
 export default async function AdminDancePage() {
@@ -27,7 +28,11 @@ export default async function AdminDancePage() {
             <option value="photo">Photo</option>
             <option value="video">Video</option>
           </select>
-          <input name="url" placeholder="Image URL — or YouTube link for videos" className={fieldInputClasses} />
+          <UploadInput
+            name="url"
+            ariaLabel="URL"
+            placeholder="Drop an image here, paste a URL, or a YouTube link"
+          />
           <input name="caption" placeholder="Caption" className={fieldInputClasses} />
           <select name="status" defaultValue="draft" className={fieldInputClasses}>
             <option value="draft">Draft</option>

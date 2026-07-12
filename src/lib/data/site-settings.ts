@@ -7,10 +7,18 @@ export type SiteSettings = {
   siteTitle: string;
   siteDescription: string;
   logoUrl: string | null;
+  logoUrlLight: string | null;
   logoType: "text" | "image";
   logoText: string;
+  faviconUrl: string | null;
   heroMediaType: "none" | "image" | "video" | "youtube";
   heroMediaUrl: string | null;
+  heroMediaUrls: string[];
+  heroOverlayOpacity: number;
+  danceSectionEyebrow: string;
+  danceSectionTitle: string;
+  danceIntro: string;
+  aboutDescription: string;
   navLinks: { label: string; href: string }[];
   heroEyebrow: string;
   heroIntro: string;
@@ -52,10 +60,19 @@ const placeholderSettings: SiteSettings = {
   siteDescription:
     "MJFIRD is a designer and developer with a decade in the cypher. Portfolio, services, and case studies.",
   logoUrl: null,
+  logoUrlLight: null,
   logoType: "text",
   logoText: "MJFIRD",
+  faviconUrl: null,
   heroMediaType: "none",
   heroMediaUrl: null,
+  heroMediaUrls: [],
+  heroOverlayOpacity: 60,
+  danceSectionEyebrow: "Dance",
+  danceSectionTitle: "The other half",
+  danceIntro:
+    "Breaking is where the design taste comes from. Here's the reel, the footage, and the battle record.",
+  aboutDescription: "",
   navLinks: defaultNavLinks,
   heroEyebrow: "Breaker — Designer — Builder",
   heroIntro:
@@ -108,10 +125,21 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     siteTitle: row.site_title,
     siteDescription: row.site_description,
     logoUrl: row.logo_url,
+    logoUrlLight: row.logo_url_light,
     logoType: row.logo_type ?? "text",
     logoText: row.logo_text || "MJFIRD",
+    faviconUrl: row.favicon_url,
     heroMediaType: row.hero_media_type ?? "none",
     heroMediaUrl: row.hero_media_url,
+    heroMediaUrls: (row.hero_media_urls ?? []).map((item) => item.url).filter(Boolean),
+    danceSectionEyebrow: row.dance_section_eyebrow || placeholderSettings.danceSectionEyebrow,
+    danceSectionTitle: row.dance_section_title || placeholderSettings.danceSectionTitle,
+    danceIntro: row.dance_intro || placeholderSettings.danceIntro,
+    aboutDescription: row.about_description ?? "",
+    heroOverlayOpacity:
+      typeof row.hero_overlay_opacity === "number"
+        ? Math.min(100, Math.max(0, row.hero_overlay_opacity))
+        : 60,
     navLinks: row.nav_links?.length ? row.nav_links : defaultNavLinks,
     heroEyebrow: row.hero_eyebrow,
     heroIntro: row.hero_intro,

@@ -10,10 +10,12 @@ export default function LogoPicker({
   initialType,
   initialText,
   initialUrl,
+  initialUrlLight,
 }: {
   initialType?: LogoType;
   initialText?: string;
   initialUrl?: string | null;
+  initialUrlLight?: string | null;
 }) {
   const [type, setType] = useState<LogoType>(initialType ?? "text");
 
@@ -40,12 +42,22 @@ export default function LogoPicker({
               className={fieldInputClasses}
             />
           </Field>
-          {/* Keep the uploaded logo so switching back to image doesn't lose it */}
+          {/* Keep the uploaded logos so switching back to image doesn't lose them */}
           <input type="hidden" name="logo_url" value={initialUrl ?? ""} />
+          <input type="hidden" name="logo_url_light" value={initialUrlLight ?? ""} />
         </>
       ) : (
         <>
-          <ImageUploader name="logo_url" label="Logo image (shown at 32px tall)" initialUrl={initialUrl} />
+          <ImageUploader
+            name="logo_url"
+            label="Logo — dark mode (shown at 32px tall)"
+            initialUrl={initialUrl}
+          />
+          <ImageUploader
+            name="logo_url_light"
+            label="Logo — light mode (optional; dark-mode logo is used if empty)"
+            initialUrl={initialUrlLight}
+          />
           <input type="hidden" name="logo_text" value={initialText ?? "MJFIRD"} />
         </>
       )}

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeMediaUrl } from "@/lib/media";
 import type { ContentStatus, CaseStudyTemplate } from "@/lib/supabase/types";
 
 function parseGallery(raw: string): { url: string; alt: string }[] {
@@ -11,7 +12,10 @@ function parseGallery(raw: string): { url: string; alt: string }[] {
     if (Array.isArray(parsed)) {
       return parsed
         .filter((item) => typeof item?.url === "string" && item.url)
-        .map((item) => ({ url: item.url, alt: typeof item.alt === "string" ? item.alt : "" }));
+        .map((item) => ({
+          url: normalizeMediaUrl(item.url),
+          alt: typeof item.alt === "string" ? item.alt : "",
+        }));
     }
   } catch {
     // fall through to empty
@@ -42,7 +46,7 @@ function parsePayload(formData: FormData) {
     category: String(formData.get("category") ?? ""),
     hook: String(formData.get("hook") ?? ""),
     template: String(formData.get("template") ?? "editorial") as CaseStudyTemplate,
-    cover_image: String(formData.get("cover_image") ?? "") || null,
+    cover_image: normalizeMediaUrl(String(formData.get("cover_image") ?? "")) || null,
     cover_focal_point: parseFocalPoint(String(formData.get("cover_focal_point") ?? "")),
     gallery: parseGallery(String(formData.get("gallery") ?? "")),
     narrative: {

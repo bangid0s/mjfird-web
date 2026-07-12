@@ -3,6 +3,24 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeMediaUrl } from "@/lib/media";
+
+function parseMediaList(raw: string): { url: string; alt: string }[] {
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .filter((item) => typeof item?.url === "string" && item.url)
+        .map((item) => ({
+          url: normalizeMediaUrl(item.url),
+          alt: typeof item.alt === "string" ? item.alt : "",
+        }));
+    }
+  } catch {
+    // fall through to empty
+  }
+  return [];
+}
 
 function linesToList(raw: string) {
   return raw
@@ -59,10 +77,21 @@ export async function saveSiteSettings(formData: FormData) {
     site_title: String(formData.get("site_title") ?? ""),
     site_description: String(formData.get("site_description") ?? ""),
     logo_url: String(formData.get("logo_url") ?? "") || null,
+    logo_url_light: String(formData.get("logo_url_light") ?? "") || null,
     logo_type: String(formData.get("logo_type") ?? "text"),
     logo_text: String(formData.get("logo_text") ?? "") || "MJFIRD",
+    favicon_url: String(formData.get("favicon_url") ?? "") || null,
     hero_media_type: String(formData.get("hero_media_type") ?? "none"),
-    hero_media_url: String(formData.get("hero_media_url") ?? "") || null,
+    hero_media_url: normalizeMediaUrl(String(formData.get("hero_media_url") ?? "")) || null,
+    hero_media_urls: parseMediaList(String(formData.get("hero_media_urls") ?? "[]")),
+    dance_section_eyebrow: String(formData.get("dance_section_eyebrow") ?? ""),
+    dance_section_title: String(formData.get("dance_section_title") ?? ""),
+    dance_intro: String(formData.get("dance_intro") ?? ""),
+    about_description: String(formData.get("about_description") ?? ""),
+    hero_overlay_opacity: Math.min(
+      100,
+      Math.max(0, Number(formData.get("hero_overlay_opacity") ?? 60) || 0),
+    ),
     nav_links: parseNavLinks(String(formData.get("nav_links") ?? "")),
     hero_eyebrow: String(formData.get("hero_eyebrow") ?? ""),
     hero_intro: String(formData.get("hero_intro") ?? ""),

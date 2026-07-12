@@ -36,9 +36,15 @@ export default async function Home() {
         }}
       />
       <section className="relative">
-        {settings.heroMediaType !== "none" && settings.heroMediaUrl && (
-          <HeroMedia type={settings.heroMediaType} url={settings.heroMediaUrl} />
-        )}
+        {settings.heroMediaType !== "none" &&
+          (settings.heroMediaUrl || settings.heroMediaUrls.length > 0) && (
+            <HeroMedia
+              type={settings.heroMediaType}
+              url={settings.heroMediaUrl ?? ""}
+              urls={settings.heroMediaUrls}
+              overlayOpacity={settings.heroOverlayOpacity}
+            />
+          )}
         <div className="relative mx-auto flex min-h-[calc(100svh-5rem)] max-w-6xl flex-col justify-center gap-8 px-6 py-20 sm:px-10">
           <p className="font-mono text-label uppercase tracking-[0.3em] text-ink-muted">
             {settings.heroEyebrow}

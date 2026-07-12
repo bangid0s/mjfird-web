@@ -4,6 +4,7 @@ import { updateMedia, deleteMedia, reorderMedia } from "@/lib/admin/dance-action
 import { fieldInputClasses } from "@/components/admin/Field";
 import ReorderableList from "@/components/admin/ReorderableList";
 import DeleteButton from "@/components/admin/DeleteButton";
+import UploadInput from "@/components/admin/UploadInput";
 import type { DanceMediaRow } from "@/lib/supabase/types";
 
 export default function DanceMediaList({ media }: { media: DanceMediaRow[] }) {
@@ -21,7 +22,7 @@ export default function DanceMediaList({ media }: { media: DanceMediaRow[] }) {
               <option value="photo">Photo</option>
               <option value="video">Video</option>
             </select>
-            <input name="url" defaultValue={item.url} className={fieldInputClasses} />
+            <UploadInput name="url" defaultValue={item.url} ariaLabel="URL" placeholder="URL or drop a file" />
             <input name="caption" defaultValue={item.caption ?? ""} className={fieldInputClasses} />
             <select name="status" defaultValue={item.status} className={fieldInputClasses}>
               <option value="draft">Draft</option>

@@ -3,11 +3,11 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Image from "next/image";
 import type { Project } from "@/lib/placeholder-data";
 import CaseStudyMeta from "@/components/case-study/CaseStudyMeta";
 import CaseStudyNext from "@/components/case-study/CaseStudyNext";
 import MediaSlot from "@/components/case-study/MediaSlot";
+import SmartImage from "@/components/media/SmartImage";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -46,15 +46,8 @@ export default function ImmersiveTemplate({
           ref={heroImgRef}
           className="absolute inset-0 -top-[10%] h-[120%] bg-gradient-to-br from-bg-raised via-bg-raised-2 to-bg"
         >
-          {project.cover.startsWith("http") && (
-            <Image
-              src={project.cover}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover"
-            />
+          {project.cover && !project.cover.startsWith("/placeholder") && (
+            <SmartImage src={project.cover} sizes="100vw" priority className="object-cover" />
           )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />

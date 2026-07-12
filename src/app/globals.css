@@ -180,6 +180,17 @@ body {
   outline-offset: 3px;
 }
 
+/* Theme-paired assets (e.g. dark-mode vs light-mode logo) */
+.theme-light-only {
+  display: none;
+}
+[data-theme="light"] .theme-light-only {
+  display: block;
+}
+[data-theme="light"] .theme-dark-only {
+  display: none;
+}
+
 /* Hide native cursor only once the custom cursor is confirmed active (JS-driven) */
 html[data-cursor="custom"] {
   cursor: none;

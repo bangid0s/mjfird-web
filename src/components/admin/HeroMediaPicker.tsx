@@ -3,17 +3,23 @@
 import { useState } from "react";
 import { Field, fieldInputClasses } from "@/components/admin/Field";
 import ImageUploader from "@/components/admin/ImageUploader";
+import GalleryUploader from "@/components/admin/GalleryUploader";
 
 type MediaType = "none" | "image" | "video" | "youtube";
 
 export default function HeroMediaPicker({
   initialType,
   initialUrl,
+  initialImages,
+  initialOverlay,
 }: {
   initialType?: MediaType;
   initialUrl?: string | null;
+  initialImages?: { url: string; alt?: string }[];
+  initialOverlay?: number;
 }) {
   const [type, setType] = useState<MediaType>(initialType ?? "none");
+  const [overlay, setOverlay] = useState(initialOverlay ?? 60);
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,19 +31,34 @@ export default function HeroMediaPicker({
           className={fieldInputClasses}
         >
           <option value="none">None — solid dark background</option>
-          <option value="image">Uploaded image</option>
+          <option value="image">Image(s) — 2+ become a slideshow</option>
           <option value="video">Uploaded video (autoplays muted, loops)</option>
           <option value="youtube">YouTube video (autoplays muted, loops)</option>
         </select>
       </Field>
 
-      {(type === "image" || type === "video") && (
-        <ImageUploader
-          name="hero_media_url"
-          label={type === "image" ? "Hero image" : "Hero video (.mp4 / .webm)"}
-          initialUrl={initialUrl}
-          accept={type === "image" ? "image/*" : "video/mp4,video/webm"}
-        />
+      {type === "image" && (
+        <>
+          <GalleryUploader
+            name="hero_media_urls"
+            label="Hero images — add 2 or 3 and they rotate as a slider"
+            initial={initialImages}
+          />
+          {/* keep the single-media slot for video/youtube so switching types doesn't lose it */}
+          <input type="hidden" name="hero_media_url" value={initialUrl ?? ""} />
+        </>
+      )}
+
+      {type === "video" && (
+        <>
+          <ImageUploader
+            name="hero_media_url"
+            label="Hero video (.mp4 / .webm)"
+            initialUrl={initialUrl}
+            accept="video/mp4,video/webm"
+          />
+          <input type="hidden" name="hero_media_urls" value={JSON.stringify(initialImages ?? [])} />
+        </>
       )}
 
       {type === "youtube" && (
@@ -52,7 +73,33 @@ export default function HeroMediaPicker({
         </Field>
       )}
 
-      {type === "none" && <input type="hidden" name="hero_media_url" value={initialUrl ?? ""} />}
+      {type === "youtube" && (
+        <input type="hidden" name="hero_media_urls" value={JSON.stringify(initialImages ?? [])} />
+      )}
+
+      {type === "none" && (
+        <>
+          <input type="hidden" name="hero_media_url" value={initialUrl ?? ""} />
+          <input type="hidden" name="hero_media_urls" value={JSON.stringify(initialImages ?? [])} />
+        </>
+      )}
+
+      {type !== "none" ? (
+        <Field label={`Dark overlay on the hero media — ${overlay}% (higher = darker, more readable text)`}>
+          <input
+            type="range"
+            name="hero_overlay_opacity"
+            min={0}
+            max={100}
+            step={5}
+            value={overlay}
+            onChange={(e) => setOverlay(Number(e.target.value))}
+            className="w-full accent-accent"
+          />
+        </Field>
+      ) : (
+        <input type="hidden" name="hero_overlay_opacity" value={overlay} />
+      )}
     </div>
   );
 }

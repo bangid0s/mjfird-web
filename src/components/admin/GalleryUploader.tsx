@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { uploadToMedia } from "@/lib/upload";
 import { fieldInputClasses } from "@/components/admin/Field";
+import { isYouTubeUrl, mediaThumbnail } from "@/lib/media";
+import { cn } from "@/lib/cn";
 
 type GalleryImage = { url: string; alt?: string };
 
@@ -17,23 +19,18 @@ export default function GalleryUploader({
 }) {
   const [images, setImages] = useState<GalleryImage[]>(initial ?? []);
   const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [urlDraft, setUrlDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const handleFiles = async (files: FileList) => {
     setUploading(true);
     setError(null);
     try {
-      const supabase = createClient();
       const uploaded: GalleryImage[] = [];
       for (const file of Array.from(files)) {
-        const path = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-        const { error: uploadError } = await supabase.storage.from("media").upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-        if (uploadError) throw uploadError;
-        const { data } = supabase.storage.from("media").getPublicUrl(path);
-        uploaded.push({ url: data.publicUrl, alt: "" });
+        if (!file.type.startsWith("image/")) continue;
+        uploaded.push({ url: await uploadToMedia(file), alt: "" });
       }
       setImages((prev) => [...prev, ...uploaded]);
     } catch (err) {
@@ -41,6 +38,13 @@ export default function GalleryUploader({
     } finally {
       setUploading(false);
     }
+  };
+
+  const addByUrl = () => {
+    const trimmed = urlDraft.trim();
+    if (!trimmed) return;
+    setImages((prev) => [...prev, { url: trimmed, alt: "" }]);
+    setUrlDraft("");
   };
 
   const move = (index: number, direction: -1 | 1) => {
@@ -66,9 +70,14 @@ export default function GalleryUploader({
           {images.map((image, i) => (
             <div key={`${image.url}-${i}`} className="group relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={image.url} alt="" className="aspect-square w-full border border-line object-cover" />
+              <img
+                src={mediaThumbnail(image.url)}
+                alt=""
+                className="aspect-square w-full border border-line object-cover"
+              />
               <span className="absolute left-1 top-1 bg-bg/80 px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">
                 {i + 1}
+                {isYouTubeUrl(image.url) && <span className="ml-1 uppercase text-accent">▶ YT</span>}
               </span>
               <div className="absolute inset-x-1 bottom-1 flex justify-between gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                 <button
@@ -103,19 +112,61 @@ export default function GalleryUploader({
         </div>
       )}
 
-      <input
-        type="file"
-        accept="image/*"
-        multiple
-        disabled={uploading}
-        onChange={(e) => {
-          if (e.target.files?.length) handleFiles(e.target.files);
-          e.target.value = "";
+      <label
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
         }}
-        className={fieldInputClasses}
-      />
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
+        }}
+        className={cn(
+          "flex cursor-pointer flex-col items-center gap-1 border border-dashed px-4 py-6 text-center transition-colors duration-[var(--duration-fast)]",
+          dragging ? "border-accent bg-bg-raised" : "border-line hover:border-ink-faint",
+        )}
+      >
+        <span className="font-mono text-label text-ink-faint">
+          {uploading ? "Uploading…" : "Drag & drop images here — or click to browse (multiple allowed)"}
+        </span>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          disabled={uploading}
+          onChange={(e) => {
+            if (e.target.files?.length) handleFiles(e.target.files);
+            e.target.value = "";
+          }}
+          className="sr-only"
+        />
+      </label>
+      <div className="flex items-end gap-2">
+        <input
+          value={urlDraft}
+          onChange={(e) => setUrlDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addByUrl();
+            }
+          }}
+          placeholder="…or paste an image address / YouTube link"
+          className={fieldInputClasses}
+        />
+        <button
+          type="button"
+          onClick={addByUrl}
+          disabled={!urlDraft.trim()}
+          className="shrink-0 border border-line px-4 py-3 font-mono text-label uppercase tracking-[0.1em] text-ink-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+        >
+          Add
+        </button>
+      </div>
+
       <input type="hidden" name={name} value={JSON.stringify(images)} />
-      {uploading && <span className="font-mono text-label text-ink-muted">Uploading…</span>}
       {error && <span className="font-mono text-label text-error">{error}</span>}
     </div>
   );

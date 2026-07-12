@@ -127,10 +127,18 @@ export type SiteSettingsRow = {
   site_title: string;
   site_description: string;
   logo_url: string | null;
+  logo_url_light: string | null;
   logo_type: "text" | "image";
   logo_text: string;
+  favicon_url: string | null;
   hero_media_type: "none" | "image" | "video" | "youtube";
   hero_media_url: string | null;
+  hero_media_urls: { url: string; alt?: string }[];
+  hero_overlay_opacity: number;
+  dance_section_eyebrow: string;
+  dance_section_title: string;
+  dance_intro: string;
+  about_description: string;
   nav_links: { label: string; href: string }[];
   hero_eyebrow: string;
   hero_intro: string;

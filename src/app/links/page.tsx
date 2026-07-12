@@ -6,6 +6,7 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 import { cn } from "@/lib/cn";
 import { SITE_HOST } from "@/lib/site-url";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import ThemedLogo from "@/components/ui/ThemedLogo";
 
 export const metadata: Metadata = {
   title: "Links",
@@ -44,8 +45,11 @@ export default async function LinksPage() {
           style={{ animationDelay: "0ms" }}
         >
           {settings.logoType === "image" && settings.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={settings.logoUrl} alt={profile.name} className="h-14 w-auto max-w-[220px] object-contain" />
+            <ThemedLogo
+              darkUrl={settings.logoUrl}
+              lightUrl={settings.logoUrlLight}
+              className="h-14 w-auto max-w-[220px] object-contain"
+            />
           ) : profile.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

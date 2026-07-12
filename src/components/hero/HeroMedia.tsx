@@ -1,19 +1,40 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { getYouTubeId } from "@/lib/youtube";
+import { cn } from "@/lib/cn";
+
+const SLIDE_INTERVAL_MS = 5000;
 
 export default function HeroMedia({
   type,
   url,
+  urls,
+  overlayOpacity = 60,
 }: {
   type: "image" | "video" | "youtube";
   url: string;
+  urls?: string[];
+  overlayOpacity?: number;
 }) {
   const reducedMotion = usePrefersReducedMotion();
   const youTubeId = type === "youtube" ? getYouTubeId(url) : null;
 
+  // Image mode: use the slideshow list when present, else the single URL.
+  const images = type === "image" ? (urls?.length ? urls : url ? [url] : []) : [];
+  const [slide, setSlide] = useState(0);
+
+  useEffect(() => {
+    if (type !== "image" || images.length < 2 || reducedMotion) return;
+    const id = setInterval(() => {
+      setSlide((current) => (current + 1) % images.length);
+    }, SLIDE_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [type, images.length, reducedMotion]);
+
   if (type === "youtube" && !youTubeId) return null;
+  if (type === "image" && images.length === 0) return null;
 
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -47,14 +68,26 @@ export default function HeroMedia({
         />
       )}
 
-      {type === "image" && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" className="h-full w-full object-cover" />
-      )}
+      {type === "image" &&
+        images.map((imageUrl, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={`${imageUrl}-${i}`}
+            src={imageUrl}
+            alt=""
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-[var(--ease-freeze)]",
+              i === slide ? "opacity-100" : "opacity-0",
+            )}
+          />
+        ))}
 
-      {/* Legibility scrim: keeps the wordmark and copy readable over any media */}
-      <div className="absolute inset-0 bg-bg/60" />
-      <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/30 to-bg/50" />
+      {/* Legibility scrim — strength set from Site Settings (hero overlay %) */}
+      <div
+        className="absolute inset-0 bg-bg"
+        style={{ opacity: Math.min(100, Math.max(0, overlayOpacity)) / 100 }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
     </div>
   );
 }

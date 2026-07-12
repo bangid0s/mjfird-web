@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getPosts, getPost } from "@/lib/data/blog";
 import JsonLd from "@/components/seo/JsonLd";
+import { isYouTubeUrl, isVideoFile } from "@/lib/media";
+import VideoEmbed from "@/components/media/VideoEmbed";
+import SmartImage from "@/components/media/SmartImage";
 import { SITE_URL } from "@/lib/site-url";
 
 const BASE_URL = SITE_URL;
@@ -69,6 +72,15 @@ export default async function PostPage({
       <h1 className="mb-10 font-display text-display-lg uppercase leading-[0.9] text-ink">
         {post.title}
       </h1>
+      {post.cover && (
+        <div className="relative mb-10 aspect-video w-full overflow-hidden bg-bg-raised">
+          {isYouTubeUrl(post.cover) || isVideoFile(post.cover) ? (
+            <VideoEmbed url={post.cover} title={post.title} />
+          ) : (
+            <SmartImage src={post.cover} alt={post.title} sizes="(min-width: 768px) 672px, 100vw" />
+          )}
+        </div>
+      )}
       <div className="flex flex-col gap-6">
         {post.body.map((paragraph, i) => (
           <p key={i} className="font-body text-body-lg leading-relaxed text-ink-muted">

@@ -13,6 +13,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       footerSubtext={settings.footerSubtext}
       contactEmail={settings.contactEmail}
       logoUrl={settings.logoUrl}
+      logoUrlLight={settings.logoUrlLight}
       logoType={settings.logoType}
       logoText={settings.logoText}
       navLinks={settings.navLinks}

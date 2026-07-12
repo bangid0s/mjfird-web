@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeMediaUrl } from "@/lib/media";
 import type { ContentStatus } from "@/lib/supabase/types";
 
 // ---------- media ----------
@@ -9,7 +10,7 @@ export async function createMedia(formData: FormData) {
   const supabase = await createClient();
   await supabase.from("dance_media").insert({
     kind: String(formData.get("kind") ?? "photo"),
-    url: String(formData.get("url") ?? ""),
+    url: normalizeMediaUrl(String(formData.get("url") ?? "")),
     caption: String(formData.get("caption") ?? ""),
     status: String(formData.get("status") ?? "draft") as ContentStatus,
   });
@@ -23,7 +24,7 @@ export async function updateMedia(id: string, formData: FormData) {
     .from("dance_media")
     .update({
       kind: String(formData.get("kind") ?? "photo"),
-      url: String(formData.get("url") ?? ""),
+      url: normalizeMediaUrl(String(formData.get("url") ?? "")),
       caption: String(formData.get("caption") ?? ""),
       status: String(formData.get("status") ?? "draft") as ContentStatus,
     })

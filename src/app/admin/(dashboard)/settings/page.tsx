@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { saveSiteSettings } from "@/lib/admin/site-settings-actions";
 import { Field, fieldInputClasses } from "@/components/admin/Field";
 import HeroMediaPicker from "@/components/admin/HeroMediaPicker";
+import ImageUploader from "@/components/admin/ImageUploader";
 import LogoPicker from "@/components/admin/LogoPicker";
 import { defaultNavLinks } from "@/lib/data/site-settings";
 import PageHeader from "@/components/admin/PageHeader";
@@ -87,6 +88,14 @@ export default async function AdminSettingsPage({
             initialType={settings?.logo_type}
             initialText={settings?.logo_text}
             initialUrl={settings?.logo_url}
+            initialUrlLight={settings?.logo_url_light}
+          />
+
+          <ImageUploader
+            name="favicon_url"
+            label="Favicon (browser tab icon — square PNG or SVG, at least 64×64)"
+            initialUrl={settings?.favicon_url}
+            accept="image/png,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,image/jpeg,image/webp"
           />
         </fieldset>
 
@@ -127,6 +136,8 @@ export default async function AdminSettingsPage({
           <HeroMediaPicker
             initialType={settings?.hero_media_type}
             initialUrl={settings?.hero_media_url}
+            initialImages={settings?.hero_media_urls}
+            initialOverlay={settings?.hero_overlay_opacity}
           />
 
           <div className="grid gap-6 sm:grid-cols-2">
@@ -224,6 +235,15 @@ export default async function AdminSettingsPage({
             />
           </Field>
 
+          <Field label="About me — one or more paragraphs (blank line = new paragraph). Leave empty to use the bio from Profile.">
+            <textarea
+              name="about_description"
+              rows={6}
+              defaultValue={settings?.about_description ?? ""}
+              className={`${fieldInputClasses} resize-none`}
+            />
+          </Field>
+
           <Field label="Timeline — one entry per line, “year|label|detail”">
             <textarea
               name="about_timeline"
@@ -264,6 +284,36 @@ export default async function AdminSettingsPage({
               type="email"
               defaultValue={settings?.contact_email ?? ""}
               className={fieldInputClasses}
+            />
+          </Field>
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
+          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">Dance page — /dance</legend>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Field label="Eyebrow">
+              <input
+                name="dance_section_eyebrow"
+                defaultValue={settings?.dance_section_eyebrow ?? "Dance"}
+                className={fieldInputClasses}
+              />
+            </Field>
+            <Field label="Title">
+              <input
+                name="dance_section_title"
+                defaultValue={settings?.dance_section_title ?? "The other half"}
+                className={fieldInputClasses}
+              />
+            </Field>
+          </div>
+
+          <Field label="Intro paragraph">
+            <textarea
+              name="dance_intro"
+              rows={3}
+              defaultValue={settings?.dance_intro ?? ""}
+              className={`${fieldInputClasses} resize-none`}
             />
           </Field>
         </fieldset>

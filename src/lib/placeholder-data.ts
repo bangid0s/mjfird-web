@@ -156,6 +156,7 @@ export type Post = {
   date: string;
   readTime: string;
   body: string[];
+  cover?: string;
 };
 
 export const posts: Post[] = [

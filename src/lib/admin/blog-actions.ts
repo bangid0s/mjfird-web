@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeMediaUrl } from "@/lib/media";
 import type { ContentStatus } from "@/lib/supabase/types";
 
 function parsePayload(formData: FormData) {
@@ -17,7 +18,7 @@ function parsePayload(formData: FormData) {
       .split("\n\n")
       .map((p) => p.trim())
       .filter(Boolean),
-    cover_image: String(formData.get("cover_image") ?? "") || null,
+    cover_image: normalizeMediaUrl(String(formData.get("cover_image") ?? "")) || null,
     tags: String(formData.get("tags") ?? "")
       .split(",")
       .map((t) => t.trim())

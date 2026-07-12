@@ -36,6 +36,13 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s — MJFIRD",
     },
     description: settings.siteDescription,
+    ...(settings.faviconUrl && {
+      icons: {
+        icon: settings.faviconUrl,
+        shortcut: settings.faviconUrl,
+        apple: settings.faviconUrl,
+      },
+    }),
     openGraph: {
       title: settings.siteTitle,
       description: settings.siteDescription,

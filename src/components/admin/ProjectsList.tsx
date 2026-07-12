@@ -6,6 +6,7 @@ import ReorderableList from "@/components/admin/ReorderableList";
 import DeleteButton from "@/components/admin/DeleteButton";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { cn } from "@/lib/cn";
+import { mediaThumbnail } from "@/lib/media";
 import type { ProjectRow } from "@/lib/supabase/types";
 
 export default function ProjectsList({ projects }: { projects: ProjectRow[] }) {
@@ -18,7 +19,7 @@ export default function ProjectsList({ projects }: { projects: ProjectRow[] }) {
           {project.cover_image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={project.cover_image}
+              src={mediaThumbnail(project.cover_image)}
               alt=""
               className="h-12 w-16 shrink-0 border border-line object-cover"
             />

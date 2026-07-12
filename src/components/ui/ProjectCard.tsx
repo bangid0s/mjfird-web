@@ -1,9 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
+import SmartImage from "@/components/media/SmartImage";
 import type { Project } from "@/lib/placeholder-data";
 
 export default function ProjectCard({ project, index }: { project: Project; index: number }) {
-  const hasCover = project.cover?.startsWith("http");
+  const hasCover = Boolean(project.cover) && !project.cover.startsWith("/placeholder");
 
   return (
     <Link
@@ -17,10 +17,9 @@ export default function ProjectCard({ project, index }: { project: Project; inde
 
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-bg-raised sm:w-56">
         {hasCover ? (
-          <Image
+          <SmartImage
             src={project.cover}
             alt={project.title}
-            fill
             sizes="(min-width: 640px) 224px, 100vw"
             className="object-cover transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-110"
           />

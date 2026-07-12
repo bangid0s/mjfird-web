@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import SmartImage from "@/components/media/SmartImage";
 import SectionHeader from "@/components/ui/SectionHeader";
-import VideoEmbed from "@/components/dance/VideoEmbed";
+import VideoEmbed from "@/components/media/VideoEmbed";
 import { getDanceMedia, getBattles } from "@/lib/data/dance";
+import { getSiteSettings } from "@/lib/data/site-settings";
 
 export const metadata: Metadata = {
   title: "Dance",
@@ -10,7 +11,11 @@ export const metadata: Metadata = {
 };
 
 export default async function DancePage() {
-  const [media, battles] = await Promise.all([getDanceMedia(), getBattles()]);
+  const [media, battles, settings] = await Promise.all([
+    getDanceMedia(),
+    getBattles(),
+    getSiteSettings(),
+  ]);
   const stills = media.filter((m) => m.kind === "photo");
   const videos = media.filter((m) => m.kind === "video" && m.url);
   const [featured, ...moreVideos] = videos;
@@ -18,11 +23,11 @@ export default async function DancePage() {
   return (
     <div>
       <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10">
-        <SectionHeader eyebrow="Dance" title="The other half" />
-        <p className="max-w-xl font-body text-body-lg text-ink-muted">
-          Breaking is where the design taste comes from. Here&apos;s the reel, the
-          footage, and the battle record.
-        </p>
+        <SectionHeader
+          eyebrow={settings.danceSectionEyebrow}
+          title={settings.danceSectionTitle}
+        />
+        <p className="max-w-xl font-body text-body-lg text-ink-muted">{settings.danceIntro}</p>
       </div>
 
       {/* Featured reel */}
@@ -83,10 +88,9 @@ export default async function DancePage() {
             {stills.map((still, i) =>
               still.url ? (
                 <div key={i} className="relative aspect-square w-full overflow-hidden" data-cursor="view">
-                  <Image
+                  <SmartImage
                     src={still.url}
                     alt={still.caption}
-                    fill
                     sizes="(min-width: 640px) 25vw, 50vw"
                     className="object-cover transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] hover:scale-[1.03]"
                   />

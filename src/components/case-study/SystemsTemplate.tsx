@@ -1,5 +1,5 @@
-import Image from "next/image";
 import type { Project } from "@/lib/placeholder-data";
+import SmartImage from "@/components/media/SmartImage";
 import CaseStudyMeta from "@/components/case-study/CaseStudyMeta";
 import CaseStudyNext from "@/components/case-study/CaseStudyNext";
 
@@ -55,10 +55,9 @@ export default function SystemsTemplate({
           >
             {cell.image && (
               <>
-                <Image
+                <SmartImage
                   src={cell.image.url}
                   alt={cell.image.alt ?? ""}
-                  fill
                   sizes="(min-width: 640px) 33vw, 50vw"
                   className="object-cover transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-105"
                 />

@@ -24,7 +24,11 @@ export default function EditorialTemplate({
 
       <div className="mx-auto max-w-3xl px-6 sm:px-10">
         <MediaSlot
-          image={project.cover.startsWith("http") ? { url: project.cover, alt: project.title } : undefined}
+          image={
+            project.cover && !project.cover.startsWith("/placeholder")
+              ? { url: project.cover, alt: project.title }
+              : undefined
+          }
           className="aspect-[16/10] w-full"
           sizes="(min-width: 768px) 768px, 100vw"
         />

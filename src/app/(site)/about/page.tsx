@@ -34,7 +34,21 @@ export default async function AboutPage() {
           <h1 className="font-display text-display-md uppercase leading-[0.9] text-ink">
             {settings.aboutHeadline}
           </h1>
-          <p className="max-w-lg font-body text-body-lg text-ink-muted">{profile.bio}</p>
+          {settings.aboutDescription ? (
+            <div className="flex max-w-lg flex-col gap-4">
+              {settings.aboutDescription
+                .split("\n\n")
+                .map((paragraph) => paragraph.trim())
+                .filter(Boolean)
+                .map((paragraph, i) => (
+                  <p key={i} className="font-body text-body-lg text-ink-muted">
+                    {paragraph}
+                  </p>
+                ))}
+            </div>
+          ) : (
+            <p className="max-w-lg font-body text-body-lg text-ink-muted">{profile.bio}</p>
+          )}
           <MagneticButton href="/dance" variant="secondary" cursorLabel="view">
             See the dance side →
           </MagneticButton>

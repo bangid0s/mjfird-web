@@ -2,12 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeMediaUrl } from "@/lib/media";
 import type { ContentStatus } from "@/lib/supabase/types";
 
 function parsePayload(formData: FormData) {
   return {
     label: String(formData.get("label") ?? ""),
-    url: String(formData.get("url") ?? ""),
+    url: normalizeMediaUrl(String(formData.get("url") ?? "")),
     description: String(formData.get("description") ?? "") || null,
     emoji: String(formData.get("emoji") ?? "") || null,
     highlight: formData.get("highlight") === "on",

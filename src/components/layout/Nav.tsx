@@ -8,18 +8,21 @@ import { cn } from "@/lib/cn";
 import { easeFreeze } from "@/lib/motion";
 import SoundToggle from "@/components/ui/SoundToggle";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import ThemedLogo from "@/components/ui/ThemedLogo";
 
 type NavLink = { label: string; href: string };
 
 export default function Nav({
   availabilityStatus,
   logoUrl,
+  logoUrlLight,
   logoType = "text",
   logoText = "MJFIRD",
   links,
 }: {
   availabilityStatus?: string;
   logoUrl?: string | null;
+  logoUrlLight?: string | null;
   logoType?: "text" | "image";
   logoText?: string;
   links: NavLink[];
@@ -38,8 +41,11 @@ export default function Nav({
           onClick={() => setOpen(false)}
         >
           {logoType === "image" && logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="" className="h-8 w-auto max-w-[180px] object-contain" />
+            <ThemedLogo
+              darkUrl={logoUrl}
+              lightUrl={logoUrlLight}
+              className="h-8 w-auto max-w-[180px] object-contain"
+            />
           ) : (
             logoText
           )}

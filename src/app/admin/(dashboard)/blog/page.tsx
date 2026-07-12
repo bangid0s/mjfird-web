@@ -5,6 +5,7 @@ import DeleteButton from "@/components/admin/DeleteButton";
 import StatusBadge from "@/components/admin/StatusBadge";
 import PageHeader, { HeaderAction } from "@/components/admin/PageHeader";
 import EmptyState from "@/components/admin/EmptyState";
+import { mediaThumbnail } from "@/lib/media";
 import type { BlogPostRow } from "@/lib/supabase/types";
 
 export default async function AdminBlogPage() {
@@ -38,7 +39,19 @@ export default async function AdminBlogPage() {
               key={post.id}
               className="flex items-center justify-between gap-4 border-t border-line px-2 py-4 transition-colors last:border-b hover:bg-bg-raised/40"
             >
-              <div className="min-w-0">
+              {post.cover_image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={mediaThumbnail(post.cover_image)}
+                  alt=""
+                  className="h-12 w-16 shrink-0 border border-line object-cover"
+                />
+              ) : (
+                <div className="flex h-12 w-16 shrink-0 items-center justify-center border border-line bg-bg-raised font-mono text-[9px] uppercase text-ink-faint">
+                  No cover
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <Link
                     href={`/admin/blog/${post.id}`}

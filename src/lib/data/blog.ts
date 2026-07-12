@@ -11,6 +11,7 @@ function mapRow(row: BlogPostRow): Post {
     date: row.published_at ?? row.created_at,
     readTime: row.read_time ?? "",
     body: (row.body as string[]) ?? [],
+    cover: row.cover_image ?? undefined,
   };
 }
 

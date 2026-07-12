@@ -1,8 +1,11 @@
-import Image from "next/image";
 import { cn } from "@/lib/cn";
+import { isYouTubeUrl, isVideoFile } from "@/lib/media";
+import VideoEmbed from "@/components/media/VideoEmbed";
+import SmartImage from "@/components/media/SmartImage";
 
-// A template image slot: renders the gallery image if one exists for this
-// position, otherwise the placeholder gradient block the templates shipped with.
+// A template media slot: renders the gallery entry for this position —
+// uploaded image, pasted image URL, video file, or YouTube link (embedded,
+// click-to-play) — otherwise the placeholder gradient the templates shipped with.
 export default function MediaSlot({
   image,
   className,
@@ -13,9 +16,16 @@ export default function MediaSlot({
   sizes?: string;
 }) {
   if (image?.url) {
+    if (isYouTubeUrl(image.url) || isVideoFile(image.url)) {
+      return (
+        <div className={cn("relative overflow-hidden", className)}>
+          <VideoEmbed url={image.url} title={image.alt} />
+        </div>
+      );
+    }
     return (
       <div className={cn("relative overflow-hidden", className)}>
-        <Image src={image.url} alt={image.alt ?? ""} fill sizes={sizes} className="object-cover" />
+        <SmartImage src={image.url} alt={image.alt ?? ""} sizes={sizes} />
       </div>
     );
   }
