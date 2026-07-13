@@ -23,9 +23,15 @@ export function youTubeEmbedUrl(
     params.set("playlist", id);
   }
   if (opts.background) {
+    // Strip every bit of YouTube chrome so it reads as a clean video wall:
+    // no controls, no play button, no title, no fullscreen, no captions.
     params.set("controls", "0");
     params.set("disablekb", "1");
     params.set("iv_load_policy", "3");
+    params.set("fs", "0");
+    params.set("showinfo", "0");
+    params.set("cc_load_policy", "0");
+    params.set("vq", "hd1080"); // best-effort high-quality hint
     params.set("mute", "1");
   }
   return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;

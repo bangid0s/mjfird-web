@@ -129,6 +129,7 @@ export type Testimonial = {
   quote: string;
   name: string;
   role: string;
+  avatarUrl?: string;
 };
 
 export const testimonials: Testimonial[] = [

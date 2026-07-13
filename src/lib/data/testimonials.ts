@@ -8,6 +8,7 @@ function mapRow(row: TestimonialRow): Testimonial {
     quote: row.quote,
     name: row.name,
     role: row.role ?? "",
+    avatarUrl: row.avatar_url ?? undefined,
   };
 }
 

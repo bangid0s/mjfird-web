@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
-import { getYouTubeId } from "@/lib/youtube";
+import { getYouTubeId, youTubeEmbedUrl } from "@/lib/youtube";
 import { cn } from "@/lib/cn";
 
 const SLIDE_INTERVAL_MS = 5000;
@@ -28,7 +28,9 @@ export default function HeroMedia({
   animation?: "none" | "zoom" | "drift" | "pulse";
 }) {
   const reducedMotion = usePrefersReducedMotion();
-  const youTubeId = type === "youtube" ? getYouTubeId(url) : null;
+  // A YouTube link pasted into the "video" slot still plays as a background embed.
+  const youTubeId = type === "youtube" || type === "video" ? getYouTubeId(url) : null;
+  const isUploadedVideo = type === "video" && !youTubeId;
 
   // Image mode: use the slideshow list when present, else the single URL.
   const images = type === "image" ? (urls?.length ? urls : url ? [url] : []) : [];
@@ -47,24 +49,29 @@ export default function HeroMedia({
 
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      {type === "video" && (
-        // Without autoplay (reduced motion) the video shows its first frame,
-        // which doubles as the static fallback.
+      {isUploadedVideo && (
+        // Uploaded file: no controls attribute, so it's a clean autoplay wall.
+        // Without autoplay (reduced motion) it shows its first frame as a fallback.
         <video
           src={url}
           autoPlay={!reducedMotion}
           loop
           muted
           playsInline
+          controls={false}
           preload="metadata"
-          className="h-full w-full object-cover"
+          className="pointer-events-none h-full w-full object-cover"
         />
       )}
 
-      {type === "youtube" && youTubeId && (
+      {youTubeId && (
         // Oversized 16:9 iframe centered to emulate object-fit: cover.
         <iframe
-          src={`https://www.youtube-nocookie.com/embed/${youTubeId}?autoplay=${reducedMotion ? 0 : 1}&mute=1&loop=1&playlist=${youTubeId}&controls=0&rel=0&playsinline=1&disablekb=1&modestbranding=1&iv_load_policy=3`}
+          src={youTubeEmbedUrl(youTubeId, {
+            autoplay: !reducedMotion,
+            loop: true,
+            background: true,
+          })}
           title=""
           tabIndex={-1}
           allow="autoplay; encrypted-media"

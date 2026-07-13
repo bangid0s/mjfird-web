@@ -112,8 +112,19 @@ export default async function Home() {
           {testimonials.map((t) => (
             <figure key={t.name} className="flex flex-col justify-between gap-6 border-t border-line pt-6">
               <blockquote className="font-body text-body text-ink">&ldquo;{t.quote}&rdquo;</blockquote>
-              <figcaption className="font-mono text-label uppercase tracking-[0.1em] text-ink-muted">
-                {t.name} — {t.role}
+              <figcaption className="flex items-center gap-3">
+                {t.avatarUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={t.avatarUrl}
+                    alt={t.name}
+                    className="h-10 w-10 shrink-0 rounded-full border border-line object-cover"
+                  />
+                )}
+                <span className="font-mono text-label uppercase tracking-[0.1em] text-ink-muted">
+                  {t.name}
+                  {t.role ? ` — ${t.role}` : ""}
+                </span>
               </figcaption>
             </figure>
           ))}

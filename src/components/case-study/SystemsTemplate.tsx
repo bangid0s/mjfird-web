@@ -1,9 +1,9 @@
 import type { Project } from "@/lib/placeholder-data";
-import SmartImage from "@/components/media/SmartImage";
 import CaseStudyMeta from "@/components/case-study/CaseStudyMeta";
 import CaseStudyNext from "@/components/case-study/CaseStudyNext";
-
-const APPLICATIONS = ["Flyer", "Social tile", "Business card", "Signage", "Merch", "Web banner"];
+import CaseStudyNarrative from "@/components/case-study/CaseStudyNarrative";
+import MediaSlot from "@/components/case-study/MediaSlot";
+import ProjectGallery from "@/components/media/ProjectGallery";
 
 export default function SystemsTemplate({
   project,
@@ -12,6 +12,8 @@ export default function SystemsTemplate({
   project: Project;
   next: Project;
 }) {
+  const hasCover = project.cover && !project.cover.startsWith("/placeholder");
+
   return (
     <article>
       <header className="mx-auto max-w-6xl px-6 pt-16 pb-12 sm:px-10">
@@ -28,62 +30,37 @@ export default function SystemsTemplate({
         </div>
       </header>
 
+      {hasCover && (
+        <div className="mx-auto max-w-6xl px-6 pb-16 sm:px-10">
+          <MediaSlot
+            image={{ url: project.cover, alt: project.title }}
+            className="aspect-[16/9] w-full"
+            sizes="(min-width: 1024px) 1152px, 100vw"
+          />
+        </div>
+      )}
+
       <div className="mx-auto max-w-6xl px-6 pb-16 sm:px-10">
         <CaseStudyMeta project={project} />
       </div>
 
-      <section className="mx-auto max-w-6xl px-6 pb-16 sm:px-10">
-        <p className="max-w-2xl font-body text-body-lg leading-relaxed text-ink">
-          {project.narrative.context} {project.narrative.move}
-        </p>
-      </section>
+      <div className="mx-auto max-w-3xl px-6 pb-16 sm:px-10">
+        <CaseStudyNarrative narrative={project.narrative} />
+      </div>
 
-      <section className="mx-auto max-w-6xl px-6 pb-4 sm:px-10">
-        <p className="mb-6 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
-          The system, applied
-        </p>
-      </section>
+      {project.gallery && project.gallery.length > 0 && (
+        <div className="mx-auto max-w-6xl px-6 pb-4 sm:px-10">
+          <p className="mb-6 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
+            The system, applied
+          </p>
+        </div>
+      )}
 
-      <section className="mx-auto grid max-w-6xl grid-cols-2 gap-px border border-line bg-line sm:grid-cols-3">
-        {(project.gallery?.length
-          ? project.gallery.map((image, i) => ({ label: image.alt || APPLICATIONS[i % APPLICATIONS.length], image }))
-          : APPLICATIONS.map((app) => ({ label: app, image: undefined }))
-        ).map((cell, i) => (
-          <div
-            key={`${cell.label}-${i}`}
-            className="group relative flex aspect-square flex-col justify-end overflow-hidden bg-bg p-4 transition-colors duration-[var(--duration-base)] hover:bg-bg-raised"
-          >
-            {cell.image && (
-              <>
-                <SmartImage
-                  src={cell.image.url}
-                  alt={cell.image.alt ?? ""}
-                  sizes="(min-width: 640px) 33vw, 50vw"
-                  className="object-cover transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-105"
-                />
-                <span className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-bg/90 to-transparent" />
-              </>
-            )}
-            <span className="relative font-mono text-label uppercase tracking-[0.1em] text-ink-faint transition-colors group-hover:text-accent">
-              {cell.label}
-            </span>
-          </div>
-        ))}
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 py-16 sm:px-10">
-        <p className="font-mono text-label uppercase tracking-[0.2em] text-ink-faint">The build</p>
-        <p className="mt-4 max-w-2xl font-body text-body-lg leading-relaxed text-ink">
-          {project.narrative.build}
-        </p>
-      </section>
-
-      <section className="mx-auto max-w-6xl border-t border-line px-6 py-16 sm:px-10">
-        <p className="font-mono text-label uppercase tracking-[0.2em] text-ink-faint">Result</p>
-        <p className="mt-4 max-w-2xl font-body text-body-lg leading-relaxed text-ink">
-          {project.narrative.result}
-        </p>
-      </section>
+      {project.gallery && project.gallery.length > 0 && (
+        <div className="mx-auto max-w-6xl px-6 pb-24 sm:px-10">
+          <ProjectGallery images={project.gallery} />
+        </div>
+      )}
 
       <CaseStudyNext project={next} />
     </article>

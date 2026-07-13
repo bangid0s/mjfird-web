@@ -45,11 +45,11 @@ export default function ProjectForm({
         <Field label="Category">
           <input name="category" defaultValue={project?.category ?? ""} className={fieldInputClasses} />
         </Field>
-        <Field label="Case study template">
+        <Field label="Layout">
           <select name="template" defaultValue={project?.template ?? "editorial"} className={fieldInputClasses}>
-            <option value="editorial">Editorial</option>
-            <option value="immersive">Immersive</option>
-            <option value="systems">Systems</option>
+            <option value="editorial">Editorial — illustration &amp; artwork (centered story)</option>
+            <option value="immersive">Showcase — full-bleed cover hero (graphic design)</option>
+            <option value="systems">System — brand identity applications</option>
           </select>
         </Field>
       </div>
@@ -74,42 +74,42 @@ export default function ProjectForm({
 
       <GalleryUploader
         name="gallery"
-        label="Case study images — fill the template's image slots in order (upload several at once)"
+        label="Project gallery — shown as a masonry grid; each image opens full-screen on click (upload several at once)"
         initial={project?.gallery}
       />
 
       <fieldset className="flex flex-col gap-6 border-t border-line pt-6">
         <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
-          Narrative
+          Story — leave any blank to hide it
         </legend>
-        <Field label="Context">
+        <Field label="The brief — what the client asked for">
           <textarea
             name="narrative_context"
-            rows={2}
+            rows={3}
             defaultValue={project?.narrative?.context ?? ""}
             className={`${fieldInputClasses} resize-none`}
           />
         </Field>
-        <Field label="The move">
+        <Field label="The idea — your concept / direction">
           <textarea
             name="narrative_move"
-            rows={2}
+            rows={3}
             defaultValue={project?.narrative?.move ?? ""}
             className={`${fieldInputClasses} resize-none`}
           />
         </Field>
-        <Field label="The build">
+        <Field label="The execution — how you made it">
           <textarea
             name="narrative_build"
-            rows={2}
+            rows={3}
             defaultValue={project?.narrative?.build ?? ""}
             className={`${fieldInputClasses} resize-none`}
           />
         </Field>
-        <Field label="Result">
+        <Field label="The result — outcome / reception">
           <textarea
             name="narrative_result"
-            rows={2}
+            rows={3}
             defaultValue={project?.narrative?.result ?? ""}
             className={`${fieldInputClasses} resize-none`}
           />
