@@ -1,4 +1,5 @@
 import type { Project } from "@/lib/placeholder-data";
+import Linkify from "@/components/ui/Linkify";
 
 // The narrative keys stay the same in the database; only the public labels are
 // project-oriented now: brief → idea → execution → result.
@@ -28,7 +29,7 @@ export default function CaseStudyNarrative({
         <section key={key} className="flex flex-col gap-3">
           <p className="font-mono text-label uppercase tracking-[0.2em] text-accent">{label}</p>
           <p className="max-w-2xl font-body text-body-lg leading-relaxed text-ink">
-            {narrative[key]}
+            <Linkify text={narrative[key]!} />
           </p>
         </section>
       ))}

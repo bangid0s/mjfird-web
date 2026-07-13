@@ -6,6 +6,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import { isYouTubeUrl, isVideoFile } from "@/lib/media";
 import VideoEmbed from "@/components/media/VideoEmbed";
 import SmartImage from "@/components/media/SmartImage";
+import Linkify from "@/components/ui/Linkify";
 import { SITE_URL } from "@/lib/site-url";
 
 const BASE_URL = SITE_URL;
@@ -84,7 +85,7 @@ export default async function PostPage({
       <div className="flex flex-col gap-6">
         {post.body.map((paragraph, i) => (
           <p key={i} className="font-body text-body-lg leading-relaxed text-ink-muted">
-            {paragraph}
+            <Linkify text={paragraph} />
           </p>
         ))}
       </div>
