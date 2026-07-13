@@ -139,6 +139,7 @@ export default async function AdminSettingsPage({
             initialUrl={settings?.hero_media_url}
             initialImages={settings?.hero_media_urls}
             initialOverlay={settings?.hero_overlay_opacity}
+            initialAnimation={settings?.hero_animation}
           />
 
           <div className="grid gap-6 sm:grid-cols-2">

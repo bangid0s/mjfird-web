@@ -12,11 +12,13 @@ export default function HeroMediaPicker({
   initialUrl,
   initialImages,
   initialOverlay,
+  initialAnimation,
 }: {
   initialType?: MediaType;
   initialUrl?: string | null;
   initialImages?: { url: string; alt?: string }[];
   initialOverlay?: number;
+  initialAnimation?: "none" | "zoom" | "drift" | "pulse";
 }) {
   const [type, setType] = useState<MediaType>(initialType ?? "none");
   const [overlay, setOverlay] = useState(initialOverlay ?? 60);
@@ -44,9 +46,25 @@ export default function HeroMediaPicker({
             label="Hero images — add 2 or 3 and they rotate as a slider"
             initial={initialImages}
           />
+          <Field label="Image animation">
+            <select
+              name="hero_animation"
+              defaultValue={initialAnimation ?? "none"}
+              className={fieldInputClasses}
+            >
+              <option value="none">None — still image</option>
+              <option value="zoom">Slow zoom — cinematic Ken Burns push-in</option>
+              <option value="drift">Drift — slow side-to-side pan</option>
+              <option value="pulse">Pulse — gentle breathing scale</option>
+            </select>
+          </Field>
           {/* keep the single-media slot for video/youtube so switching types doesn't lose it */}
           <input type="hidden" name="hero_media_url" value={initialUrl ?? ""} />
         </>
+      )}
+
+      {type !== "image" && (
+        <input type="hidden" name="hero_animation" value={initialAnimation ?? "none"} />
       )}
 
       {type === "video" && (

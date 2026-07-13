@@ -43,6 +43,7 @@ export default async function Home() {
               url={settings.heroMediaUrl ?? ""}
               urls={settings.heroMediaUrls}
               overlayOpacity={settings.heroOverlayOpacity}
+              animation={settings.heroAnimation}
             />
           )}
         <div className="relative mx-auto flex min-h-[calc(100svh-5rem)] max-w-6xl flex-col justify-center gap-8 px-6 py-20 sm:px-10">

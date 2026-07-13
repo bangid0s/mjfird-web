@@ -128,6 +128,36 @@
 
   --animate-marquee: marquee 45s linear infinite;
   --animate-rise: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-hero-zoom: hero-zoom 24s ease-in-out infinite alternate;
+  --animate-hero-drift: hero-drift 30s ease-in-out infinite alternate;
+  --animate-hero-pulse: hero-pulse 9s ease-in-out infinite alternate;
+}
+
+@keyframes hero-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes hero-drift {
+  from {
+    transform: scale(1.1) translateX(-2.5%);
+  }
+  to {
+    transform: scale(1.1) translateX(2.5%);
+  }
+}
+
+@keyframes hero-pulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.05);
+  }
 }
 
 @keyframes marquee {

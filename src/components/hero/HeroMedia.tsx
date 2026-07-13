@@ -7,16 +7,25 @@ import { cn } from "@/lib/cn";
 
 const SLIDE_INTERVAL_MS = 5000;
 
+const ANIMATION_CLASS: Record<string, string> = {
+  none: "",
+  zoom: "motion-safe:animate-hero-zoom",
+  drift: "motion-safe:animate-hero-drift",
+  pulse: "motion-safe:animate-hero-pulse",
+};
+
 export default function HeroMedia({
   type,
   url,
   urls,
   overlayOpacity = 60,
+  animation = "none",
 }: {
   type: "image" | "video" | "youtube";
   url: string;
   urls?: string[];
   overlayOpacity?: number;
+  animation?: "none" | "zoom" | "drift" | "pulse";
 }) {
   const reducedMotion = usePrefersReducedMotion();
   const youTubeId = type === "youtube" ? getYouTubeId(url) : null;
@@ -77,6 +86,7 @@ export default function HeroMedia({
             alt=""
             className={cn(
               "absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-[var(--ease-freeze)]",
+              ANIMATION_CLASS[animation] ?? "",
               i === slide ? "opacity-100" : "opacity-0",
             )}
           />

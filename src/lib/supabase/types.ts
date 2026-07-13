@@ -135,6 +135,7 @@ export type SiteSettingsRow = {
   hero_media_url: string | null;
   hero_media_urls: { url: string; alt?: string }[];
   hero_overlay_opacity: number;
+  hero_animation: "none" | "zoom" | "drift" | "pulse";
   dance_section_eyebrow: string;
   dance_section_title: string;
   dance_intro: string;
