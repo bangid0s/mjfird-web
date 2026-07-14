@@ -65,7 +65,9 @@ export default function HeroMedia({
       )}
 
       {youTubeId && (
-        // Oversized 16:9 iframe centered to emulate object-fit: cover.
+        // Oversized 16:9 iframe, centered and scaled up ~1.4× so YouTube's
+        // title bar (top) and any hover chrome (edges) are cropped off-screen
+        // by the container's overflow-hidden — a truly clean video wall.
         <iframe
           src={youTubeEmbedUrl(youTubeId, {
             autoplay: !reducedMotion,
@@ -75,11 +77,12 @@ export default function HeroMedia({
           title=""
           tabIndex={-1}
           allow="autoplay; encrypted-media"
-          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 border-0"
+          className="pointer-events-none absolute left-1/2 top-1/2 border-0"
           style={{
             width: "max(100%, 177.78vh)",
             height: "max(100%, 56.25vw)",
             aspectRatio: "16 / 9",
+            transform: "translate(-50%, -50%) scale(1.4)",
           }}
         />
       )}
