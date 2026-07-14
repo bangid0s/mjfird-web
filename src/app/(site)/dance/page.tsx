@@ -19,6 +19,11 @@ export default async function DancePage() {
   const stills = media.filter((m) => m.kind === "photo");
   const videos = media.filter((m) => m.kind === "video" && m.url);
   const [featured, ...moreVideos] = videos;
+  // Battle record runs newest year first. Ties keep their saved sort_order
+  // (Array.prototype.sort is stable), so admins still control same-year ordering.
+  const orderedBattles = [...battles].sort(
+    (a, b) => (parseInt(b.year, 10) || 0) - (parseInt(a.year, 10) || 0),
+  );
 
   return (
     <div>
@@ -112,7 +117,7 @@ export default async function DancePage() {
           <SectionHeader eyebrow="Battle Record" title="On the record" />
           <table className="w-full border-collapse">
             <tbody>
-              {battles.map((b) => (
+              {orderedBattles.map((b) => (
                 <tr key={`${b.year}-${b.event}`} className="border-t border-line">
                   <td className="py-4 font-mono text-body-sm text-ink-muted">{b.year}</td>
                   <td className="py-4 font-body text-body text-ink">{b.event}</td>

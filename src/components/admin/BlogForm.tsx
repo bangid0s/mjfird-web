@@ -80,6 +80,17 @@ export default function BlogForm({
         </Field>
       )}
 
+      {status === "published" && (
+        <Field label="Published date & time — leave blank to use now">
+          <input
+            type="datetime-local"
+            name="published_at"
+            defaultValue={post?.published_at ? post.published_at.slice(0, 16) : ""}
+            className={fieldInputClasses}
+          />
+        </Field>
+      )}
+
       <div className="flex gap-4">
         <SubmitButton className="self-start">Save post</SubmitButton>
         {post && (

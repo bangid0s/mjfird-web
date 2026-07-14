@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/cn";
 import { easeFreeze } from "@/lib/motion";
-import SoundToggle from "@/components/ui/SoundToggle";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import ThemedLogo from "@/components/ui/ThemedLogo";
 
@@ -77,7 +76,6 @@ export default function Nav({
         </nav>
 
         <div className="hidden items-center gap-3 sm:flex">
-          <SoundToggle />
           <ThemeToggle />
         </div>
 

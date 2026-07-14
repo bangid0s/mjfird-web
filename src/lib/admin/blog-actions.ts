@@ -9,6 +9,7 @@ import type { ContentStatus } from "@/lib/supabase/types";
 function parsePayload(formData: FormData) {
   const status = String(formData.get("status") ?? "draft") as ContentStatus;
   const scheduledAt = String(formData.get("scheduled_at") ?? "");
+  const publishedAt = String(formData.get("published_at") ?? "");
 
   return {
     slug: String(formData.get("slug") ?? "").trim(),
@@ -26,7 +27,11 @@ function parsePayload(formData: FormData) {
     read_time: String(formData.get("read_time") ?? ""),
     status,
     scheduled_at: status === "scheduled" && scheduledAt ? new Date(scheduledAt).toISOString() : null,
-    published_at: status === "published" ? new Date().toISOString() : null,
+    // Admin can pick the published date/time; blank falls back to the current moment.
+    published_at:
+      status === "published"
+        ? (publishedAt ? new Date(publishedAt).toISOString() : new Date().toISOString())
+        : null,
   };
 }
 
