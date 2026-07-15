@@ -2,7 +2,7 @@ import KineticWordmark from "@/components/hero/KineticWordmark";
 import HeroMedia from "@/components/hero/HeroMedia";
 import MagneticButton from "@/components/ui/MagneticButton";
 import SectionHeader from "@/components/ui/SectionHeader";
-import ProjectCard from "@/components/ui/ProjectCard";
+import FeaturedWork from "@/components/work/FeaturedWork";
 import Marquee from "@/components/ui/Marquee";
 import AnimatedNumber from "@/components/ui/AnimatedNumber";
 import { getProjects } from "@/lib/data/projects";
@@ -69,11 +69,7 @@ export default async function Home() {
 
       <section className="mx-auto max-w-6xl px-6 py-24 sm:px-10">
         <SectionHeader eyebrow={settings.workSectionEyebrow} title={settings.workSectionTitle} />
-        <div className="flex flex-col">
-          {featured.map((project, i) => (
-            <ProjectCard key={project.slug} project={project} index={i} />
-          ))}
-        </div>
+        <FeaturedWork projects={featured} />
       </section>
 
       <section className="border-y border-line bg-bg-raised">
