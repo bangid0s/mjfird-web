@@ -13,15 +13,18 @@ export default function HeroMediaPicker({
   initialImages,
   initialOverlay,
   initialAnimation,
+  initialSlideDuration,
 }: {
   initialType?: MediaType;
   initialUrl?: string | null;
   initialImages?: { url: string; alt?: string }[];
   initialOverlay?: number;
   initialAnimation?: "none" | "zoom" | "drift" | "pulse";
+  initialSlideDuration?: number;
 }) {
   const [type, setType] = useState<MediaType>(initialType ?? "none");
   const [overlay, setOverlay] = useState(initialOverlay ?? 60);
+  const [slideDuration, setSlideDuration] = useState(initialSlideDuration ?? 5);
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,13 +61,28 @@ export default function HeroMediaPicker({
               <option value="pulse">Pulse — gentle breathing scale</option>
             </select>
           </Field>
+          <Field label={`Auto-slide duration — ${slideDuration}s per image (only applies with 2+ images)`}>
+            <input
+              type="range"
+              name="hero_slide_duration"
+              min={2}
+              max={15}
+              step={1}
+              value={slideDuration}
+              onChange={(e) => setSlideDuration(Number(e.target.value))}
+              className="w-full accent-accent"
+            />
+          </Field>
           {/* keep the single-media slot for video/youtube so switching types doesn't lose it */}
           <input type="hidden" name="hero_media_url" value={initialUrl ?? ""} />
         </>
       )}
 
       {type !== "image" && (
-        <input type="hidden" name="hero_animation" value={initialAnimation ?? "none"} />
+        <>
+          <input type="hidden" name="hero_animation" value={initialAnimation ?? "none"} />
+          <input type="hidden" name="hero_slide_duration" value={slideDuration} />
+        </>
       )}
 
       {type === "video" && (

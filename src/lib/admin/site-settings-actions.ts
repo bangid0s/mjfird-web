@@ -85,6 +85,10 @@ export async function saveSiteSettings(formData: FormData) {
     hero_media_url: normalizeMediaUrl(String(formData.get("hero_media_url") ?? "")) || null,
     hero_media_urls: parseMediaList(String(formData.get("hero_media_urls") ?? "[]")),
     hero_animation: String(formData.get("hero_animation") ?? "none"),
+    hero_slide_duration: Math.min(
+      30,
+      Math.max(1, Math.round(Number(formData.get("hero_slide_duration") ?? 5) || 5)),
+    ),
     dance_section_eyebrow: String(formData.get("dance_section_eyebrow") ?? ""),
     dance_section_title: String(formData.get("dance_section_title") ?? ""),
     dance_intro: String(formData.get("dance_intro") ?? ""),

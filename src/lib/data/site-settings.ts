@@ -16,6 +16,7 @@ export type SiteSettings = {
   heroMediaUrls: string[];
   heroOverlayOpacity: number;
   heroAnimation: "none" | "zoom" | "drift" | "pulse";
+  heroSlideDuration: number;
   danceSectionEyebrow: string;
   danceSectionTitle: string;
   danceIntro: string;
@@ -73,6 +74,7 @@ const placeholderSettings: SiteSettings = {
   heroMediaUrls: [],
   heroOverlayOpacity: 60,
   heroAnimation: "none",
+  heroSlideDuration: 5,
   danceSectionEyebrow: "Dance",
   danceSectionTitle: "The other half",
   danceIntro:
@@ -141,6 +143,10 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     heroMediaUrl: row.hero_media_url,
     heroMediaUrls: (row.hero_media_urls ?? []).map((item) => item.url).filter(Boolean),
     heroAnimation: row.hero_animation ?? "none",
+    heroSlideDuration:
+      typeof row.hero_slide_duration === "number" && row.hero_slide_duration > 0
+        ? Math.min(30, Math.max(1, row.hero_slide_duration))
+        : 5,
     danceSectionEyebrow: row.dance_section_eyebrow || placeholderSettings.danceSectionEyebrow,
     danceSectionTitle: row.dance_section_title || placeholderSettings.danceSectionTitle,
     danceIntro: row.dance_intro || placeholderSettings.danceIntro,

@@ -5,8 +5,6 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { getYouTubeId, youTubeEmbedUrl } from "@/lib/youtube";
 import { cn } from "@/lib/cn";
 
-const SLIDE_INTERVAL_MS = 5000;
-
 const ANIMATION_CLASS: Record<string, string> = {
   none: "",
   zoom: "motion-safe:animate-hero-zoom",
@@ -20,12 +18,14 @@ export default function HeroMedia({
   urls,
   overlayOpacity = 60,
   animation = "none",
+  slideDuration = 5,
 }: {
   type: "image" | "video" | "youtube";
   url: string;
   urls?: string[];
   overlayOpacity?: number;
   animation?: "none" | "zoom" | "drift" | "pulse";
+  slideDuration?: number;
 }) {
   const reducedMotion = usePrefersReducedMotion();
   // A YouTube link pasted into the "video" slot still plays as a background embed.
@@ -35,19 +35,25 @@ export default function HeroMedia({
   // Image mode: use the slideshow list when present, else the single URL.
   const images = type === "image" ? (urls?.length ? urls : url ? [url] : []) : [];
   const [slide, setSlide] = useState(0);
+  const hasSlides = type === "image" && images.length > 1;
 
   useEffect(() => {
-    if (type !== "image" || images.length < 2 || reducedMotion) return;
-    const id = setInterval(() => {
+    if (!hasSlides || reducedMotion) return;
+    // setTimeout keyed on `slide` (below) so manual navigation also resets the
+    // countdown — each image gets its full on-screen duration after a click.
+    const id = setTimeout(() => {
       setSlide((current) => (current + 1) % images.length);
-    }, SLIDE_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [type, images.length, reducedMotion]);
+    }, Math.max(1, slideDuration) * 1000);
+    return () => clearTimeout(id);
+  }, [hasSlides, images.length, reducedMotion, slideDuration, slide]);
 
   if (type === "youtube" && !youTubeId) return null;
   if (type === "image" && images.length === 0) return null;
 
+  const goTo = (index: number) => setSlide((index + images.length) % images.length);
+
   return (
+    <>
     <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
       {isUploadedVideo && (
         // Uploaded file: no controls attribute, so it's a clean autoplay wall.
@@ -109,5 +115,45 @@ export default function HeroMedia({
       />
       <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
     </div>
+
+    {/* Slider navigation — only when there's more than one image. The wrapper
+        stays pointer-events-none so it never blocks the hero's own buttons;
+        only the controls themselves are clickable. */}
+    {hasSlides && (
+      <div className="pointer-events-none absolute inset-0 z-10">
+        <button
+          type="button"
+          onClick={() => goTo(slide - 1)}
+          aria-label="Previous slide"
+          className="pointer-events-auto absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg/50 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg/80 sm:left-6"
+        >
+          ‹
+        </button>
+        <button
+          type="button"
+          onClick={() => goTo(slide + 1)}
+          aria-label="Next slide"
+          className="pointer-events-auto absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg/50 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg/80 sm:right-6"
+        >
+          ›
+        </button>
+        <div className="pointer-events-auto absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2.5">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              aria-current={i === slide}
+              className={cn(
+                "h-2 rounded-full transition-all duration-[var(--duration-fast)]",
+                i === slide ? "w-6 bg-accent" : "w-2 bg-ink/40 hover:bg-ink/70",
+              )}
+            />
+          ))}
+        </div>
+      </div>
+    )}
+    </>
   );
 }
