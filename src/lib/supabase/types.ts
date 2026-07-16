@@ -32,6 +32,7 @@ export type ServiceRow = {
   title: string;
   description: string | null;
   deliverables: string[];
+  image_url: string | null;
   sort_order: number;
   status: ContentStatus;
   created_at: string;

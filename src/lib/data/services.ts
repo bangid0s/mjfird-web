@@ -8,6 +8,7 @@ function mapRow(row: ServiceRow): Service {
     title: row.title,
     description: row.description ?? "",
     deliverables: row.deliverables ?? [],
+    imageUrl: row.image_url ?? undefined,
   };
 }
 

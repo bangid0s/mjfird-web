@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import SectionHeader from "@/components/ui/SectionHeader";
 import MagneticButton from "@/components/ui/MagneticButton";
+import SmartImage from "@/components/media/SmartImage";
 import { getServices } from "@/lib/data/services";
 import { getSiteSettings } from "@/lib/data/site-settings";
 
@@ -20,6 +21,15 @@ export default async function ServicesPage() {
         <div className="grid gap-px overflow-hidden border border-line bg-line sm:grid-cols-3">
           {services.map((service) => (
             <div key={service.title} className="flex flex-col gap-4 bg-bg p-8">
+              {service.imageUrl && (
+                <div className="relative aspect-[4/3] overflow-hidden border border-line">
+                  <SmartImage
+                    src={service.imageUrl}
+                    alt={service.title}
+                    sizes="(min-width: 640px) 33vw, 100vw"
+                  />
+                </div>
+              )}
               <h2 className="font-display text-xl uppercase text-ink">{service.title}</h2>
               <p className="font-body text-body-sm text-ink-muted">{service.description}</p>
               <ul className="mt-2 flex flex-col gap-1">

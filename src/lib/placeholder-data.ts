@@ -98,6 +98,7 @@ export type Service = {
   title: string;
   description: string;
   deliverables: string[];
+  imageUrl?: string;
 };
 
 export const services: Service[] = [
