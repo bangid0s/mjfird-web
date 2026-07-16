@@ -1,4 +1,5 @@
 import { Field, fieldInputClasses } from "@/components/admin/Field";
+import ImageUploader from "@/components/admin/ImageUploader";
 import type { ServiceRow } from "@/lib/supabase/types";
 import SubmitButton from "@/components/admin/SubmitButton";
 
@@ -32,6 +33,12 @@ export default function ServiceForm({
           className={`${fieldInputClasses} resize-none`}
         />
       </Field>
+
+      <ImageUploader
+        name="image_url"
+        label="Card image — shown on the Services page only (upload or paste a link)"
+        initialUrl={service?.image_url}
+      />
 
       <Field label="Status">
         <select name="status" defaultValue={service?.status ?? "draft"} className={fieldInputClasses}>

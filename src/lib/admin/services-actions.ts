@@ -13,6 +13,7 @@ function parsePayload(formData: FormData) {
       .split("\n")
       .map((s) => s.trim())
       .filter(Boolean),
+    image_url: String(formData.get("image_url") ?? "").trim() || null,
     status: String(formData.get("status") ?? "draft") as ContentStatus,
   };
 }
