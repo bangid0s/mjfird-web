@@ -80,7 +80,7 @@ export default function ProjectForm({
 
       <fieldset className="flex flex-col gap-6 border-t border-line pt-6">
         <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
-          Story — leave any blank to hide it
+          Story — leave any blank to hide it · paste a YouTube link in any section to embed the video
         </legend>
         <Field label="The brief — what the client asked for">
           <textarea
