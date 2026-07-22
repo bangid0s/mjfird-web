@@ -3,10 +3,25 @@
 import { useState } from "react";
 import { uploadToMedia } from "@/lib/upload";
 import { fieldInputClasses } from "@/components/admin/Field";
-import { isYouTubeUrl, mediaThumbnail } from "@/lib/media";
+import { isYouTubeUrl, mediaThumbnail, normalizeMediaUrl } from "@/lib/media";
 import { cn } from "@/lib/cn";
 
 type GalleryImage = { url: string; alt?: string };
+
+// Pull a usable URL out of a drag-and-drop payload. Dragging a link or some
+// selected text (e.g. a YouTube URL from the address bar) lands here as
+// text/uri-list or text/plain — grab the first http(s) address we can find.
+function urlFromDrop(dt: DataTransfer): string | null {
+  const raw = dt.getData("text/uri-list") || dt.getData("text/plain");
+  if (!raw) return null;
+  const candidate = raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line && !line.startsWith("#"));
+  if (!candidate) return null;
+  const normalized = normalizeMediaUrl(candidate);
+  return /^https?:\/\//i.test(normalized) ? normalized : null;
+}
 
 export default function GalleryUploader({
   name,
@@ -40,10 +55,16 @@ export default function GalleryUploader({
     }
   };
 
+  const addUrl = (url: string) => {
+    const normalized = normalizeMediaUrl(url);
+    if (!normalized) return;
+    setImages((prev) => [...prev, { url: normalized, alt: "" }]);
+  };
+
   const addByUrl = () => {
     const trimmed = urlDraft.trim();
     if (!trimmed) return;
-    setImages((prev) => [...prev, { url: trimmed, alt: "" }]);
+    addUrl(trimmed);
     setUrlDraft("");
   };
 
@@ -121,7 +142,14 @@ export default function GalleryUploader({
         onDrop={(e) => {
           e.preventDefault();
           setDragging(false);
-          if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
+          if (e.dataTransfer.files?.length) {
+            handleFiles(e.dataTransfer.files);
+            return;
+          }
+          // Dropped a link (e.g. a YouTube URL) rather than a file — add it
+          // straight to the gallery so it renders as an embedded video.
+          const url = urlFromDrop(e.dataTransfer);
+          if (url) addUrl(url);
         }}
         className={cn(
           "flex cursor-pointer flex-col items-center gap-1 border border-dashed px-4 py-6 text-center transition-colors duration-[var(--duration-fast)]",
@@ -129,7 +157,9 @@ export default function GalleryUploader({
         )}
       >
         <span className="font-mono text-label text-ink-faint">
-          {uploading ? "Uploading…" : "Drag & drop images here — or click to browse (multiple allowed)"}
+          {uploading
+            ? "Uploading…"
+            : "Drag & drop images or a YouTube link here — or click to browse (multiple allowed)"}
         </span>
         <input
           type="file"
