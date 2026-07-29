@@ -110,6 +110,8 @@ export type ProfileRow = {
   updated_at: string;
 };
 
+export type LinkPageTab = "links" | "shop";
+
 export type LinkItemRow = {
   id: string;
   label: string;
@@ -117,6 +119,8 @@ export type LinkItemRow = {
   description: string | null;
   emoji: string | null;
   highlight: boolean;
+  tab: LinkPageTab;
+  section: string | null;
   sort_order: number;
   status: ContentStatus;
   created_at: string;
@@ -145,6 +149,21 @@ export type SiteSettingsRow = {
   links_bg_type: "none" | "image" | "video" | "youtube";
   links_bg_url: string | null;
   links_overlay_opacity: number;
+  links_window_title: string;
+  links_headline: string;
+  links_run_by: string;
+  links_intro: string;
+  links_cta_label: string;
+  links_cta_url: string;
+  links_show_status: boolean;
+  links_timezone: string;
+  links_open_time: string;
+  links_close_time: string;
+  links_open_days: string;
+  links_brands: { name: string; logoUrl?: string; note?: string; url?: string }[];
+  links_brand_slots: number;
+  links_brand_cta_url: string;
+  links_tags: string[];
   nav_links: { label: string; href: string }[];
   hero_eyebrow: string;
   hero_intro: string;

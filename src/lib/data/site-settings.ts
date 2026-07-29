@@ -2,6 +2,8 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "./config";
 import type { SiteSettingsRow } from "@/lib/supabase/types";
 
+export type LinkBrand = { name: string; logoUrl: string; note: string; url: string };
+
 export type SiteSettings = {
   accentColor: string;
   siteTitle: string;
@@ -24,6 +26,21 @@ export type SiteSettings = {
   linksBgType: "none" | "image" | "video" | "youtube";
   linksBgUrl: string | null;
   linksOverlayOpacity: number;
+  linksWindowTitle: string;
+  linksHeadline: string;
+  linksRunBy: string;
+  linksIntro: string;
+  linksCtaLabel: string;
+  linksCtaUrl: string;
+  linksShowStatus: boolean;
+  linksTimezone: string;
+  linksOpenTime: string;
+  linksCloseTime: string;
+  linksOpenDays: string;
+  linksBrands: LinkBrand[];
+  linksBrandSlots: number;
+  linksBrandCtaUrl: string;
+  linksTags: string[];
   navLinks: { label: string; href: string }[];
   heroEyebrow: string;
   heroIntro: string;
@@ -83,6 +100,21 @@ const placeholderSettings: SiteSettings = {
   linksBgType: "none",
   linksBgUrl: null,
   linksOverlayOpacity: 70,
+  linksWindowTitle: "// Welcome to",
+  linksHeadline: "",
+  linksRunBy: "",
+  linksIntro: "",
+  linksCtaLabel: "Contact Now",
+  linksCtaUrl: "/contact",
+  linksShowStatus: true,
+  linksTimezone: "Asia/Jakarta",
+  linksOpenTime: "09:00",
+  linksCloseTime: "17:00",
+  linksOpenDays: "1,2,3,4,5",
+  linksBrands: [],
+  linksBrandSlots: 3,
+  linksBrandCtaUrl: "",
+  linksTags: [],
   navLinks: defaultNavLinks,
   heroEyebrow: "Breaker — Designer — Builder",
   heroIntro:
@@ -157,6 +189,31 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
       typeof row.links_overlay_opacity === "number"
         ? Math.min(100, Math.max(0, row.links_overlay_opacity))
         : 70,
+    linksWindowTitle: row.links_window_title ?? placeholderSettings.linksWindowTitle,
+    linksHeadline: row.links_headline ?? "",
+    linksRunBy: row.links_run_by ?? "",
+    linksIntro: row.links_intro ?? "",
+    linksCtaLabel: row.links_cta_label || placeholderSettings.linksCtaLabel,
+    linksCtaUrl: row.links_cta_url || placeholderSettings.linksCtaUrl,
+    linksShowStatus: row.links_show_status ?? true,
+    linksTimezone: row.links_timezone || placeholderSettings.linksTimezone,
+    linksOpenTime: row.links_open_time || placeholderSettings.linksOpenTime,
+    linksCloseTime: row.links_close_time || placeholderSettings.linksCloseTime,
+    linksOpenDays: row.links_open_days ?? placeholderSettings.linksOpenDays,
+    linksBrands: (row.links_brands ?? [])
+      .filter((brand) => typeof brand?.name === "string" && brand.name)
+      .map((brand) => ({
+        name: brand.name,
+        logoUrl: brand.logoUrl ?? "",
+        note: brand.note ?? "",
+        url: brand.url ?? "",
+      })),
+    linksBrandSlots:
+      typeof row.links_brand_slots === "number"
+        ? Math.min(6, Math.max(0, row.links_brand_slots))
+        : 3,
+    linksBrandCtaUrl: row.links_brand_cta_url ?? "",
+    linksTags: row.links_tags ?? [],
     heroOverlayOpacity:
       typeof row.hero_overlay_opacity === "number"
         ? Math.min(100, Math.max(0, row.hero_overlay_opacity))

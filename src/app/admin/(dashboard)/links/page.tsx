@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { createLinkItem } from "@/lib/admin/links-actions";
+import { getSiteSettings } from "@/lib/data/site-settings";
 import { fieldInputClasses } from "@/components/admin/Field";
-import LinkItemsList from "@/components/admin/LinkItemsList";
+import LinkItemsList, { SECTION_LIST_ID } from "@/components/admin/LinkItemsList";
+import LinksStudioPanel from "@/components/admin/LinksStudioPanel";
 import PageHeader from "@/components/admin/PageHeader";
 import EmptyState from "@/components/admin/EmptyState";
 import SubmitButton from "@/components/admin/SubmitButton";
@@ -9,18 +11,21 @@ import type { LinkItemRow } from "@/lib/supabase/types";
 
 export default async function AdminLinksPage() {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("link_page_items")
-    .select("*")
-    .order("sort_order", { ascending: true });
+  const [{ data }, settings] = await Promise.all([
+    supabase.from("link_page_items").select("*").order("sort_order", { ascending: true }),
+    getSiteSettings(),
+  ]);
 
   const items = (data as LinkItemRow[]) ?? [];
+  const sections = [
+    ...new Set(items.map((item) => item.section?.trim()).filter((s): s is string => Boolean(s))),
+  ];
 
   return (
     <div>
       <PageHeader
         title="Links page"
-        description="The link-in-bio page at /links — drop that URL in your Instagram or TikTok bio. Name, avatar, and socials come from Profile; the accent color from Site Settings."
+        description="The link-in-bio page at /links — drop that URL in your Instagram or TikTok bio. Buttons are grouped under their section heading. Give a button the Shop tab to split it out; the tab bar only appears once something is in Shop."
         action={
           <a
             href="/links"
@@ -33,17 +38,36 @@ export default async function AdminLinksPage() {
         }
       />
 
+      <LinksStudioPanel settings={settings} />
+
+      <datalist id={SECTION_LIST_ID}>
+        {sections.map((section) => (
+          <option key={section} value={section} />
+        ))}
+      </datalist>
+
       <form
         action={createLinkItem}
-        className="mb-10 grid grid-cols-2 items-end gap-3 border border-line p-4 lg:grid-cols-[3rem_1fr_1.4fr_1fr_auto_auto]"
+        className="mb-10 grid grid-cols-2 items-end gap-3 border border-line p-4 lg:grid-cols-[3rem_1fr_1.3fr_1fr_6rem_8rem_auto_auto]"
       >
         <input name="emoji" placeholder="⚡" aria-label="Emoji" className={`${fieldInputClasses} text-center`} />
         <input name="label" required placeholder="Button label" aria-label="Label" className={fieldInputClasses} />
         <input name="url" required placeholder="https://… or /work" aria-label="URL" className={fieldInputClasses} />
-        <input name="description" placeholder="Small sub-line (optional)" aria-label="Description" className={fieldInputClasses} />
+        <input name="description" placeholder="Sub-line (optional)" aria-label="Description" className={fieldInputClasses} />
+        <select name="tab" defaultValue="links" aria-label="Tab" className={fieldInputClasses}>
+          <option value="links">Links</option>
+          <option value="shop">Shop</option>
+        </select>
+        <input
+          name="section"
+          list={SECTION_LIST_ID}
+          placeholder="Group heading"
+          aria-label="Section"
+          className={fieldInputClasses}
+        />
         <label className="flex items-center gap-2 pb-3 font-mono text-label uppercase tracking-[0.1em] text-ink-muted">
           <input type="checkbox" name="highlight" className="h-4 w-4 accent-accent" />
-          Accent
+          Ring
         </label>
         <SubmitButton pendingLabel="Adding…">Add link</SubmitButton>
       </form>
