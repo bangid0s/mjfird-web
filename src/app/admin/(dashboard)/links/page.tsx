@@ -25,7 +25,7 @@ export default async function AdminLinksPage() {
     <div>
       <PageHeader
         title="Links page"
-        description="The link-in-bio page at /links — drop that URL in your Instagram or TikTok bio. Buttons are grouped under their section heading and split across the Links and Shop tabs; Reviews come from Testimonials and About from Profile."
+        description="The link-in-bio page at /links — drop that URL in your Instagram or TikTok bio. Buttons are grouped under their section heading. Give a button the Shop tab to split it out; the tab bar only appears once something is in Shop."
         action={
           <a
             href="/links"

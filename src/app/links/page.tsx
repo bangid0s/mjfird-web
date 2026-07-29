@@ -4,7 +4,6 @@ import { Silkscreen } from "next/font/google";
 import { getProfile } from "@/lib/data/profile";
 import { getLinkItems } from "@/lib/data/links";
 import { getSiteSettings } from "@/lib/data/site-settings";
-import { getTestimonials } from "@/lib/data/testimonials";
 import { SITE_HOST } from "@/lib/site-url";
 import { getStudioStatus, parseOpenDays, type StudioHours } from "@/lib/studio-hours";
 import ThemeToggle from "@/components/ui/ThemeToggle";
@@ -29,11 +28,10 @@ export const metadata: Metadata = {
 };
 
 export default async function LinksPage() {
-  const [profile, links, settings, testimonials] = await Promise.all([
+  const [profile, links, settings] = await Promise.all([
     getProfile(),
     getLinkItems(),
     getSiteSettings(),
-    getTestimonials(),
   ]);
 
   const headline =
@@ -51,7 +49,8 @@ export default async function LinksPage() {
   const linkItems = links.filter((item) => item.tab === "links");
   const shopItems = links.filter((item) => item.tab === "shop");
 
-  // Only offer a tab when there's something behind it.
+  // Only offer a tab when there's something behind it; with a single tab the
+  // bar hides itself and the panel just renders.
   const tabs: LinksTab[] = [];
   const panels: Record<string, React.ReactNode> = {};
 
@@ -62,61 +61,6 @@ export default async function LinksPage() {
   if (shopItems.length > 0) {
     tabs.push({ id: "shop", label: "Shop" });
     panels.shop = <LinkList items={shopItems} />;
-  }
-  if (testimonials.length > 0) {
-    tabs.push({ id: "reviews", label: "Reviews" });
-    panels.reviews = (
-      <ul className="flex flex-col gap-3">
-        {testimonials.map((testimonial, i) => (
-          <li key={`${testimonial.name}-${i}`} className="rounded-2xl bg-bg-raised p-5">
-            <p className="font-body text-body-sm leading-relaxed text-ink">
-              &ldquo;{testimonial.quote}&rdquo;
-            </p>
-            <p className="mt-3 font-mono text-label uppercase tracking-[0.15em] text-ink-faint">
-              {testimonial.name}
-              {testimonial.role && <span className="text-ink-faint/70"> — {testimonial.role}</span>}
-            </p>
-          </li>
-        ))}
-      </ul>
-    );
-  }
-  if (profile.bio || settings.aboutSkills.length > 0) {
-    tabs.push({ id: "about", label: "About" });
-    panels.about = (
-      <div className="flex flex-col gap-5">
-        {profile.bio && (
-          <p className="font-body text-body-sm leading-relaxed text-ink-muted">{profile.bio}</p>
-        )}
-        {settings.aboutSkills.length > 0 && (
-          <ul className="flex flex-wrap gap-2">
-            {settings.aboutSkills.map((skill) => (
-              <li
-                key={skill}
-                className="rounded-lg bg-bg-raised px-3 py-1.5 font-mono text-label text-ink-muted"
-              >
-                {skill}
-              </li>
-            ))}
-          </ul>
-        )}
-        {profile.socials.length > 0 && (
-          <div className="flex flex-wrap gap-x-6 gap-y-2">
-            {profile.socials.map((social) => (
-              <a
-                key={social.url}
-                href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted transition-colors hover:text-accent"
-              >
-                {social.label} →
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-    );
   }
 
   return (
@@ -215,12 +159,14 @@ export default async function LinksPage() {
         {/* Window status bar */}
         <div className="flex items-center justify-between gap-4 border-t border-line px-5 py-3.5 sm:px-6">
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-2">
-              <kbd className="rounded bg-bg-raised px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">
-                ← →
-              </kbd>
-              <span className="font-mono text-label text-ink-faint">Navigate</span>
-            </span>
+            {tabs.length > 1 && (
+              <span className="flex items-center gap-2">
+                <kbd className="rounded bg-bg-raised px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">
+                  ← →
+                </kbd>
+                <span className="font-mono text-label text-ink-faint">Navigate</span>
+              </span>
+            )}
             <span className="hidden items-center gap-2 sm:flex">
               <kbd className="rounded bg-bg-raised px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">
                 ESC

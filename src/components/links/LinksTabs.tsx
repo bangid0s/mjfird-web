@@ -47,6 +47,9 @@ export default function LinksTabs({
     focusTab(tabs[next].id);
   };
 
+  // A single tab is just a heading for itself — render the panel bare.
+  if (tabs.length === 1) return <>{panels[tabs[0].id]}</>;
+
   return (
     <div className="flex flex-col gap-6">
       <div role="tablist" aria-label="Links sections" className="flex flex-wrap gap-2">
