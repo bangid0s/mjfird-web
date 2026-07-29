@@ -154,6 +154,25 @@ export default async function LinksPage() {
               ))}
             </ul>
           )}
+
+          {profile.socials.length > 0 && (
+            <nav
+              aria-label="Social profiles"
+              className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line pt-4"
+            >
+              {profile.socials.map((social) => (
+                <a
+                  key={social.url}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-accent"
+                >
+                  {social.label} ↗
+                </a>
+              ))}
+            </nav>
+          )}
         </div>
 
         {/* Window status bar */}
