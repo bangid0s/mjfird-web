@@ -7,6 +7,7 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 import { SITE_HOST } from "@/lib/site-url";
 import { getStudioStatus, parseOpenDays, type StudioHours } from "@/lib/studio-hours";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import Avatar from "@/components/ui/Avatar";
 import HeroMedia from "@/components/hero/HeroMedia";
 import StudioStatusBar from "@/components/links/StudioStatus";
 import LinksTabs, { type LinksTab } from "@/components/links/LinksTabs";
@@ -93,11 +94,11 @@ export default async function LinksPage() {
           {/* Identity */}
           <section className="flex flex-col gap-5 rounded-2xl bg-bg-raised p-5 sm:flex-row sm:gap-6">
             {profile.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Avatar
                 src={profile.avatarUrl}
                 alt={profile.name}
-                className="h-28 w-28 shrink-0 rounded-xl border border-line object-cover sm:h-36 sm:w-36"
+                sizes="144px"
+                className="h-28 w-28 shrink-0 rounded-xl border border-line sm:h-36 sm:w-36"
               />
             ) : (
               <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl border border-line bg-bg font-[family-name:var(--font-silkscreen)] text-2xl text-accent sm:h-36 sm:w-36">
