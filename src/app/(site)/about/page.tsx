@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Avatar from "@/components/ui/Avatar";
 import SectionHeader from "@/components/ui/SectionHeader";
 import MagneticButton from "@/components/ui/MagneticButton";
 import { getProfile } from "@/lib/data/profile";
@@ -17,15 +17,12 @@ export default async function AboutPage() {
     <div>
       <div className="mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:grid-cols-[1fr_1.2fr] sm:px-10">
         {profile.avatarUrl ? (
-          <div className="relative aspect-[4/5] w-full">
-            <Image
-              src={profile.avatarUrl}
-              alt={profile.name}
-              fill
-              sizes="(min-width: 640px) 40vw, 100vw"
-              className="object-cover"
-            />
-          </div>
+          <Avatar
+            src={profile.avatarUrl}
+            alt={profile.name}
+            sizes="(min-width: 640px) 40vw, 100vw"
+            className="aspect-[4/5] w-full"
+          />
         ) : (
           <div className="aspect-[4/5] w-full bg-gradient-to-br from-bg-raised to-bg-raised-2" />
         )}

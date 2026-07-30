@@ -106,6 +106,16 @@ export function SettingsIcon(props: IconProps) {
   );
 }
 
+export function MediaIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <path d="m21 15-5-5L5 21" />
+    </Icon>
+  );
+}
+
 export function LinkIcon(props: IconProps) {
   return (
     <Icon {...props}>
