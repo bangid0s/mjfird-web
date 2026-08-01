@@ -136,6 +136,15 @@ export type SiteSettingsRow = {
   logo_type: "text" | "image";
   logo_text: string;
   favicon_url: string | null;
+  share_image_mode: "auto" | "custom";
+  share_image_url: string | null;
+  share_title: string;
+  share_description: string;
+  share_card_eyebrow: string;
+  share_card_headline: string;
+  share_card_bg_url: string | null;
+  share_card_overlay_opacity: number;
+  share_twitter_handle: string;
   hero_media_type: "none" | "image" | "video" | "youtube";
   hero_media_url: string | null;
   hero_media_urls: { url: string; alt?: string }[];

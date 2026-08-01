@@ -13,6 +13,17 @@ export type SiteSettings = {
   logoType: "text" | "image";
   logoText: string;
   faviconUrl: string | null;
+  shareImageMode: "auto" | "custom";
+  shareImageUrl: string | null;
+  shareTitle: string;
+  shareDescription: string;
+  shareCardEyebrow: string;
+  shareCardHeadline: string;
+  shareCardBgUrl: string | null;
+  shareCardOverlayOpacity: number;
+  shareTwitterHandle: string;
+  /** Bumped on every save — used to cache-bust the share image on social platforms. */
+  updatedAt: string;
   heroMediaType: "none" | "image" | "video" | "youtube";
   heroMediaUrl: string | null;
   heroMediaUrls: string[];
@@ -86,6 +97,16 @@ const placeholderSettings: SiteSettings = {
   logoType: "text",
   logoText: "MJFIRD",
   faviconUrl: null,
+  shareImageMode: "auto",
+  shareImageUrl: null,
+  shareTitle: "",
+  shareDescription: "",
+  shareCardEyebrow: "",
+  shareCardHeadline: "",
+  shareCardBgUrl: null,
+  shareCardOverlayOpacity: 55,
+  shareTwitterHandle: "",
+  updatedAt: "",
   heroMediaType: "none",
   heroMediaUrl: null,
   heroMediaUrls: [],
@@ -171,6 +192,19 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     logoType: row.logo_type ?? "text",
     logoText: row.logo_text || "MJFIRD",
     faviconUrl: row.favicon_url,
+    shareImageMode: row.share_image_mode === "custom" ? "custom" : "auto",
+    shareImageUrl: row.share_image_url || null,
+    shareTitle: row.share_title ?? "",
+    shareDescription: row.share_description ?? "",
+    shareCardEyebrow: row.share_card_eyebrow ?? "",
+    shareCardHeadline: row.share_card_headline ?? "",
+    shareCardBgUrl: row.share_card_bg_url || null,
+    shareCardOverlayOpacity:
+      typeof row.share_card_overlay_opacity === "number"
+        ? Math.min(100, Math.max(0, row.share_card_overlay_opacity))
+        : 55,
+    shareTwitterHandle: row.share_twitter_handle ?? "",
+    updatedAt: row.updated_at ?? "",
     heroMediaType: row.hero_media_type ?? "none",
     heroMediaUrl: row.hero_media_url,
     heroMediaUrls: (row.hero_media_urls ?? []).map((item) => item.url).filter(Boolean),

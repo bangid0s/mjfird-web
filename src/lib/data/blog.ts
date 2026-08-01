@@ -12,6 +12,7 @@ function mapRow(row: BlogPostRow): Post {
     readTime: row.read_time ?? "",
     body: (row.body as string[]) ?? [],
     cover: row.cover_image ?? undefined,
+    ogImage: row.og_image ?? undefined,
   };
 }
 

@@ -20,6 +20,7 @@ function parsePayload(formData: FormData) {
       .map((p) => p.trim())
       .filter(Boolean),
     cover_image: normalizeMediaUrl(String(formData.get("cover_image") ?? "")) || null,
+    og_image: normalizeMediaUrl(String(formData.get("og_image") ?? "")) || null,
     tags: String(formData.get("tags") ?? "")
       .split(",")
       .map((t) => t.trim())

@@ -48,6 +48,7 @@ function parsePayload(formData: FormData) {
     template: String(formData.get("template") ?? "editorial") as CaseStudyTemplate,
     cover_image: normalizeMediaUrl(String(formData.get("cover_image") ?? "")) || null,
     cover_focal_point: parseFocalPoint(String(formData.get("cover_focal_point") ?? "")),
+    og_image: normalizeMediaUrl(String(formData.get("og_image") ?? "")) || null,
     gallery: parseGallery(String(formData.get("gallery") ?? "")),
     narrative: {
       context: String(formData.get("narrative_context") ?? ""),

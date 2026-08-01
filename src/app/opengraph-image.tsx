@@ -1,38 +1,35 @@
 import { ImageResponse } from "next/og";
+import { getSiteSettings } from "@/lib/data/site-settings";
+import { fetchImageData, shareCard, OG_SIZE } from "@/lib/og-card";
+import { shareCardEyebrow, shareCardHeadline } from "@/lib/social-share";
+import { SITE_HOST } from "@/lib/site-url";
 
-export const size = { width: 1200, height: 630 };
+// The site-wide link-preview thumbnail, drawn from the settings in
+// /admin/settings → "Link preview". The <meta> tag is emitted by
+// src/lib/social-share.ts (which also handles the "upload your own image" case),
+// not by this file convention — see the note there.
+
+export const size = OG_SIZE;
 export const contentType = "image/png";
 
+// Saving in the admin redraws this immediately (revalidatePath); the window is
+// the safety net for settings edited straight in the Supabase dashboard, same as
+// the public pages.
+export const revalidate = 60;
+
 export default async function OgImage() {
+  const settings = await getSiteSettings();
+  const background = await fetchImageData(settings.shareCardBgUrl);
+
   return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          background: "#0c0b0d",
-          color: "#f5f1e8",
-          padding: "72px",
-          fontFamily: "sans-serif",
-        }}
-      >
-        <div style={{ display: "flex", width: 64, height: 10, background: "#ff2e88" }} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "flex", fontSize: 24, letterSpacing: 4, textTransform: "uppercase", color: "#ff2e88" }}>
-            Breaker — Designer — Builder
-          </div>
-          <div style={{ display: "flex", fontSize: 120, fontWeight: 800, textTransform: "uppercase" }}>
-            MJFIRD
-          </div>
-        </div>
-        <div style={{ display: "flex", fontSize: 22, color: "#9a9499", letterSpacing: 2, textTransform: "uppercase" }}>
-          MJFIRD.COM
-        </div>
-      </div>
-    ),
+    shareCard({
+      eyebrow: shareCardEyebrow(settings),
+      headline: shareCardHeadline(settings),
+      host: SITE_HOST,
+      accent: settings.accentColor,
+      background,
+      overlay: settings.shareCardOverlayOpacity,
+    }),
     { ...size },
   );
 }

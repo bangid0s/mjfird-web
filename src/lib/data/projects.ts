@@ -15,6 +15,7 @@ function mapRow(row: ProjectRow): Project {
     template: row.template,
     featured: row.featured,
     cover: row.cover_image ?? "/placeholder/project-01.jpg",
+    ogImage: row.og_image ?? undefined,
     gallery: row.gallery ?? [],
     narrative: {
       context: row.narrative?.context ?? "",

@@ -25,7 +25,13 @@ export async function generateMetadata({
   return {
     title: project.title,
     description: project.hook,
-    openGraph: { title: project.title, description: project.hook },
+    openGraph: {
+      title: project.title,
+      description: project.hook,
+      // Only set when the project has its own share image — leaving the key off
+      // lets the generated card in opengraph-image.tsx take over.
+      ...(project.ogImage && { images: [{ url: project.ogImage, alt: project.title }] }),
+    },
   };
 }
 
