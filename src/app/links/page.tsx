@@ -6,6 +6,7 @@ import { getLinkItems } from "@/lib/data/links";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { SITE_HOST } from "@/lib/site-url";
 import { getStudioStatus, parseOpenDays, type StudioHours } from "@/lib/studio-hours";
+import Analytics from "@/components/analytics/Analytics";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import Avatar from "@/components/ui/Avatar";
 import HeroMedia from "@/components/hero/HeroMedia";
@@ -199,6 +200,8 @@ export default async function LinksPage() {
           <FooterClock />
         </div>
       </main>
+
+      <Analytics measurementId={settings.gaMeasurementId} />
     </div>
   );
 }
