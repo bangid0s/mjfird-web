@@ -5,7 +5,9 @@ import HeroMediaPicker from "@/components/admin/HeroMediaPicker";
 import ImageUploader from "@/components/admin/ImageUploader";
 import LogoPicker from "@/components/admin/LogoPicker";
 import LinksBgPicker from "@/components/admin/LinksBgPicker";
+import SharePicker from "@/components/admin/SharePicker";
 import { defaultNavLinks } from "@/lib/data/site-settings";
+import { SITE_HOST } from "@/lib/site-url";
 import PageHeader from "@/components/admin/PageHeader";
 import type { SiteSettingsRow } from "@/lib/supabase/types";
 import SubmitButton from "@/components/admin/SubmitButton";
@@ -97,6 +99,34 @@ export default async function AdminSettingsPage({
             label="Favicon (browser tab icon — square PNG or SVG, at least 64×64)"
             initialUrl={settings?.favicon_url}
             accept="image/png,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,image/jpeg,image/webp"
+          />
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
+          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">
+            Link preview — X, WhatsApp, LinkedIn, Slack
+          </legend>
+          <p className="font-mono text-label text-ink-faint">
+            The thumbnail and text that show up when {SITE_HOST} is pasted anywhere. Projects and
+            blog posts can override the image individually — the field sits at the bottom of their
+            edit page.
+          </p>
+
+          <SharePicker
+            initialMode={settings?.share_image_mode}
+            initialImageUrl={settings?.share_image_url}
+            initialTitle={settings?.share_title}
+            initialDescription={settings?.share_description}
+            initialEyebrow={settings?.share_card_eyebrow}
+            initialHeadline={settings?.share_card_headline}
+            initialBgUrl={settings?.share_card_bg_url}
+            initialOverlay={settings?.share_card_overlay_opacity}
+            initialHandle={settings?.share_twitter_handle}
+            fallbackTitle={settings?.site_title ?? ""}
+            fallbackDescription={settings?.site_description ?? ""}
+            fallbackEyebrow={settings?.hero_eyebrow ?? ""}
+            fallbackHeadline={settings?.logo_text || "MJFIRD"}
+            host={SITE_HOST}
           />
         </fieldset>
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Big_Shoulders, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { getSiteSettings } from "@/lib/data/site-settings";
+import { shareMetadata } from "@/lib/social-share";
 import { SITE_URL } from "@/lib/site-url";
 
 // ISR window for public pages: admin saves revalidate instantly via
@@ -43,11 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
         apple: settings.faviconUrl,
       },
     }),
-    openGraph: {
-      title: settings.siteTitle,
-      description: settings.siteDescription,
-      type: "website",
-    },
+    ...shareMetadata(settings),
   };
 }
 

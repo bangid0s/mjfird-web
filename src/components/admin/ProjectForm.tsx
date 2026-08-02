@@ -116,6 +116,17 @@ export default function ProjectForm({
         </Field>
       </fieldset>
 
+      <fieldset className="flex flex-col gap-6 border-t border-line pt-6">
+        <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
+          Link preview — X, WhatsApp, LinkedIn
+        </legend>
+        <ImageUploader
+          name="og_image"
+          label="Share image — 1200 × 630. Leave empty to use the branded card built from the project title."
+          initialUrl={project?.og_image}
+        />
+      </fieldset>
+
       <label className="flex items-center gap-3">
         <input type="checkbox" name="featured" defaultChecked={project?.featured} className="h-4 w-4 accent-accent" />
         <span className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted">

@@ -9,6 +9,8 @@ export type Project = {
   template: "editorial" | "immersive" | "systems";
   featured: boolean;
   cover: string;
+  /** Custom link-preview thumbnail; falls back to the generated card. */
+  ogImage?: string;
   gallery?: { url: string; alt?: string }[];
   narrative: {
     context: string;
@@ -159,6 +161,8 @@ export type Post = {
   readTime: string;
   body: string[];
   cover?: string;
+  /** Custom link-preview thumbnail; falls back to the generated card. */
+  ogImage?: string;
 };
 
 export const posts: Post[] = [

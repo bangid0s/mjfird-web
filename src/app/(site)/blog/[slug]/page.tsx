@@ -24,7 +24,17 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = await getPost(slug);
   if (!post) return {};
-  return { title: post.title, description: post.excerpt };
+  return {
+    title: post.title,
+    description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      // Only set when the post has its own share image — leaving the key off
+      // lets the generated card in opengraph-image.tsx take over.
+      ...(post.ogImage && { images: [{ url: post.ogImage, alt: post.title }] }),
+    },
+  };
 }
 
 export default async function PostPage({

@@ -56,6 +56,17 @@ export default function BlogForm({
         </Field>
       </div>
 
+      <fieldset className="flex flex-col gap-6 border-t border-line pt-6">
+        <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
+          Link preview — X, WhatsApp, LinkedIn
+        </legend>
+        <ImageUploader
+          name="og_image"
+          label="Share image — 1200 × 630. Leave empty to use the branded card built from the post title."
+          initialUrl={post?.og_image}
+        />
+      </fieldset>
+
       <Field label="Status">
         <select
           name="status"

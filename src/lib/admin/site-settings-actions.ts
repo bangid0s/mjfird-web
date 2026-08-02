@@ -81,6 +81,19 @@ export async function saveSiteSettings(formData: FormData) {
     logo_type: String(formData.get("logo_type") ?? "text"),
     logo_text: String(formData.get("logo_text") ?? "") || "MJFIRD",
     favicon_url: String(formData.get("favicon_url") ?? "") || null,
+    // Link preview — see src/lib/social-share.ts for how these become meta tags.
+    share_image_mode: String(formData.get("share_image_mode") ?? "auto") === "custom" ? "custom" : "auto",
+    share_image_url: normalizeMediaUrl(String(formData.get("share_image_url") ?? "")) || null,
+    share_title: String(formData.get("share_title") ?? ""),
+    share_description: String(formData.get("share_description") ?? ""),
+    share_card_eyebrow: String(formData.get("share_card_eyebrow") ?? ""),
+    share_card_headline: String(formData.get("share_card_headline") ?? ""),
+    share_card_bg_url: normalizeMediaUrl(String(formData.get("share_card_bg_url") ?? "")) || null,
+    share_card_overlay_opacity: Math.min(
+      100,
+      Math.max(0, Number(formData.get("share_card_overlay_opacity") ?? 55) || 0),
+    ),
+    share_twitter_handle: String(formData.get("share_twitter_handle") ?? "").trim(),
     hero_media_type: String(formData.get("hero_media_type") ?? "none"),
     hero_media_url: normalizeMediaUrl(String(formData.get("hero_media_url") ?? "")) || null,
     hero_media_urls: parseMediaList(String(formData.get("hero_media_urls") ?? "[]")),
@@ -141,5 +154,7 @@ export async function saveSiteSettings(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
+  // The generated share card is its own route, so redraw it with the new settings.
+  revalidatePath("/opengraph-image");
   redirect("/admin/settings?saved=1");
 }
