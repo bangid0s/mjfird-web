@@ -145,6 +145,7 @@ export type SiteSettingsRow = {
   share_card_bg_url: string | null;
   share_card_overlay_opacity: number;
   share_twitter_handle: string;
+  ga_measurement_id: string;
   hero_media_type: "none" | "image" | "video" | "youtube";
   hero_media_url: string | null;
   hero_media_urls: { url: string; alt?: string }[];

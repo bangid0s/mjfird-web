@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeMediaUrl } from "@/lib/media";
+import { normalizeGaId } from "@/lib/analytics";
 
 function parseMediaList(raw: string): { url: string; alt: string }[] {
   try {
@@ -94,6 +95,7 @@ export async function saveSiteSettings(formData: FormData) {
       Math.max(0, Number(formData.get("share_card_overlay_opacity") ?? 55) || 0),
     ),
     share_twitter_handle: String(formData.get("share_twitter_handle") ?? "").trim(),
+    ga_measurement_id: normalizeGaId(String(formData.get("ga_measurement_id") ?? "")),
     hero_media_type: String(formData.get("hero_media_type") ?? "none"),
     hero_media_url: normalizeMediaUrl(String(formData.get("hero_media_url") ?? "")) || null,
     hero_media_urls: parseMediaList(String(formData.get("hero_media_urls") ?? "[]")),

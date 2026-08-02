@@ -7,6 +7,7 @@ import LogoPicker from "@/components/admin/LogoPicker";
 import LinksBgPicker from "@/components/admin/LinksBgPicker";
 import SharePicker from "@/components/admin/SharePicker";
 import { defaultNavLinks } from "@/lib/data/site-settings";
+import { isValidGaId } from "@/lib/analytics";
 import { SITE_HOST } from "@/lib/site-url";
 import PageHeader from "@/components/admin/PageHeader";
 import type { SiteSettingsRow } from "@/lib/supabase/types";
@@ -36,6 +37,8 @@ export default async function AdminSettingsPage({
     .join("\n");
   const processStepsText =
     settings?.process_steps?.map((s) => `${s.title}|${s.description}`).join("\n") ?? "";
+  const gaId = settings?.ga_measurement_id ?? "";
+  const gaIdLooksValid = isValidGaId(gaId);
 
   return (
     <div className="max-w-2xl">
@@ -128,6 +131,32 @@ export default async function AdminSettingsPage({
             fallbackHeadline={settings?.logo_text || "MJFIRD"}
             host={SITE_HOST}
           />
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
+          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">
+            Analytics
+          </legend>
+
+          <Field label="Google Analytics measurement ID">
+            <input
+              name="ga_measurement_id"
+              defaultValue={settings?.ga_measurement_id ?? ""}
+              placeholder="G-XXXXXXXXXX"
+              className={fieldInputClasses}
+            />
+          </Field>
+          {gaId && !gaIdLooksValid && (
+            <p className="font-mono text-label text-error">
+              That doesn’t look like a measurement ID — they start with “G-”. Tracking stays off
+              until it does.
+            </p>
+          )}
+          <p className="font-mono text-label text-ink-faint">
+            Google Analytics → Admin → Data streams → your web stream. Leave it blank to switch
+            tracking off. Only public pages report — the admin is never tracked, and nothing is
+            sent while the site runs locally in dev.
+          </p>
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">

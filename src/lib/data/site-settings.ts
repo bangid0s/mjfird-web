@@ -22,6 +22,7 @@ export type SiteSettings = {
   shareCardBgUrl: string | null;
   shareCardOverlayOpacity: number;
   shareTwitterHandle: string;
+  gaMeasurementId: string;
   /** Bumped on every save — used to cache-bust the share image on social platforms. */
   updatedAt: string;
   heroMediaType: "none" | "image" | "video" | "youtube";
@@ -106,6 +107,7 @@ const placeholderSettings: SiteSettings = {
   shareCardBgUrl: null,
   shareCardOverlayOpacity: 55,
   shareTwitterHandle: "",
+  gaMeasurementId: "",
   updatedAt: "",
   heroMediaType: "none",
   heroMediaUrl: null,
@@ -204,6 +206,7 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
         ? Math.min(100, Math.max(0, row.share_card_overlay_opacity))
         : 55,
     shareTwitterHandle: row.share_twitter_handle ?? "",
+    gaMeasurementId: row.ga_measurement_id ?? "",
     updatedAt: row.updated_at ?? "",
     heroMediaType: row.hero_media_type ?? "none",
     heroMediaUrl: row.hero_media_url,

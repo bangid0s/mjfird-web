@@ -25,13 +25,17 @@ browsable out of the box. `/admin` requires real Supabase credentials (see below
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. Run the migrations in `supabase/migrations/` against it **in order** (SQL editor, or
-   `supabase db push` if you have the CLI linked) — `0001` through `0015`.
+   `supabase db push` if you have the CLI linked) — `0001` through `0016`.
 3. Copy `.env.local.example` to `.env.local` and fill in the Supabase URL/anon key from
    Project Settings → API.
 4. Create yourself an admin user under Authentication → Users (email + password) —
    there's no public sign-up, any authenticated user can manage the site.
 5. Restart the dev server. Public pages now read from Supabase (falling back to the
    placeholder data if a table is empty); `/admin` is live once you sign in.
+
+Google Analytics needs no environment variable — paste the GA4 measurement ID into
+`/admin/settings` → Analytics and save. It loads on public pages only, and never in
+`npm run dev`.
 
 Optional: set `RESEND_API_KEY` to email yourself on new inquiries, and
 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` to add bot protection to the
