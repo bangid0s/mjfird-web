@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { getYouTubeId, youTubeEmbedUrl } from "@/lib/youtube";
 import { cn } from "@/lib/cn";
@@ -12,20 +11,25 @@ const ANIMATION_CLASS: Record<string, string> = {
   pulse: "motion-safe:animate-hero-pulse",
 };
 
+// The slideshow is driven from outside (see Hero.tsx) so the hero copy can change
+// with the image. Callers with a single background — /links — just leave
+// activeIndex and onGoTo off.
 export default function HeroMedia({
   type,
   url,
-  urls,
+  images,
+  activeIndex = 0,
+  onGoTo,
   overlayOpacity = 60,
   animation = "none",
-  slideDuration = 5,
 }: {
   type: "image" | "video" | "youtube";
   url: string;
-  urls?: string[];
+  images?: string[];
+  activeIndex?: number;
+  onGoTo?: (index: number) => void;
   overlayOpacity?: number;
   animation?: "none" | "zoom" | "drift" | "pulse";
-  slideDuration?: number;
 }) {
   const reducedMotion = usePrefersReducedMotion();
   // A YouTube link pasted into the "video" slot still plays as a background embed.
@@ -33,24 +37,14 @@ export default function HeroMedia({
   const isUploadedVideo = type === "video" && !youTubeId;
 
   // Image mode: use the slideshow list when present, else the single URL.
-  const images = type === "image" ? (urls?.length ? urls : url ? [url] : []) : [];
-  const [slide, setSlide] = useState(0);
-  const hasSlides = type === "image" && images.length > 1;
-
-  useEffect(() => {
-    if (!hasSlides || reducedMotion) return;
-    // setTimeout keyed on `slide` (below) so manual navigation also resets the
-    // countdown — each image gets its full on-screen duration after a click.
-    const id = setTimeout(() => {
-      setSlide((current) => (current + 1) % images.length);
-    }, Math.max(1, slideDuration) * 1000);
-    return () => clearTimeout(id);
-  }, [hasSlides, images.length, reducedMotion, slideDuration, slide]);
+  const slides = type === "image" ? (images?.length ? images : url ? [url] : []) : [];
+  const hasSlides = slides.length > 1 && Boolean(onGoTo);
+  const current = Math.min(Math.max(activeIndex, 0), Math.max(slides.length - 1, 0));
 
   if (type === "youtube" && !youTubeId) return null;
-  if (type === "image" && images.length === 0) return null;
+  if (type === "image" && slides.length === 0) return null;
 
-  const goTo = (index: number) => setSlide((index + images.length) % images.length);
+  const goTo = (index: number) => onGoTo?.((index + slides.length) % slides.length);
 
   return (
     <>
@@ -94,7 +88,7 @@ export default function HeroMedia({
       )}
 
       {type === "image" &&
-        images.map((imageUrl, i) => (
+        slides.map((imageUrl, i) => (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={`${imageUrl}-${i}`}
@@ -103,7 +97,7 @@ export default function HeroMedia({
             className={cn(
               "absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-[var(--ease-freeze)]",
               ANIMATION_CLASS[animation] ?? "",
-              i === slide ? "opacity-100" : "opacity-0",
+              i === current ? "opacity-100" : "opacity-0",
             )}
           />
         ))}
@@ -123,7 +117,7 @@ export default function HeroMedia({
       <div className="pointer-events-none absolute inset-0 z-10">
         <button
           type="button"
-          onClick={() => goTo(slide - 1)}
+          onClick={() => goTo(current - 1)}
           aria-label="Previous slide"
           className="pointer-events-auto absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg/50 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg/80 sm:left-6"
         >
@@ -131,23 +125,23 @@ export default function HeroMedia({
         </button>
         <button
           type="button"
-          onClick={() => goTo(slide + 1)}
+          onClick={() => goTo(current + 1)}
           aria-label="Next slide"
           className="pointer-events-auto absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg/50 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg/80 sm:right-6"
         >
           ›
         </button>
         <div className="pointer-events-auto absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2.5">
-          {images.map((_, i) => (
+          {slides.map((_, i) => (
             <button
               key={i}
               type="button"
               onClick={() => goTo(i)}
               aria-label={`Go to slide ${i + 1}`}
-              aria-current={i === slide}
+              aria-current={i === current}
               className={cn(
                 "h-2 rounded-full transition-all duration-[var(--duration-fast)]",
-                i === slide ? "w-6 bg-accent" : "w-2 bg-ink/40 hover:bg-ink/70",
+                i === current ? "w-6 bg-accent" : "w-2 bg-ink/40 hover:bg-ink/70",
               )}
             />
           ))}

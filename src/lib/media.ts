@@ -21,6 +21,21 @@ export function mediaThumbnail(url: string) {
   return id ? youTubeThumbnail(id) : url;
 }
 
+// Pull a usable URL out of a drag-and-drop payload. Dragging a link or some
+// selected text (e.g. a YouTube URL from the address bar) lands here as
+// text/uri-list or text/plain — grab the first http(s) address we can find.
+export function urlFromDrop(dt: DataTransfer): string | null {
+  const raw = dt.getData("text/uri-list") || dt.getData("text/plain");
+  if (!raw) return null;
+  const candidate = raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line && !line.startsWith("#"));
+  if (!candidate) return null;
+  const normalized = normalizeMediaUrl(candidate);
+  return /^https?:\/\//i.test(normalized) ? normalized : null;
+}
+
 // Pasted addresses often arrive without a scheme ("example.com/pic.jpg");
 // prefix https:// so they work in <img> and pass startsWith("http") checks.
 export function normalizeMediaUrl(url: string) {

@@ -148,7 +148,16 @@ export type SiteSettingsRow = {
   ga_measurement_id: string;
   hero_media_type: "none" | "image" | "video" | "youtube";
   hero_media_url: string | null;
-  hero_media_urls: { url: string; alt?: string }[];
+  // Hero slides. Everything past `url` is optional per-slide copy that falls
+  // back to the hero_* columns below when blank.
+  hero_media_urls: {
+    url: string;
+    alt?: string;
+    eyebrow?: string;
+    intro?: string;
+    ctaLabel?: string;
+    ctaUrl?: string;
+  }[];
   hero_overlay_opacity: number;
   hero_animation: "none" | "zoom" | "drift" | "pulse";
   hero_slide_duration: number;

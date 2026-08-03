@@ -1,6 +1,4 @@
-import KineticWordmark from "@/components/hero/KineticWordmark";
-import HeroMedia from "@/components/hero/HeroMedia";
-import MagneticButton from "@/components/ui/MagneticButton";
+import Hero from "@/components/hero/Hero";
 import SectionHeader from "@/components/ui/SectionHeader";
 import FeaturedWork from "@/components/work/FeaturedWork";
 import Marquee from "@/components/ui/Marquee";
@@ -35,36 +33,18 @@ export default async function Home() {
           sameAs: profile.socials.map((s) => s.url),
         }}
       />
-      <section className="relative">
-        {settings.heroMediaType !== "none" &&
-          (settings.heroMediaUrl || settings.heroMediaUrls.length > 0) && (
-            <HeroMedia
-              type={settings.heroMediaType}
-              url={settings.heroMediaUrl ?? ""}
-              urls={settings.heroMediaUrls}
-              overlayOpacity={settings.heroOverlayOpacity}
-              animation={settings.heroAnimation}
-              slideDuration={settings.heroSlideDuration}
-            />
-          )}
-        <div className="relative mx-auto flex min-h-[calc(100svh-5rem)] max-w-6xl flex-col justify-center gap-8 px-6 py-20 sm:px-10">
-          <p className="font-mono text-label uppercase tracking-[0.3em] text-ink-muted">
-            {settings.heroEyebrow}
-          </p>
-          <KineticWordmark />
-          <div className="flex flex-col items-start gap-8 sm:flex-row sm:items-end sm:justify-between">
-            <p className="max-w-md font-body text-body-lg text-ink-muted">{settings.heroIntro}</p>
-            <div className="flex gap-4">
-              <MagneticButton href="/work" cursorLabel="view">
-                {settings.heroCtaPrimary}
-              </MagneticButton>
-              <MagneticButton href="/contact" variant="secondary" cursorLabel="view">
-                {settings.heroCtaSecondary}
-              </MagneticButton>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Hero
+        mediaType={settings.heroMediaType}
+        mediaUrl={settings.heroMediaUrl ?? ""}
+        slides={settings.heroSlides}
+        overlayOpacity={settings.heroOverlayOpacity}
+        animation={settings.heroAnimation}
+        slideDuration={settings.heroSlideDuration}
+        eyebrow={settings.heroEyebrow}
+        intro={settings.heroIntro}
+        ctaPrimary={settings.heroCtaPrimary}
+        ctaSecondary={settings.heroCtaSecondary}
+      />
 
       <Marquee items={settings.marqueeItems} />
 

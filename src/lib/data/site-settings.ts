@@ -4,6 +4,19 @@ import type { SiteSettingsRow } from "@/lib/supabase/types";
 
 export type LinkBrand = { name: string; logoUrl: string; note: string; url: string };
 
+/**
+ * One image in the homepage hero slider. The copy fields are per-slide
+ * overrides — blank means "use the hero's own eyebrow / intro / button".
+ */
+export type HeroSlide = {
+  url: string;
+  alt: string;
+  eyebrow: string;
+  intro: string;
+  ctaLabel: string;
+  ctaUrl: string;
+};
+
 export type SiteSettings = {
   accentColor: string;
   siteTitle: string;
@@ -27,7 +40,7 @@ export type SiteSettings = {
   updatedAt: string;
   heroMediaType: "none" | "image" | "video" | "youtube";
   heroMediaUrl: string | null;
-  heroMediaUrls: string[];
+  heroSlides: HeroSlide[];
   heroOverlayOpacity: number;
   heroAnimation: "none" | "zoom" | "drift" | "pulse";
   heroSlideDuration: number;
@@ -111,7 +124,7 @@ const placeholderSettings: SiteSettings = {
   updatedAt: "",
   heroMediaType: "none",
   heroMediaUrl: null,
-  heroMediaUrls: [],
+  heroSlides: [],
   heroOverlayOpacity: 60,
   heroAnimation: "none",
   heroSlideDuration: 5,
@@ -210,7 +223,16 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     updatedAt: row.updated_at ?? "",
     heroMediaType: row.hero_media_type ?? "none",
     heroMediaUrl: row.hero_media_url,
-    heroMediaUrls: (row.hero_media_urls ?? []).map((item) => item.url).filter(Boolean),
+    heroSlides: (row.hero_media_urls ?? [])
+      .filter((item) => Boolean(item?.url))
+      .map((item) => ({
+        url: item.url,
+        alt: item.alt ?? "",
+        eyebrow: item.eyebrow ?? "",
+        intro: item.intro ?? "",
+        ctaLabel: item.ctaLabel ?? "",
+        ctaUrl: item.ctaUrl ?? "",
+      })),
     heroAnimation: row.hero_animation ?? "none",
     heroSlideDuration:
       typeof row.hero_slide_duration === "number" && row.hero_slide_duration > 0
