@@ -6,7 +6,13 @@ import { createClient } from "@/lib/supabase/server";
 import { normalizeMediaUrl } from "@/lib/media";
 import { normalizeGaId } from "@/lib/analytics";
 
-function parseMediaList(raw: string): { url: string; alt: string }[] {
+function text(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+// Hero slides: an image plus optional copy that overrides the hero's own
+// eyebrow / intro / button for as long as that slide is on screen.
+function parseHeroSlides(raw: string) {
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
@@ -14,7 +20,11 @@ function parseMediaList(raw: string): { url: string; alt: string }[] {
         .filter((item) => typeof item?.url === "string" && item.url)
         .map((item) => ({
           url: normalizeMediaUrl(item.url),
-          alt: typeof item.alt === "string" ? item.alt : "",
+          alt: text(item.alt),
+          eyebrow: text(item.eyebrow),
+          intro: text(item.intro),
+          ctaLabel: text(item.ctaLabel),
+          ctaUrl: normalizeMediaUrl(text(item.ctaUrl)),
         }));
     }
   } catch {
@@ -98,7 +108,7 @@ export async function saveSiteSettings(formData: FormData) {
     ga_measurement_id: normalizeGaId(String(formData.get("ga_measurement_id") ?? "")),
     hero_media_type: String(formData.get("hero_media_type") ?? "none"),
     hero_media_url: normalizeMediaUrl(String(formData.get("hero_media_url") ?? "")) || null,
-    hero_media_urls: parseMediaList(String(formData.get("hero_media_urls") ?? "[]")),
+    hero_media_urls: parseHeroSlides(String(formData.get("hero_media_urls") ?? "[]")),
     hero_animation: String(formData.get("hero_animation") ?? "none"),
     hero_slide_duration: Math.min(
       30,

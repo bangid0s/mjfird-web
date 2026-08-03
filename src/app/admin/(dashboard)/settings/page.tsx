@@ -180,11 +180,11 @@ export default async function AdminSettingsPage({
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
           <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">Homepage — /</legend>
 
-          <Field label="Eyebrow (above the wordmark)">
+          <Field label="Eyebrow (above the wordmark) — used by any slide that doesn’t set its own">
             <input name="hero_eyebrow" defaultValue={settings?.hero_eyebrow ?? ""} className={fieldInputClasses} />
           </Field>
 
-          <Field label="Intro paragraph">
+          <Field label="Intro paragraph — used by any slide that doesn’t set its own">
             <textarea
               name="hero_intro"
               rows={3}
@@ -203,10 +203,10 @@ export default async function AdminSettingsPage({
           />
 
           <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="Primary button label">
+            <Field label="Primary button label — goes to /work unless a slide sets its own link">
               <input name="hero_cta_primary" defaultValue={settings?.hero_cta_primary ?? ""} className={fieldInputClasses} />
             </Field>
-            <Field label="Secondary button label">
+            <Field label="Secondary button label — always goes to /contact">
               <input name="hero_cta_secondary" defaultValue={settings?.hero_cta_secondary ?? ""} className={fieldInputClasses} />
             </Field>
           </div>

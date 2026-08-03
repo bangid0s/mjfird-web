@@ -3,9 +3,18 @@
 import { useState } from "react";
 import { Field, fieldInputClasses } from "@/components/admin/Field";
 import ImageUploader from "@/components/admin/ImageUploader";
-import GalleryUploader from "@/components/admin/GalleryUploader";
+import HeroSlidesEditor from "@/components/admin/HeroSlidesEditor";
 
 type MediaType = "none" | "image" | "video" | "youtube";
+
+type HeroSlideInput = {
+  url: string;
+  alt?: string;
+  eyebrow?: string;
+  intro?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+};
 
 export default function HeroMediaPicker({
   initialType,
@@ -17,7 +26,7 @@ export default function HeroMediaPicker({
 }: {
   initialType?: MediaType;
   initialUrl?: string | null;
-  initialImages?: { url: string; alt?: string }[];
+  initialImages?: HeroSlideInput[];
   initialOverlay?: number;
   initialAnimation?: "none" | "zoom" | "drift" | "pulse";
   initialSlideDuration?: number;
@@ -44,11 +53,7 @@ export default function HeroMediaPicker({
 
       {type === "image" && (
         <>
-          <GalleryUploader
-            name="hero_media_urls"
-            label="Hero images — add 2 or 3 and they rotate as a slider"
-            initial={initialImages}
-          />
+          <HeroSlidesEditor name="hero_media_urls" initial={initialImages} />
           <Field label="Image animation">
             <select
               name="hero_animation"
