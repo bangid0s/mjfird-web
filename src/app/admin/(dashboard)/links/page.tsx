@@ -7,6 +7,8 @@ import LinksStudioPanel from "@/components/admin/LinksStudioPanel";
 import PageHeader from "@/components/admin/PageHeader";
 import EmptyState from "@/components/admin/EmptyState";
 import SubmitButton from "@/components/admin/SubmitButton";
+import UploadInput from "@/components/admin/UploadInput";
+import { LINK_TILE_SIZES } from "@/lib/link-tiles";
 import type { LinkItemRow } from "@/lib/supabase/types";
 
 export default async function AdminLinksPage() {
@@ -25,7 +27,7 @@ export default async function AdminLinksPage() {
     <div>
       <PageHeader
         title="Links page"
-        description="The link-in-bio page at /links — drop that URL in your Instagram or TikTok bio. Buttons are grouped under their section heading. Give a button the Shop tab to split it out; the tab bar only appears once something is in Shop."
+        description="The link-in-bio page at /links — drop that URL in your Instagram or TikTok bio. Every link is a tile in one bento grid: paste an image address to give it a photo, and pick a size to make it claim more of the grid. The section shows as a small label on the tile itself, so drag rows to keep a section together. Give a link the Shop tab to split it out; the tab bar only appears once something is in Shop."
         action={
           <a
             href="/links"
@@ -46,30 +48,40 @@ export default async function AdminLinksPage() {
         ))}
       </datalist>
 
-      <form
-        action={createLinkItem}
-        className="mb-10 grid grid-cols-2 items-end gap-3 border border-line p-4 lg:grid-cols-[3rem_1fr_1.3fr_1fr_6rem_8rem_auto_auto]"
-      >
-        <input name="emoji" placeholder="⚡" aria-label="Emoji" className={`${fieldInputClasses} text-center`} />
-        <input name="label" required placeholder="Button label" aria-label="Label" className={fieldInputClasses} />
-        <input name="url" required placeholder="https://… or /work" aria-label="URL" className={fieldInputClasses} />
-        <input name="description" placeholder="Sub-line (optional)" aria-label="Description" className={fieldInputClasses} />
-        <select name="tab" defaultValue="links" aria-label="Tab" className={fieldInputClasses}>
-          <option value="links">Links</option>
-          <option value="shop">Shop</option>
-        </select>
-        <input
-          name="section"
-          list={SECTION_LIST_ID}
-          placeholder="Group heading"
-          aria-label="Section"
-          className={fieldInputClasses}
-        />
-        <label className="flex items-center gap-2 pb-3 font-mono text-label uppercase tracking-[0.1em] text-ink-muted">
-          <input type="checkbox" name="highlight" className="h-4 w-4 accent-accent" />
-          Ring
-        </label>
-        <SubmitButton pendingLabel="Adding…">Add link</SubmitButton>
+      <form action={createLinkItem} className="mb-10 flex flex-col gap-3 border border-line p-4">
+        <div className="grid grid-cols-2 items-end gap-3 lg:grid-cols-[3rem_1fr_1.3fr_1fr]">
+          <input name="emoji" placeholder="⚡" aria-label="Emoji" className={`${fieldInputClasses} text-center`} />
+          <input name="label" required placeholder="Button label" aria-label="Label" className={fieldInputClasses} />
+          <input name="url" required placeholder="https://… or /work" aria-label="URL" className={fieldInputClasses} />
+          <input name="description" placeholder="Sub-line (optional)" aria-label="Description" className={fieldInputClasses} />
+        </div>
+
+        <div className="grid grid-cols-2 items-end gap-3 lg:grid-cols-[1.4fr_7rem_6rem_8rem_auto_auto]">
+          <UploadInput name="image_url" ariaLabel="Tile image" placeholder="Paste an image address…" />
+          <select name="size" defaultValue="small" aria-label="Tile size" className={fieldInputClasses}>
+            {LINK_TILE_SIZES.map((size) => (
+              <option key={size.value} value={size.value}>
+                {size.label}
+              </option>
+            ))}
+          </select>
+          <select name="tab" defaultValue="links" aria-label="Tab" className={fieldInputClasses}>
+            <option value="links">Links</option>
+            <option value="shop">Shop</option>
+          </select>
+          <input
+            name="section"
+            list={SECTION_LIST_ID}
+            placeholder="Group heading"
+            aria-label="Section"
+            className={fieldInputClasses}
+          />
+          <label className="flex items-center gap-2 pb-3 font-mono text-label uppercase tracking-[0.1em] text-ink-muted">
+            <input type="checkbox" name="highlight" className="h-4 w-4 accent-accent" />
+            Ring
+          </label>
+          <SubmitButton pendingLabel="Adding…">Add link</SubmitButton>
+        </div>
       </form>
 
       {items.length === 0 ? (

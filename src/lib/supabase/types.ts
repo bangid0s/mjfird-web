@@ -111,6 +111,7 @@ export type ProfileRow = {
 };
 
 export type LinkPageTab = "links" | "shop";
+export type LinkTileSize = "small" | "wide" | "tall" | "large";
 
 export type LinkItemRow = {
   id: string;
@@ -118,6 +119,8 @@ export type LinkItemRow = {
   url: string;
   description: string | null;
   emoji: string | null;
+  image_url: string | null;
+  size: LinkTileSize;
   highlight: boolean;
   tab: LinkPageTab;
   section: string | null;

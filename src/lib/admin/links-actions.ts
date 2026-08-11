@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { normalizeMediaUrl } from "@/lib/media";
+import { parseTileSize } from "@/lib/link-tiles";
 import type { ContentStatus, LinkPageTab } from "@/lib/supabase/types";
 
 function parsePayload(formData: FormData) {
@@ -13,6 +14,8 @@ function parsePayload(formData: FormData) {
     url: normalizeMediaUrl(String(formData.get("url") ?? "")),
     description: String(formData.get("description") ?? "") || null,
     emoji: String(formData.get("emoji") ?? "") || null,
+    image_url: normalizeMediaUrl(String(formData.get("image_url") ?? "")) || null,
+    size: parseTileSize(String(formData.get("size") ?? "")),
     highlight: formData.get("highlight") === "on",
     tab: (tab === "shop" ? "shop" : "links") as LinkPageTab,
     section: String(formData.get("section") ?? "").trim() || null,
