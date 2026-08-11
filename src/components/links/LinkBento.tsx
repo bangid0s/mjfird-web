@@ -20,7 +20,7 @@ const SCRIM =
 // small one, so the hierarchy the admin set survives the reflow. `sizes` tracks
 // the rendered tile width so a 1x1 never pulls a full-width file.
 const GRID =
-  "grid auto-rows-[8.5rem] grid-flow-row-dense grid-cols-2 gap-3 sm:auto-rows-[11rem] sm:grid-cols-3 lg:auto-rows-[12rem] lg:grid-cols-4 lg:gap-4";
+  "grid auto-rows-[9rem] grid-flow-row-dense grid-cols-2 gap-3 sm:auto-rows-[11rem] sm:grid-cols-3 lg:auto-rows-[12rem] lg:grid-cols-4 lg:gap-4";
 
 const SMALL_SIZES = "(min-width: 1024px) 15rem, (min-width: 640px) 13rem, 45vw";
 const BIG_SIZES = "(min-width: 1024px) 30rem, (min-width: 640px) 27rem, 92vw";
@@ -31,20 +31,6 @@ const TILES: Record<LinkTileSize, { span: string; sizes: string }> = {
   tall: { span: "col-span-1 row-span-2", sizes: SMALL_SIZES },
   large: { span: "col-span-2 row-span-2", sizes: BIG_SIZES },
 };
-
-// Groups links under their section heading, keeping the admin's sort order and
-// the order in which each heading first appears. Links with no section render
-// first, ungrouped.
-function groupBySection(items: LinkItem[]) {
-  const groups: { section: string; items: LinkItem[] }[] = [];
-  for (const item of items) {
-    const section = item.section.trim();
-    const existing = groups.find((group) => group.section === section);
-    if (existing) existing.items.push(item);
-    else groups.push({ section, items: [item] });
-  }
-  return groups;
-}
 
 function Tile({ link }: { link: LinkItem }) {
   const hasImage = Boolean(link.imageUrl);
@@ -77,6 +63,18 @@ function Tile({ link }: { link: LinkItem }) {
 
       <span className="relative mt-auto flex items-end justify-between gap-3">
         <span className="flex min-w-0 flex-col">
+          {/* The section rides on the tile now that the grid is one piece —
+              it's the grouping the divider headings used to carry. */}
+          {link.section && (
+            <span
+              className={cn(
+                "mb-1 line-clamp-1 font-mono text-[10px] uppercase tracking-[0.2em]",
+                hasImage ? "text-white/55" : "text-accent-ink/55",
+              )}
+            >
+              {link.section}
+            </span>
+          )}
           <span className="line-clamp-2 font-body text-body-sm font-medium leading-snug">
             {link.label}
           </span>
@@ -126,27 +124,13 @@ function Tile({ link }: { link: LinkItem }) {
 export default function LinkBento({ items }: { items: LinkItem[] }) {
   if (items.length === 0) return null;
 
+  // One grid for every link rather than one per section: dense flow can then
+  // pull any later tile into a hole a tall or wide one left behind, so the
+  // whole block packs solid instead of fraying at each section boundary.
   return (
-    <div className="flex flex-col gap-6">
-      {groupBySection(items).map((group, i) => (
-        <div key={`${group.section}-${i}`} className="flex flex-col gap-3">
-          {group.section && (
-            <div className="flex items-center gap-3">
-              <span className="h-px flex-1 bg-line" />
-              <h2 className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
-                {group.section}
-              </h2>
-              <span className="h-px flex-1 bg-line" />
-            </div>
-          )}
-          {/* Dense flow backfills the holes a tall or wide tile leaves behind,
-              so the grid stays solid whatever mix of sizes is set. */}
-          <div className={GRID}>
-            {group.items.map((link, j) => (
-              <Tile key={`${link.url}-${j}`} link={link} />
-            ))}
-          </div>
-        </div>
+    <div className={GRID}>
+      {items.map((link, i) => (
+        <Tile key={`${link.url}-${i}`} link={link} />
       ))}
     </div>
   );

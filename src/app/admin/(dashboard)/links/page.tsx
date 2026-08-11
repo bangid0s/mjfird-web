@@ -27,7 +27,7 @@ export default async function AdminLinksPage() {
     <div>
       <PageHeader
         title="Links page"
-        description="The link-in-bio page at /links — drop that URL in your Instagram or TikTok bio. Each link is a bento tile: paste an image address to give it a photo, and pick a size to make it claim more of the grid. Tiles are grouped under their section heading. Give a link the Shop tab to split it out; the tab bar only appears once something is in Shop."
+        description="The link-in-bio page at /links — drop that URL in your Instagram or TikTok bio. Every link is a tile in one bento grid: paste an image address to give it a photo, and pick a size to make it claim more of the grid. The section shows as a small label on the tile itself, so drag rows to keep a section together. Give a link the Shop tab to split it out; the tab bar only appears once something is in Shop."
         action={
           <a
             href="/links"
