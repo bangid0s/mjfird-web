@@ -16,7 +16,7 @@ export default function BrandStrip({
   const openSlots = Array.from({ length: slots });
 
   return (
-    <section aria-label="Partners" className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+    <section aria-label="Partners" className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-6 lg:gap-4">
       {brands.map((brand, i) => {
         const content = (
           <>

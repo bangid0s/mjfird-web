@@ -14,13 +14,22 @@ function isExternal(url: string) {
 const SCRIM =
   "bg-[linear-gradient(to_top,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.62)_38%,rgba(0,0,0,0.1)_78%,rgba(0,0,0,0)_100%)]";
 
-// Bento spans on a two-column grid of fixed-height rows. `sizes` describes the
-// rendered tile width so photo tiles don't pull a full-width file for a 1x1.
+// The grid runs 2 columns on phones, 3 from tablet, 4 on desktop, and the row
+// height grows with it so a tile keeps roughly the same 1.2:1 shape at every
+// width. Spans stay put across breakpoints — a wide tile is always twice a
+// small one, so the hierarchy the admin set survives the reflow. `sizes` tracks
+// the rendered tile width so a 1x1 never pulls a full-width file.
+const GRID =
+  "grid auto-rows-[8.5rem] grid-flow-row-dense grid-cols-2 gap-3 sm:auto-rows-[11rem] sm:grid-cols-3 lg:auto-rows-[12rem] lg:grid-cols-4 lg:gap-4";
+
+const SMALL_SIZES = "(min-width: 1024px) 15rem, (min-width: 640px) 13rem, 45vw";
+const BIG_SIZES = "(min-width: 1024px) 30rem, (min-width: 640px) 27rem, 92vw";
+
 const TILES: Record<LinkTileSize, { span: string; sizes: string }> = {
-  small: { span: "col-span-1 row-span-1", sizes: "(min-width: 640px) 20rem, 45vw" },
-  wide: { span: "col-span-2 row-span-1", sizes: "(min-width: 640px) 40rem, 92vw" },
-  tall: { span: "col-span-1 row-span-2", sizes: "(min-width: 640px) 20rem, 45vw" },
-  large: { span: "col-span-2 row-span-2", sizes: "(min-width: 640px) 40rem, 92vw" },
+  small: { span: "col-span-1 row-span-1", sizes: SMALL_SIZES },
+  wide: { span: "col-span-2 row-span-1", sizes: BIG_SIZES },
+  tall: { span: "col-span-1 row-span-2", sizes: SMALL_SIZES },
+  large: { span: "col-span-2 row-span-2", sizes: BIG_SIZES },
 };
 
 // Groups links under their section heading, keeping the admin's sort order and
@@ -132,7 +141,7 @@ export default function LinkBento({ items }: { items: LinkItem[] }) {
           )}
           {/* Dense flow backfills the holes a tall or wide tile leaves behind,
               so the grid stays solid whatever mix of sizes is set. */}
-          <div className="grid auto-rows-[8.5rem] grid-flow-row-dense grid-cols-2 gap-3 sm:auto-rows-[12rem]">
+          <div className={GRID}>
             {group.items.map((link, j) => (
               <Tile key={`${link.url}-${j}`} link={link} />
             ))}

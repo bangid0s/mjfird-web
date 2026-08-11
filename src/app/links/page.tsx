@@ -75,9 +75,11 @@ export default async function LinksPage() {
         />
       )}
 
-      <main className="relative z-10 mx-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-line bg-bg-raised/60 backdrop-blur-sm">
+      {/* The window widens on desktop to give the bento grid its fourth column;
+          everything else inside it is reined back in so it doesn't stretch. */}
+      <main className="relative z-10 mx-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-line bg-bg-raised/60 backdrop-blur-sm lg:max-w-5xl">
         {/* Window chrome */}
-        <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
+        <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6 lg:px-8">
           <span className="truncate font-mono text-label text-ink-muted">
             {settings.linksWindowTitle}
           </span>
@@ -91,43 +93,47 @@ export default async function LinksPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 px-3 pb-3 sm:px-5 sm:pb-5">
+        <div className="flex flex-col gap-4 px-3 pb-3 sm:px-5 sm:pb-5 lg:gap-5 lg:px-6 lg:pb-6">
           {/* Identity */}
-          <section className="flex flex-col gap-5 rounded-2xl bg-bg-raised p-5 sm:flex-row sm:gap-6">
+          <section className="flex flex-col gap-5 rounded-2xl bg-bg-raised p-5 sm:flex-row sm:gap-6 lg:gap-8 lg:p-6">
             {profile.avatarUrl ? (
               <Avatar
                 src={profile.avatarUrl}
                 alt={profile.name}
-                sizes="144px"
-                className="h-28 w-28 shrink-0 rounded-xl border border-line sm:h-36 sm:w-36"
+                sizes="176px"
+                className="h-28 w-28 shrink-0 rounded-xl border border-line sm:h-36 sm:w-36 lg:h-44 lg:w-44"
               />
             ) : (
-              <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl border border-line bg-bg font-[family-name:var(--font-silkscreen)] text-2xl text-accent sm:h-36 sm:w-36">
+              <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl border border-line bg-bg font-[family-name:var(--font-silkscreen)] text-2xl text-accent sm:h-36 sm:w-36 lg:h-44 lg:w-44">
                 {headline.slice(0, 1)}
               </div>
             )}
 
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <h1 className="font-[family-name:var(--font-silkscreen)] text-2xl leading-tight text-ink sm:text-3xl">
-                {headline}
-              </h1>
-              {settings.linksRunBy && (
-                <p className="font-body text-body-sm text-ink-faint">
-                  Run By: {settings.linksRunBy}
-                </p>
-              )}
-              {introLines.length > 0 && (
-                <div className="flex flex-col">
-                  {introLines.map((line, i) => (
-                    <p key={i} className="font-body text-body-sm text-ink-muted">
-                      {line}
-                    </p>
-                  ))}
-                </div>
-              )}
+            {/* Stacked up to tablet; on desktop the name and the button split to
+                opposite ends so the wider card doesn't strand its right half. */}
+            <div className="flex min-w-0 flex-1 flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+              <div className="flex min-w-0 flex-col gap-2">
+                <h1 className="font-[family-name:var(--font-silkscreen)] text-2xl leading-tight text-ink sm:text-3xl">
+                  {headline}
+                </h1>
+                {settings.linksRunBy && (
+                  <p className="font-body text-body-sm text-ink-faint">
+                    Run By: {settings.linksRunBy}
+                  </p>
+                )}
+                {introLines.length > 0 && (
+                  <div className="flex flex-col lg:max-w-lg">
+                    {introLines.map((line, i) => (
+                      <p key={i} className="font-body text-body-sm text-ink-muted">
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Link
                 href={settings.linksCtaUrl || "/contact"}
-                className="mt-2 rounded-xl bg-accent px-6 py-3.5 text-center font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
+                className="mt-2 shrink-0 rounded-xl bg-accent px-6 py-3.5 text-center font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85 lg:mt-0 lg:px-12"
               >
                 {settings.linksCtaLabel}
               </Link>
@@ -178,7 +184,7 @@ export default async function LinksPage() {
         </div>
 
         {/* Window status bar */}
-        <div className="flex items-center justify-between gap-4 border-t border-line px-5 py-3.5 sm:px-6">
+        <div className="flex items-center justify-between gap-4 border-t border-line px-5 py-3.5 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             {tabs.length > 1 && (
               <span className="flex items-center gap-2">
