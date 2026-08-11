@@ -12,7 +12,7 @@ import Avatar from "@/components/ui/Avatar";
 import HeroMedia from "@/components/hero/HeroMedia";
 import StudioStatusBar from "@/components/links/StudioStatus";
 import LinksTabs, { type LinksTab } from "@/components/links/LinksTabs";
-import LinkList from "@/components/links/LinkList";
+import LinkBento from "@/components/links/LinkBento";
 import BrandStrip from "@/components/links/BrandStrip";
 import FooterClock from "@/components/links/FooterClock";
 
@@ -58,11 +58,11 @@ export default async function LinksPage() {
 
   if (linkItems.length > 0) {
     tabs.push({ id: "links", label: "Links" });
-    panels.links = <LinkList items={linkItems} />;
+    panels.links = <LinkBento items={linkItems} />;
   }
   if (shopItems.length > 0) {
     tabs.push({ id: "shop", label: "Shop" });
-    panels.shop = <LinkList items={shopItems} />;
+    panels.shop = <LinkBento items={shopItems} />;
   }
 
   return (

@@ -1,12 +1,17 @@
 import { createPublicClient } from "@/lib/supabase/public";
+import { parseTileSize } from "@/lib/link-tiles";
 import { isSupabaseConfigured } from "./config";
-import type { LinkItemRow, LinkPageTab } from "@/lib/supabase/types";
+import type { LinkItemRow, LinkPageTab, LinkTileSize } from "@/lib/supabase/types";
 
 export type LinkItem = {
   label: string;
   url: string;
   description: string;
   emoji: string;
+  /** Feature image behind the tile — a pasted address or an uploaded file's URL. */
+  imageUrl: string;
+  /** How much of the bento grid this tile claims. */
+  size: LinkTileSize;
   highlight: boolean;
   /** Which tab of the links page this button belongs to. */
   tab: LinkPageTab;
@@ -15,12 +20,12 @@ export type LinkItem = {
 };
 
 const placeholderLinks: LinkItem[] = [
-  { label: "Custom Design (Email)", url: "/contact", description: "", emoji: "📩", highlight: true, tab: "links", section: "Graphics need" },
-  { label: "Custom Design (WhatsApp)", url: "/contact", description: "", emoji: "💬", highlight: false, tab: "links", section: "Graphics need" },
-  { label: "Custom Design (Instagram)", url: "https://instagram.com", description: "", emoji: "📷", highlight: false, tab: "links", section: "Graphics need" },
-  { label: "Watch the reel", url: "/dance", description: "The breaking side", emoji: "🎥", highlight: false, tab: "links", section: "Collaboration" },
-  { label: "Selected work", url: "/work", description: "Case studies", emoji: "📁", highlight: false, tab: "links", section: "Collaboration" },
-  { label: "Notes", url: "/blog", description: "Writing on design & motion", emoji: "✍️", highlight: false, tab: "links", section: "Collaboration" },
+  { label: "Custom Design (Email)", url: "/contact", description: "", emoji: "📩", imageUrl: "", size: "wide", highlight: true, tab: "links", section: "Graphics need" },
+  { label: "Custom Design (WhatsApp)", url: "/contact", description: "", emoji: "💬", imageUrl: "", size: "small", highlight: false, tab: "links", section: "Graphics need" },
+  { label: "Custom Design (Instagram)", url: "https://instagram.com", description: "", emoji: "📷", imageUrl: "", size: "small", highlight: false, tab: "links", section: "Graphics need" },
+  { label: "Watch the reel", url: "/dance", description: "The breaking side", emoji: "🎥", imageUrl: "", size: "small", highlight: false, tab: "links", section: "Collaboration" },
+  { label: "Selected work", url: "/work", description: "Case studies", emoji: "📁", imageUrl: "", size: "small", highlight: false, tab: "links", section: "Collaboration" },
+  { label: "Notes", url: "/blog", description: "Writing on design & motion", emoji: "✍️", imageUrl: "", size: "wide", highlight: false, tab: "links", section: "Collaboration" },
 ];
 
 export async function getLinkItems(): Promise<LinkItem[]> {
@@ -38,6 +43,8 @@ export async function getLinkItems(): Promise<LinkItem[]> {
       url: row.url,
       description: row.description ?? "",
       emoji: row.emoji ?? "",
+      imageUrl: row.image_url ?? "",
+      size: parseTileSize(row.size),
       highlight: row.highlight,
       tab: row.tab === "shop" ? "shop" : "links",
       section: row.section ?? "",
