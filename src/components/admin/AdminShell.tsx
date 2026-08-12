@@ -18,6 +18,8 @@ import {
   SettingsIcon,
   LinkIcon,
   MediaIcon,
+  ResumeIcon,
+  GalleryIcon,
   ExternalIcon,
 } from "@/components/admin/AdminIcons";
 
@@ -30,6 +32,8 @@ const NAV = [
   { href: "/admin/dance", label: "Dance", icon: DanceIcon },
   { href: "/admin/inquiries", label: "Inquiries", icon: InquiriesIcon },
   { href: "/admin/links", label: "Links Page", icon: LinkIcon },
+  { href: "/admin/resume", label: "Resume Page", icon: ResumeIcon },
+  { href: "/admin/gallery", label: "Gallery Page", icon: GalleryIcon },
   { href: "/admin/media", label: "Files", icon: MediaIcon },
   { href: "/admin/profile", label: "Profile", icon: ProfileIcon },
   { href: "/admin/settings", label: "Site Settings", icon: SettingsIcon },

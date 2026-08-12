@@ -90,6 +90,17 @@ export type SiteSettings = {
   processSectionEyebrow: string;
   processSectionTitle: string;
   processSteps: { title: string; description: string }[];
+  /** /resume — blank headline and summary fall back to the profile. */
+  resumeHeadline: string;
+  resumeRole: string;
+  resumeLocation: string;
+  resumeSummary: string;
+  resumeEmail: string;
+  resumeSkills: string[];
+  resumePdfUrl: string;
+  /** /gallery */
+  galleryHeadline: string;
+  galleryIntro: string;
 };
 
 export const defaultNavLinks = [
@@ -195,6 +206,15 @@ const placeholderSettings: SiteSettings = {
     { title: "Build", description: "Design system first, then pages — motion and performance engineered in from the start, not bolted on." },
     { title: "Launch", description: "QA across devices, a short handover walkthrough, and you own everything — no lock-in." },
   ],
+  resumeHeadline: "",
+  resumeRole: "Designer, developer & breaker",
+  resumeLocation: "Jakarta — working remotely",
+  resumeSummary: "",
+  resumeEmail: "",
+  resumeSkills: ["Brand identity", "Art direction", "Web design", "Next.js", "Motion", "Illustration"],
+  resumePdfUrl: "",
+  galleryHeadline: "Gallery",
+  galleryIntro: "Selected frames — work, process and the floor.",
 };
 
 function mapRow(row: SiteSettingsRow): SiteSettings {
@@ -301,6 +321,15 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     processSectionEyebrow: row.process_section_eyebrow || placeholderSettings.processSectionEyebrow,
     processSectionTitle: row.process_section_title || placeholderSettings.processSectionTitle,
     processSteps: row.process_steps?.length ? row.process_steps : placeholderSettings.processSteps,
+    resumeHeadline: row.resume_headline ?? "",
+    resumeRole: row.resume_role ?? "",
+    resumeLocation: row.resume_location ?? "",
+    resumeSummary: row.resume_summary ?? "",
+    resumeEmail: row.resume_email ?? "",
+    resumeSkills: row.resume_skills ?? [],
+    resumePdfUrl: row.resume_pdf_url ?? "",
+    galleryHeadline: row.gallery_headline || placeholderSettings.galleryHeadline,
+    galleryIntro: row.gallery_intro ?? "",
   };
 }
 

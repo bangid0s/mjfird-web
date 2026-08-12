@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { setInquiryStatus } from "@/lib/admin/inquiries-actions";
+import { setInquiryStatus, deleteInquiry } from "@/lib/admin/inquiries-actions";
 import { cn } from "@/lib/cn";
 import PageHeader from "@/components/admin/PageHeader";
 import EmptyState from "@/components/admin/EmptyState";
+import DeleteButton from "@/components/admin/DeleteButton";
 import type { InquiryRow } from "@/lib/supabase/types";
 
 export default async function AdminInquiriesPage() {
@@ -53,7 +54,7 @@ export default async function AdminInquiriesPage() {
               <span>{inquiry.budget}</span>
             </div>
             <p className="font-body text-body-sm text-ink-muted">{inquiry.message}</p>
-            <div className="flex gap-4">
+            <div className="flex items-center gap-4">
               {(["new", "read", "archived"] as const).map((status) => (
                 <form key={status} action={setInquiryStatus.bind(null, inquiry.id, status)}>
                   <button
@@ -68,6 +69,9 @@ export default async function AdminInquiriesPage() {
                   </button>
                 </form>
               ))}
+              <span className="ml-auto">
+                <DeleteButton action={deleteInquiry.bind(null, inquiry.id)} />
+              </span>
             </div>
           </div>
         ))}

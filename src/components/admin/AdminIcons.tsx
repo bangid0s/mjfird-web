@@ -125,6 +125,28 @@ export function LinkIcon(props: IconProps) {
   );
 }
 
+export function ResumeIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+      <path d="M14 2v6h6" />
+      <path d="M8 13h8" />
+      <path d="M8 17h5" />
+    </Icon>
+  );
+}
+
+export function GalleryIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="3" width="7" height="10" rx="1" />
+      <rect x="14" y="3" width="7" height="6" rx="1" />
+      <rect x="3" y="17" width="7" height="4" rx="1" />
+      <rect x="14" y="13" width="7" height="8" rx="1" />
+    </Icon>
+  );
+}
+
 export function ExternalIcon(props: IconProps) {
   return (
     <Icon {...props}>
