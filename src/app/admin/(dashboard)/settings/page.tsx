@@ -324,6 +324,25 @@ export default async function AdminSettingsPage({
               className={`${fieldInputClasses} resize-none`}
             />
           </Field>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Field label="Button label — blank hides the button">
+              <input
+                name="about_cta_label"
+                defaultValue={settings?.about_cta_label ?? ""}
+                placeholder="See the dance side"
+                className={fieldInputClasses}
+              />
+            </Field>
+            <Field label="Button link">
+              <input
+                name="about_cta_url"
+                defaultValue={settings?.about_cta_url ?? ""}
+                placeholder="/dance"
+                className={fieldInputClasses}
+              />
+            </Field>
+          </div>
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">

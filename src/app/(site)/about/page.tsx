@@ -46,9 +46,15 @@ export default async function AboutPage() {
           ) : (
             <p className="max-w-lg font-body text-body-lg text-ink-muted">{profile.bio}</p>
           )}
-          <MagneticButton href="/dance" variant="secondary" cursorLabel="view">
-            See the dance side →
-          </MagneticButton>
+          {settings.aboutCtaLabel && (
+            <MagneticButton
+              href={settings.aboutCtaUrl}
+              variant="secondary"
+              cursorLabel="view"
+            >
+              {settings.aboutCtaLabel} →
+            </MagneticButton>
+          )}
         </div>
       </div>
 
