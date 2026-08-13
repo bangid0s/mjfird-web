@@ -69,15 +69,27 @@ export default function ResumePanel({ settings }: { settings: SiteSettings }) {
             className={`${fieldInputClasses} resize-none`}
           />
         </Field>
-        <Field label="PDF link — shows a Download button when set">
-          <input
-            name="resume_pdf_url"
-            defaultValue={settings.resumePdfUrl}
-            placeholder="https://…/resume.pdf"
-            className={fieldInputClasses}
+        <Field label="Languages — one per line: Name|Level">
+          <textarea
+            name="resume_languages"
+            rows={4}
+            defaultValue={settings.resumeLanguages
+              .map((language) => [language.name, language.level].join("|").replace(/\|+$/, ""))
+              .join("\n")}
+            placeholder={"Indonesian|Native\nEnglish|Professional"}
+            className={`${fieldInputClasses} resize-none font-mono`}
           />
         </Field>
       </div>
+
+      <Field label="PDF link — shows a Download button when set">
+        <input
+          name="resume_pdf_url"
+          defaultValue={settings.resumePdfUrl}
+          placeholder="https://…/resume.pdf"
+          className={fieldInputClasses}
+        />
+      </Field>
 
       <SubmitButton className="self-start">Save header</SubmitButton>
     </form>

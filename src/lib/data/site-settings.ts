@@ -98,6 +98,7 @@ export type SiteSettings = {
   resumeEmail: string;
   resumeSkills: string[];
   resumePdfUrl: string;
+  resumeLanguages: { name: string; level: string }[];
   /** /gallery */
   galleryHeadline: string;
   galleryIntro: string;
@@ -213,6 +214,10 @@ const placeholderSettings: SiteSettings = {
   resumeEmail: "",
   resumeSkills: ["Brand identity", "Art direction", "Web design", "Next.js", "Motion", "Illustration"],
   resumePdfUrl: "",
+  resumeLanguages: [
+    { name: "Indonesian", level: "Native" },
+    { name: "English", level: "Professional" },
+  ],
   galleryHeadline: "Gallery",
   galleryIntro: "Selected frames — work, process and the floor.",
 };
@@ -328,6 +333,9 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     resumeEmail: row.resume_email ?? "",
     resumeSkills: row.resume_skills ?? [],
     resumePdfUrl: row.resume_pdf_url ?? "",
+    resumeLanguages: (row.resume_languages ?? [])
+      .filter((language) => typeof language?.name === "string" && language.name)
+      .map((language) => ({ name: language.name, level: language.level ?? "" })),
     galleryHeadline: row.gallery_headline || placeholderSettings.galleryHeadline,
     galleryIntro: row.gallery_intro ?? "",
   };

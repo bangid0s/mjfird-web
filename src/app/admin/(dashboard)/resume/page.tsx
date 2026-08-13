@@ -1,23 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
-import { createResumeEntry } from "@/lib/admin/resume-actions";
+import { createResumeEntry, createResumeTool } from "@/lib/admin/resume-actions";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { RESUME_KINDS } from "@/lib/data/resume";
 import { fieldInputClasses } from "@/components/admin/Field";
 import ResumeEntriesList from "@/components/admin/ResumeEntriesList";
+import ResumeToolsList from "@/components/admin/ResumeToolsList";
 import ResumePanel from "@/components/admin/ResumePanel";
 import PageHeader from "@/components/admin/PageHeader";
 import EmptyState from "@/components/admin/EmptyState";
 import SubmitButton from "@/components/admin/SubmitButton";
-import type { ResumeEntryRow } from "@/lib/supabase/types";
+import UploadInput from "@/components/admin/UploadInput";
+import type { ResumeEntryRow, ResumeToolRow } from "@/lib/supabase/types";
 
 export default async function AdminResumePage() {
   const supabase = await createClient();
-  const [{ data }, settings] = await Promise.all([
+  const [{ data }, { data: toolData }, settings] = await Promise.all([
     supabase.from("resume_entries").select("*").order("sort_order", { ascending: true }),
+    supabase.from("resume_tools").select("*").order("sort_order", { ascending: true }),
     getSiteSettings(),
   ]);
 
   const entries = (data as ResumeEntryRow[]) ?? [];
+  const tools = (toolData as ResumeToolRow[]) ?? [];
 
   return (
     <div>
@@ -74,6 +78,35 @@ export default async function AdminResumePage() {
       ) : (
         <ResumeEntriesList entries={entries} />
       )}
+
+      <section className="mt-16">
+        <h2 className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-ink">
+          Tools &amp; software
+        </h2>
+        <p className="mb-6 font-body text-label text-ink-muted">
+          The shelf under your experience. Paste an icon address per tool — without one the tile
+          falls back to the first letter of the name.
+        </p>
+
+        <form
+          action={createResumeTool}
+          className="mb-8 grid grid-cols-2 items-end gap-3 border border-line p-4 lg:grid-cols-[1fr_1.4fr_1fr_auto]"
+        >
+          <input name="name" required placeholder="Figma" aria-label="Tool name" className={fieldInputClasses} />
+          <UploadInput name="icon_url" ariaLabel="Icon" placeholder="Paste an icon address…" />
+          <input name="note" placeholder="Daily driver (optional)" aria-label="Note" className={fieldInputClasses} />
+          <SubmitButton pendingLabel="Adding…">Add tool</SubmitButton>
+        </form>
+
+        {tools.length === 0 ? (
+          <EmptyState
+            title="No tools yet"
+            description="Add the software you work in — the icons make this the most scannable block on the page."
+          />
+        ) : (
+          <ResumeToolsList tools={tools} />
+        )}
+      </section>
     </div>
   );
 }

@@ -1,6 +1,14 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "./config";
-import type { ResumeEntryKind, ResumeEntryRow } from "@/lib/supabase/types";
+import type { ResumeEntryKind, ResumeEntryRow, ResumeToolRow } from "@/lib/supabase/types";
+
+export type ResumeTool = {
+  name: string;
+  /** Icon image — a pasted address or an uploaded file's URL. Optional. */
+  iconUrl: string;
+  /** e.g. "Daily driver", "Advanced". Optional. */
+  note: string;
+};
 
 export type ResumeEntry = {
   kind: ResumeEntryKind;
@@ -56,6 +64,33 @@ const placeholderEntries: ResumeEntry[] = [
     bullets: [],
   },
 ];
+
+const placeholderTools: ResumeTool[] = [
+  { name: "Figma", iconUrl: "", note: "Daily driver" },
+  { name: "Illustrator", iconUrl: "", note: "" },
+  { name: "After Effects", iconUrl: "", note: "" },
+  { name: "Next.js", iconUrl: "", note: "" },
+];
+
+export async function getResumeTools(): Promise<ResumeTool[]> {
+  if (!isSupabaseConfigured) return placeholderTools;
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("resume_tools")
+      .select("*")
+      .eq("status", "published")
+      .order("sort_order", { ascending: true });
+    if (error || !data || data.length === 0) return placeholderTools;
+    return (data as ResumeToolRow[]).map((row) => ({
+      name: row.name,
+      iconUrl: row.icon_url ?? "",
+      note: row.note ?? "",
+    }));
+  } catch {
+    return placeholderTools;
+  }
+}
 
 export async function getResumeEntries(): Promise<ResumeEntry[]> {
   if (!isSupabaseConfigured) return placeholderEntries;

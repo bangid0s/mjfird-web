@@ -61,6 +61,59 @@ export async function reorderResumeEntries(orderedIds: string[]) {
   revalidatePath("/resume");
 }
 
+function parseToolPayload(formData: FormData) {
+  return {
+    name: String(formData.get("name") ?? ""),
+    icon_url: normalizeMediaUrl(String(formData.get("icon_url") ?? "")) || null,
+    note: String(formData.get("note") ?? "") || null,
+    status: String(formData.get("status") ?? "published") as ContentStatus,
+  };
+}
+
+export async function createResumeTool(formData: FormData) {
+  const payload = parseToolPayload(formData);
+  if (!payload.name) return;
+  const supabase = await createClient();
+  await supabase.from("resume_tools").insert(payload);
+  revalidatePath("/admin/resume");
+  revalidatePath("/resume");
+}
+
+export async function updateResumeTool(id: string, formData: FormData) {
+  const supabase = await createClient();
+  await supabase.from("resume_tools").update(parseToolPayload(formData)).eq("id", id);
+  revalidatePath("/admin/resume");
+  revalidatePath("/resume");
+}
+
+export async function deleteResumeTool(id: string) {
+  const supabase = await createClient();
+  await supabase.from("resume_tools").delete().eq("id", id);
+  revalidatePath("/admin/resume");
+  revalidatePath("/resume");
+}
+
+export async function reorderResumeTools(orderedIds: string[]) {
+  const supabase = await createClient();
+  await Promise.all(
+    orderedIds.map((id, index) =>
+      supabase.from("resume_tools").update({ sort_order: index }).eq("id", id),
+    ),
+  );
+  revalidatePath("/admin/resume");
+  revalidatePath("/resume");
+}
+
+/** One language per line: "Name|Level" — the level is optional. */
+function parseLanguages(raw: string) {
+  return linesToList(raw)
+    .map((line) => {
+      const [name, level] = line.split("|").map((part) => part.trim());
+      return { name: name ?? "", level: level ?? "" };
+    })
+    .filter((language) => language.name);
+}
+
 export async function updateResumePanel(formData: FormData) {
   const payload = {
     resume_headline: String(formData.get("resume_headline") ?? "").slice(0, 80),
@@ -70,6 +123,7 @@ export async function updateResumePanel(formData: FormData) {
     resume_email: String(formData.get("resume_email") ?? "").trim(),
     resume_skills: linesToList(String(formData.get("resume_skills") ?? "").replace(/,/g, "\n")),
     resume_pdf_url: normalizeMediaUrl(String(formData.get("resume_pdf_url") ?? "")),
+    resume_languages: parseLanguages(String(formData.get("resume_languages") ?? "")),
   };
 
   const supabase = await createClient();

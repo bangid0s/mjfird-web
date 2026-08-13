@@ -126,12 +126,23 @@ export type ResumeEntryRow = {
   created_at: string;
 };
 
+export type ResumeToolRow = {
+  id: string;
+  name: string;
+  icon_url: string | null;
+  note: string | null;
+  sort_order: number;
+  status: ContentStatus;
+  created_at: string;
+};
+
 export type GalleryItemRow = {
   id: string;
   image_url: string;
   title: string | null;
   caption: string | null;
   link_url: string | null;
+  tags: string[];
   sort_order: number;
   status: ContentStatus;
   created_at: string;
@@ -244,6 +255,7 @@ export type SiteSettingsRow = {
   resume_email: string;
   resume_skills: string[];
   resume_pdf_url: string;
+  resume_languages: { name: string; level?: string }[];
   gallery_headline: string;
   gallery_intro: string;
   updated_at: string;

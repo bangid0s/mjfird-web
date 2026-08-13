@@ -12,6 +12,8 @@ import UploadInput from "@/components/admin/UploadInput";
 import { mediaThumbnail } from "@/lib/media";
 import type { GalleryItemRow } from "@/lib/supabase/types";
 
+export const TAG_LIST_ID = "gallery-tags";
+
 export default function GalleryItemsList({ items }: { items: GalleryItemRow[] }) {
   return (
     <ReorderableList
@@ -43,12 +45,20 @@ export default function GalleryItemsList({ items }: { items: GalleryItemRow[] })
               />
             </div>
 
-            <div className="grid grid-cols-2 items-center gap-3 lg:grid-cols-[1.4fr_1fr_6.5rem_auto]">
+            <div className="grid grid-cols-2 items-center gap-3 lg:grid-cols-[1.2fr_1fr_1fr_6.5rem_auto]">
               <input
                 name="caption"
                 defaultValue={item.caption ?? ""}
                 placeholder="Caption (optional)"
                 aria-label="Caption"
+                className={fieldInputClasses}
+              />
+              <input
+                name="tags"
+                defaultValue={(item.tags ?? []).join(", ")}
+                list={TAG_LIST_ID}
+                placeholder="Tags, comma separated"
+                aria-label="Tags"
                 className={fieldInputClasses}
               />
               <input

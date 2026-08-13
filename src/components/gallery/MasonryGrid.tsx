@@ -62,7 +62,7 @@ export default function MasonryGrid({ items }: { items: GalleryItem[] }) {
 
         if (!item.linkUrl) {
           return (
-            <figure key={`${item.imageUrl}-${i}`} className={classes}>
+            <figure key={item.id} className={classes}>
               {inner}
             </figure>
           );
@@ -70,7 +70,7 @@ export default function MasonryGrid({ items }: { items: GalleryItem[] }) {
 
         return isExternal(item.linkUrl) ? (
           <a
-            key={`${item.imageUrl}-${i}`}
+            key={item.id}
             href={item.linkUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -79,7 +79,7 @@ export default function MasonryGrid({ items }: { items: GalleryItem[] }) {
             {inner}
           </a>
         ) : (
-          <Link key={`${item.imageUrl}-${i}`} href={item.linkUrl} className={classes}>
+          <Link key={item.id} href={item.linkUrl} className={classes}>
             {inner}
           </Link>
         );

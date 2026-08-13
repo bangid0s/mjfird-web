@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { getProfile } from "@/lib/data/profile";
-import { getResumeEntries, RESUME_KINDS, type ResumeEntry } from "@/lib/data/resume";
+import {
+  getResumeEntries,
+  getResumeTools,
+  RESUME_KINDS,
+  type ResumeEntry,
+} from "@/lib/data/resume";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import Analytics from "@/components/analytics/Analytics";
 import Avatar from "@/components/ui/Avatar";
@@ -53,9 +58,10 @@ function Entry({ entry }: { entry: ResumeEntry }) {
 }
 
 export default async function ResumePage() {
-  const [profile, entries, settings] = await Promise.all([
+  const [profile, entries, tools, settings] = await Promise.all([
     getProfile(),
     getResumeEntries(),
+    getResumeTools(),
     getSiteSettings(),
   ]);
 
@@ -150,22 +156,93 @@ export default async function ResumePage() {
           </section>
         ))}
 
-        {settings.resumeSkills.length > 0 && (
+        {tools.length > 0 && (
           <section className="rounded-2xl bg-bg-raised p-5 lg:p-6">
             <h2 className="mb-4 font-mono text-label uppercase tracking-[0.25em] text-ink-faint">
-              Skills
+              Tools &amp; software
             </h2>
-            <ul className="flex flex-wrap gap-2">
-              {settings.resumeSkills.map((skill) => (
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {tools.map((tool) => (
                 <li
-                  key={skill}
-                  className="rounded-lg bg-bg px-3 py-1.5 font-body text-body-sm text-ink-muted"
+                  key={tool.name}
+                  className="flex items-center gap-3 rounded-xl bg-bg p-3 ring-1 ring-line"
                 >
-                  {skill}
+                  {tool.iconUrl ? (
+                    /* Vendor icons are arbitrary pasted addresses, so no
+                       next/image host allowlist to satisfy here. */
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={tool.iconUrl}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="h-8 w-8 shrink-0 rounded-md object-contain"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-bg-raised font-mono text-label text-accent"
+                    >
+                      {tool.name.slice(0, 1)}
+                    </span>
+                  )}
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate font-body text-body-sm text-ink">{tool.name}</span>
+                    {tool.note && (
+                      <span className="truncate font-body text-label text-ink-faint">
+                        {tool.note}
+                      </span>
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>
           </section>
+        )}
+
+        {(settings.resumeSkills.length > 0 || settings.resumeLanguages.length > 0) && (
+          <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
+            {settings.resumeSkills.length > 0 && (
+              <section className="rounded-2xl bg-bg-raised p-5 lg:p-6">
+                <h2 className="mb-4 font-mono text-label uppercase tracking-[0.25em] text-ink-faint">
+                  Skills
+                </h2>
+                <ul className="flex flex-wrap gap-2">
+                  {settings.resumeSkills.map((skill) => (
+                    <li
+                      key={skill}
+                      className="rounded-lg bg-bg px-3 py-1.5 font-body text-body-sm text-ink-muted"
+                    >
+                      {skill}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {settings.resumeLanguages.length > 0 && (
+              <section className="rounded-2xl bg-bg-raised p-5 lg:p-6">
+                <h2 className="mb-4 font-mono text-label uppercase tracking-[0.25em] text-ink-faint">
+                  Languages
+                </h2>
+                <ul className="flex flex-col gap-2">
+                  {settings.resumeLanguages.map((language) => (
+                    <li
+                      key={language.name}
+                      className="flex items-baseline justify-between gap-4 border-b border-line pb-2 last:border-b-0 last:pb-0"
+                    >
+                      <span className="font-body text-body-sm text-ink">{language.name}</span>
+                      {language.level && (
+                        <span className="shrink-0 font-mono text-label uppercase tracking-[0.1em] text-ink-faint">
+                          {language.level}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
         )}
       </StandaloneWindow>
 

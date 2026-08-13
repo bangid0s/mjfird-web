@@ -6,12 +6,26 @@ import { createClient } from "@/lib/supabase/server";
 import { normalizeMediaUrl } from "@/lib/media";
 import type { ContentStatus } from "@/lib/supabase/types";
 
+/** Tags arrive comma- or newline-separated; either way one tag per entry. */
+function parseTags(raw: string) {
+  return [
+    ...new Set(
+      raw
+        .replace(/,/g, "\n")
+        .split("\n")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+
 function parsePayload(formData: FormData) {
   return {
     image_url: normalizeMediaUrl(String(formData.get("image_url") ?? "")),
     title: String(formData.get("title") ?? "") || null,
     caption: String(formData.get("caption") ?? "") || null,
     link_url: normalizeMediaUrl(String(formData.get("link_url") ?? "")) || null,
+    tags: parseTags(String(formData.get("tags") ?? "")),
     status: String(formData.get("status") ?? "published") as ContentStatus,
   };
 }

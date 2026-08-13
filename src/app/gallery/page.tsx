@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getGalleryItems } from "@/lib/data/gallery";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import Analytics from "@/components/analytics/Analytics";
-import MasonryGrid from "@/components/gallery/MasonryGrid";
+import GalleryBrowser from "@/components/gallery/GalleryBrowser";
 import StandaloneWindow from "@/components/standalone/StandaloneWindow";
 
 export const metadata: Metadata = {
@@ -32,7 +32,7 @@ export default async function GalleryPage() {
             Nothing in the gallery yet.
           </p>
         ) : (
-          <MasonryGrid items={items} />
+          <GalleryBrowser items={items} />
         )}
       </StandaloneWindow>
 
