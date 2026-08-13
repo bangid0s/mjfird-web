@@ -110,6 +110,44 @@ export type ProfileRow = {
   updated_at: string;
 };
 
+export type ResumeEntryKind = "experience" | "education" | "award";
+
+export type ResumeEntryRow = {
+  id: string;
+  kind: ResumeEntryKind;
+  role: string;
+  organization: string | null;
+  period: string | null;
+  location: string | null;
+  summary: string | null;
+  bullets: string[];
+  sort_order: number;
+  status: ContentStatus;
+  created_at: string;
+};
+
+export type ResumeToolRow = {
+  id: string;
+  name: string;
+  icon_url: string | null;
+  note: string | null;
+  sort_order: number;
+  status: ContentStatus;
+  created_at: string;
+};
+
+export type GalleryItemRow = {
+  id: string;
+  image_url: string;
+  title: string | null;
+  caption: string | null;
+  link_url: string | null;
+  tags: string[];
+  sort_order: number;
+  status: ContentStatus;
+  created_at: string;
+};
+
 export type LinkPageTab = "links" | "shop";
 export type LinkTileSize = "small" | "wide" | "tall" | "large";
 
@@ -210,5 +248,15 @@ export type SiteSettingsRow = {
   process_section_eyebrow: string;
   process_section_title: string;
   process_steps: { title: string; description: string }[];
+  resume_headline: string;
+  resume_role: string;
+  resume_location: string;
+  resume_summary: string;
+  resume_email: string;
+  resume_skills: string[];
+  resume_pdf_url: string;
+  resume_languages: { name: string; level?: string }[];
+  gallery_headline: string;
+  gallery_intro: string;
   updated_at: string;
 };

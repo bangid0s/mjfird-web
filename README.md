@@ -25,7 +25,7 @@ browsable out of the box. `/admin` requires real Supabase credentials (see below
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. Run the migrations in `supabase/migrations/` against it **in order** (SQL editor, or
-   `supabase db push` if you have the CLI linked) — `0001` through `0017`.
+   `supabase db push` if you have the CLI linked) — `0001` through `0019`.
 3. Copy `.env.local.example` to `.env.local` and fill in the Supabase URL/anon key from
    Project Settings → API.
 4. Create yourself an admin user under Authentication → Users (email + password) —
