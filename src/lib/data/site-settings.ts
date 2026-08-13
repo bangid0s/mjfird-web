@@ -98,6 +98,8 @@ export type SiteSettings = {
   resumeEmail: string;
   resumeSkills: string[];
   resumePdfUrl: string;
+  /** Portrait for /resume only — blank falls back to the profile avatar. */
+  resumePhotoUrl: string;
   resumeLanguages: { name: string; level: string }[];
   /** /gallery */
   galleryHeadline: string;
@@ -214,6 +216,7 @@ const placeholderSettings: SiteSettings = {
   resumeEmail: "",
   resumeSkills: ["Brand identity", "Art direction", "Web design", "Next.js", "Motion", "Illustration"],
   resumePdfUrl: "",
+  resumePhotoUrl: "",
   resumeLanguages: [
     { name: "Indonesian", level: "Native" },
     { name: "English", level: "Professional" },
@@ -333,6 +336,7 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     resumeEmail: row.resume_email ?? "",
     resumeSkills: row.resume_skills ?? [],
     resumePdfUrl: row.resume_pdf_url ?? "",
+    resumePhotoUrl: row.resume_photo_url ?? "",
     resumeLanguages: (row.resume_languages ?? [])
       .filter((language) => typeof language?.name === "string" && language.name)
       .map((language) => ({ name: language.name, level: language.level ?? "" })),
