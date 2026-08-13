@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getProfile } from "@/lib/data/profile";
 import {
   getResumeEntries,
@@ -6,6 +7,7 @@ import {
   RESUME_KINDS,
   type ResumeEntry,
 } from "@/lib/data/resume";
+import { getGalleryItems } from "@/lib/data/gallery";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import Analytics from "@/components/analytics/Analytics";
 import Avatar from "@/components/ui/Avatar";
@@ -58,10 +60,11 @@ function Entry({ entry }: { entry: ResumeEntry }) {
 }
 
 export default async function ResumePage() {
-  const [profile, entries, tools, settings] = await Promise.all([
+  const [profile, entries, tools, gallery, settings] = await Promise.all([
     getProfile(),
     getResumeEntries(),
     getResumeTools(),
+    getGalleryItems(),
     getSiteSettings(),
   ]);
 
@@ -124,15 +127,36 @@ export default async function ResumePage() {
               ))}
             </div>
 
-            {settings.resumePdfUrl && (
-              <a
-                href={settings.resumePdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 self-start rounded-xl bg-accent px-6 py-3 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
-              >
-                Download PDF
-              </a>
+            {/* The gallery link only appears once there is a gallery to see —
+                the page ships empty, and a button onto an empty page is worse
+                than no button. */}
+            {(settings.resumePdfUrl || gallery.length > 0) && (
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                {settings.resumePdfUrl && (
+                  <a
+                    href={settings.resumePdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-xl bg-accent px-6 py-3 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
+                  >
+                    Download PDF
+                  </a>
+                )}
+                {gallery.length > 0 && (
+                  <Link
+                    href="/gallery"
+                    className="group rounded-xl border border-line px-6 py-3 font-body text-body-sm font-medium text-ink transition-colors duration-[var(--duration-fast)] hover:border-accent hover:text-accent"
+                  >
+                    View gallery{" "}
+                    <span
+                      aria-hidden="true"
+                      className="inline-block transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-1"
+                    >
+                      →
+                    </span>
+                  </Link>
+                )}
+              </div>
             )}
           </div>
         </header>
