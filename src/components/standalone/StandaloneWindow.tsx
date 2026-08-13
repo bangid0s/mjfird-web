@@ -11,11 +11,17 @@ import EscapeToHome from "@/components/standalone/EscapeToHome";
 export default function StandaloneWindow({
   title,
   width = "narrow",
+  bleed = false,
   children,
 }: {
   title: string;
   /** `wide` gives the gallery room for four masonry columns. */
   width?: "narrow" | "wide";
+  /**
+   * Drop the inner padding so children can run edge to edge — for pages laid
+   * out in full-width colour bands, which then own their own padding.
+   */
+  bleed?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -39,7 +45,13 @@ export default function StandaloneWindow({
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 px-3 pb-3 sm:px-5 sm:pb-5 lg:gap-5 lg:px-6 lg:pb-6">
+        <div
+          className={
+            bleed
+              ? "flex flex-col"
+              : "flex flex-col gap-4 px-3 pb-3 sm:px-5 sm:pb-5 lg:gap-5 lg:px-6 lg:pb-6"
+          }
+        >
           {children}
         </div>
 
