@@ -114,6 +114,7 @@ export const defaultNavLinks = [
   { label: "Services", href: "/services" },
   { label: "About", href: "/about" },
   { label: "Dance", href: "/dance" },
+  { label: "Gallery", href: "/gallery" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ];
