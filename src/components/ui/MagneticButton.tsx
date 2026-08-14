@@ -75,8 +75,16 @@ export default function MagneticButton({
   };
 
   if (href) {
+    // Some hrefs are admin-editable now, so an absolute URL can turn up here.
+    // Send those off-site in a new tab, and safely.
+    const external = /^https?:\/\//i.test(href);
     return (
-      <Link href={href} {...sharedProps} onClick={playWhoosh}>
+      <Link
+        href={href}
+        {...sharedProps}
+        {...(external && { target: "_blank", rel: "noopener noreferrer" })}
+        onClick={playWhoosh}
+      >
         {children}
       </Link>
     );

@@ -152,6 +152,8 @@ export default async function ResumePage() {
   const name = settings.resumeHeadline || profile.name;
   const summary = settings.resumeSummary || profile.bio;
   const email = settings.resumeEmail || settings.contactEmail;
+  // A resume-specific portrait when one is set, otherwise the site avatar.
+  const photo = settings.resumePhotoUrl || profile.avatarUrl;
 
   const experience = entries.filter((entry) => entry.kind === "experience");
   const education = entries.filter((entry) => entry.kind === "education");
@@ -207,7 +209,7 @@ export default async function ResumePage() {
           </div>
 
           <div className="relative flex flex-col justify-end">
-            {profile.avatarUrl && (
+            {photo && (
               <div className="relative ml-auto w-full max-w-[20rem]">
                 {/* Offset plate behind the portrait — the layered-block move
                     from the reference, in the site's own palette. */}
@@ -216,7 +218,7 @@ export default async function ResumePage() {
                   className="absolute -left-4 -top-4 hidden h-full w-full rounded-2xl bg-bg-raised-2 sm:block"
                 />
                 <Avatar
-                  src={profile.avatarUrl}
+                  src={photo}
                   alt={profile.name}
                   sizes="(min-width: 640px) 20rem, 100vw"
                   className="relative aspect-[4/5] w-full rounded-2xl"
@@ -241,7 +243,7 @@ export default async function ResumePage() {
                 the two overlap into one stack rather than sitting in a column. */}
             <div
               className={`relative rounded-2xl bg-bg-raised-2 p-5 ring-1 ring-line lg:p-6 ${
-                profile.avatarUrl ? "-mt-8 mr-auto w-full max-w-[24rem] sm:-mt-14" : ""
+                photo ? "-mt-8 mr-auto w-full max-w-[24rem] sm:-mt-14" : ""
               }`}
             >
               <h2 className="font-display text-display-sm uppercase leading-none text-ink">

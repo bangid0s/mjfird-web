@@ -144,6 +144,8 @@ export async function saveSiteSettings(formData: FormData) {
     about_headline: String(formData.get("about_headline") ?? ""),
     about_timeline: parseTimeline(String(formData.get("about_timeline") ?? "")),
     about_skills: linesToList(String(formData.get("about_skills") ?? "")),
+    about_cta_label: String(formData.get("about_cta_label") ?? "").trim(),
+    about_cta_url: normalizeMediaUrl(String(formData.get("about_cta_url") ?? "")),
     footer_heading: String(formData.get("footer_heading") ?? ""),
     footer_subtext: String(formData.get("footer_subtext") ?? ""),
     contact_email: String(formData.get("contact_email") ?? ""),

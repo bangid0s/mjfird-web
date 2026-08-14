@@ -123,6 +123,7 @@ export async function updateResumePanel(formData: FormData) {
     resume_email: String(formData.get("resume_email") ?? "").trim(),
     resume_skills: linesToList(String(formData.get("resume_skills") ?? "").replace(/,/g, "\n")),
     resume_pdf_url: normalizeMediaUrl(String(formData.get("resume_pdf_url") ?? "")),
+    resume_photo_url: normalizeMediaUrl(String(formData.get("resume_photo_url") ?? "")),
     resume_languages: parseLanguages(String(formData.get("resume_languages") ?? "")),
   };
 

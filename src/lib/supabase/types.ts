@@ -240,6 +240,8 @@ export type SiteSettingsRow = {
   about_headline: string;
   about_timeline: { year: string; label: string; detail: string }[];
   about_skills: string[];
+  about_cta_label: string;
+  about_cta_url: string;
   footer_heading: string;
   footer_subtext: string;
   contact_email: string;
@@ -255,6 +257,7 @@ export type SiteSettingsRow = {
   resume_email: string;
   resume_skills: string[];
   resume_pdf_url: string;
+  resume_photo_url: string;
   resume_languages: { name: string; level?: string }[];
   gallery_headline: string;
   gallery_intro: string;

@@ -82,6 +82,9 @@ export type SiteSettings = {
   aboutHeadline: string;
   aboutTimeline: { year: string; label: string; detail: string }[];
   aboutSkills: string[];
+  /** Button under the About intro. A blank label hides it. */
+  aboutCtaLabel: string;
+  aboutCtaUrl: string;
   footerHeading: string;
   footerSubtext: string;
   contactEmail: string;
@@ -98,6 +101,8 @@ export type SiteSettings = {
   resumeEmail: string;
   resumeSkills: string[];
   resumePdfUrl: string;
+  /** Portrait for /resume only — blank falls back to the profile avatar. */
+  resumePhotoUrl: string;
   resumeLanguages: { name: string; level: string }[];
   /** /gallery */
   galleryHeadline: string;
@@ -194,6 +199,8 @@ const placeholderSettings: SiteSettings = {
     "Art direction", "Brand systems", "Motion design", "Next.js / React",
     "GSAP / WebGL", "Design systems", "CMS architecture", "Performance engineering",
   ],
+  aboutCtaLabel: "See the dance side",
+  aboutCtaUrl: "/dance",
   footerHeading: "Let's build\nsomething",
   footerSubtext: "Got a project / a battle to plan",
   contactEmail: "hello@mjfird.com",
@@ -214,6 +221,7 @@ const placeholderSettings: SiteSettings = {
   resumeEmail: "",
   resumeSkills: ["Brand identity", "Art direction", "Web design", "Next.js", "Motion", "Illustration"],
   resumePdfUrl: "",
+  resumePhotoUrl: "",
   resumeLanguages: [
     { name: "Indonesian", level: "Native" },
     { name: "English", level: "Professional" },
@@ -318,6 +326,10 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     aboutHeadline: row.about_headline,
     aboutTimeline: row.about_timeline?.length ? row.about_timeline : placeholderSettings.aboutTimeline,
     aboutSkills: row.about_skills?.length ? row.about_skills : placeholderSettings.aboutSkills,
+    // Not `||` — a blank label is a deliberate "hide the button", not a gap to
+    // fill with the default.
+    aboutCtaLabel: row.about_cta_label ?? placeholderSettings.aboutCtaLabel,
+    aboutCtaUrl: row.about_cta_url || placeholderSettings.aboutCtaUrl,
     footerHeading: row.footer_heading,
     footerSubtext: row.footer_subtext,
     contactEmail: row.contact_email,
@@ -333,6 +345,7 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     resumeEmail: row.resume_email ?? "",
     resumeSkills: row.resume_skills ?? [],
     resumePdfUrl: row.resume_pdf_url ?? "",
+    resumePhotoUrl: row.resume_photo_url ?? "",
     resumeLanguages: (row.resume_languages ?? [])
       .filter((language) => typeof language?.name === "string" && language.name)
       .map((language) => ({ name: language.name, level: language.level ?? "" })),

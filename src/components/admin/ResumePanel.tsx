@@ -1,6 +1,7 @@
 import { updateResumePanel } from "@/lib/admin/resume-actions";
 import { Field, fieldInputClasses } from "@/components/admin/Field";
 import SubmitButton from "@/components/admin/SubmitButton";
+import UploadInput from "@/components/admin/UploadInput";
 import type { SiteSettings } from "@/lib/data/site-settings";
 
 export default function ResumePanel({ settings }: { settings: SiteSettings }) {
@@ -9,7 +10,7 @@ export default function ResumePanel({ settings }: { settings: SiteSettings }) {
       <div>
         <h2 className="font-mono text-label uppercase tracking-[0.2em] text-ink">Header</h2>
         <p className="mt-1 font-body text-label text-ink-muted">
-          The block at the top of /resume. Your avatar and social links come from Profile.
+          The block at the top of /resume. Social links come from Profile.
         </p>
       </div>
 
@@ -82,14 +83,24 @@ export default function ResumePanel({ settings }: { settings: SiteSettings }) {
         </Field>
       </div>
 
-      <Field label="PDF link — shows a Download button when set">
-        <input
-          name="resume_pdf_url"
-          defaultValue={settings.resumePdfUrl}
-          placeholder="https://…/resume.pdf"
-          className={fieldInputClasses}
-        />
-      </Field>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Field label="Photo — blank uses your profile avatar">
+          <UploadInput
+            name="resume_photo_url"
+            defaultValue={settings.resumePhotoUrl}
+            ariaLabel="Resume photo"
+            placeholder="Paste an image address…"
+          />
+        </Field>
+        <Field label="PDF link — shows a Download button when set">
+          <input
+            name="resume_pdf_url"
+            defaultValue={settings.resumePdfUrl}
+            placeholder="https://…/resume.pdf"
+            className={fieldInputClasses}
+          />
+        </Field>
+      </div>
 
       <SubmitButton className="self-start">Save header</SubmitButton>
     </form>

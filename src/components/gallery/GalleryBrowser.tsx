@@ -3,12 +3,16 @@
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import MasonryGrid from "@/components/gallery/MasonryGrid";
+import Lightbox from "@/components/gallery/Lightbox";
 import type { GalleryItem } from "@/lib/data/gallery";
 
 const ALL = "All";
 
 export default function GalleryBrowser({ items }: { items: GalleryItem[] }) {
   const [active, setActive] = useState(ALL);
+  // Indexes into the filtered list, so the viewer's prev/next walk what is on
+  // screen rather than jumping to images the current filter hides.
+  const [open, setOpen] = useState<number | null>(null);
 
   // Tags in the order they first appear, so the admin's image order decides the
   // chip order too rather than an alphabetical sort nobody asked for.
@@ -34,7 +38,10 @@ export default function GalleryBrowser({ items }: { items: GalleryItem[] }) {
                 key={tag}
                 type="button"
                 aria-pressed={selected}
-                onClick={() => setActive(tag)}
+                onClick={() => {
+                  setActive(tag);
+                  setOpen(null);
+                }}
                 className={cn(
                   "rounded-xl px-4 py-2 font-mono text-label uppercase tracking-[0.15em] transition-colors duration-[var(--duration-fast)]",
                   selected
@@ -54,7 +61,16 @@ export default function GalleryBrowser({ items }: { items: GalleryItem[] }) {
           Nothing tagged “{active}” yet.
         </p>
       ) : (
-        <MasonryGrid items={filtered} />
+        <MasonryGrid items={filtered} onOpen={setOpen} />
+      )}
+
+      {open !== null && (
+        <Lightbox
+          items={filtered}
+          index={open}
+          onClose={() => setOpen(null)}
+          onIndexChange={setOpen}
+        />
       )}
     </div>
   );
