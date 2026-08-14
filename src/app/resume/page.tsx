@@ -220,6 +220,7 @@ export default async function ResumePage() {
                 <Avatar
                   src={photo}
                   alt={profile.name}
+                  fit="cover"
                   sizes="(min-width: 640px) 20rem, 100vw"
                   className="relative aspect-[4/5] w-full rounded-2xl"
                 />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { mediaThumbnail } from "@/lib/media";
 import type { GalleryItem } from "@/lib/data/gallery";
@@ -13,6 +14,11 @@ function isExternal(url: string) {
  * Full-screen viewer for a gallery image. Escape closes, arrows step, the
  * backdrop is a click target, and the page behind is locked from scrolling
  * while it is open — the same contract the case-study gallery uses.
+ *
+ * Rendered through a portal to `document.body`: the standalone window wrapping
+ * the gallery carries a backdrop-filter, which makes it the containing block
+ * for `position: fixed` children, and clips them with its own overflow. Left in
+ * place the viewer would centre on that frame rather than on the screen.
  */
 export default function Lightbox({
   items,
@@ -57,9 +63,10 @@ export default function Lightbox({
   }, []);
 
   const item = items[index];
+  // Only ever rendered after a click, so `document` is always there.
   if (!item) return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -157,6 +164,7 @@ export default function Lightbox({
           {index + 1} / {items.length}
         </span>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }
