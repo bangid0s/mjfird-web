@@ -1,5 +1,7 @@
 export type ContentStatus = "draft" | "scheduled" | "published";
 export type CaseStudyTemplate = "editorial" | "immersive" | "systems";
+/** How a cover image is framed — see `CoverMedia`. */
+export type CoverFit = "cover" | "contain" | "natural" | "stretch";
 export type InquiryStatus = "new" | "read" | "archived";
 
 export type ProjectRow = {
@@ -57,6 +59,11 @@ export type BlogPostRow = {
   excerpt: string | null;
   body: unknown[];
   cover_image: string | null;
+  cover_fit: CoverFit;
+  cover_focal_point: { x: number; y: number };
+  /** Natural width ÷ height of the cover, measured in the admin. 0 = unknown. */
+  cover_aspect: number;
+  gallery: { url: string; alt?: string }[];
   tags: string[];
   read_time: string | null;
   status: ContentStatus;

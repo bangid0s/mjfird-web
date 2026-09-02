@@ -8,6 +8,15 @@ export function isVideoFile(url: string) {
   return /\.(mp4|webm|mov)(\?.*)?$/i.test(url);
 }
 
+export function isImageFile(url: string) {
+  return /\.(jpe?g|png|gif|webp|avif|svg)(\?.*)?$/i.test(url);
+}
+
+/** True for anything we know how to render as media: image, video, or YouTube. */
+export function isMediaUrl(url: string) {
+  return isImageFile(url) || isVideoFile(url) || isYouTubeUrl(url);
+}
+
 // Only Supabase-hosted images go through next/image (it requires allowlisted
 // hosts); arbitrary pasted URLs render as plain <img>.
 export function isSupabaseHosted(url: string) {

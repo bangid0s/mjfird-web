@@ -3,10 +3,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getPosts, getPost } from "@/lib/data/blog";
 import JsonLd from "@/components/seo/JsonLd";
-import { isYouTubeUrl, isVideoFile } from "@/lib/media";
-import VideoEmbed from "@/components/media/VideoEmbed";
-import SmartImage from "@/components/media/SmartImage";
-import Linkify from "@/components/ui/Linkify";
+import CoverMedia from "@/components/media/CoverMedia";
+import ProjectGallery from "@/components/media/ProjectGallery";
+import PostBody from "@/components/blog/PostBody";
 import { SITE_URL } from "@/lib/site-url";
 
 const BASE_URL = SITE_URL;
@@ -46,8 +45,10 @@ export default async function PostPage({
   const post = await getPost(slug);
   if (!post) notFound();
 
+  const gallery = post.gallery ?? [];
+
   return (
-    <article className="mx-auto max-w-2xl px-6 py-20 sm:px-10">
+    <article className="py-20">
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -69,36 +70,48 @@ export default async function PostPage({
           ],
         }}
       />
-      <Link
-        href="/blog"
-        data-cursor="view"
-        className="mb-8 inline-block font-mono text-label uppercase tracking-[0.15em] text-ink-muted hover:text-accent"
-      >
-        ← All notes
-      </Link>
-      <div className="mb-8 flex gap-4 font-mono text-label uppercase tracking-[0.1em] text-ink-faint">
-        <time dateTime={post.date}>{post.date}</time>
-        <span>{post.readTime} read</span>
-      </div>
-      <h1 className="mb-10 font-display text-display-lg uppercase leading-[0.9] text-ink">
-        {post.title}
-      </h1>
-      {post.cover && (
-        <div className="relative mb-10 aspect-video w-full overflow-hidden bg-bg-raised">
-          {isYouTubeUrl(post.cover) || isVideoFile(post.cover) ? (
-            <VideoEmbed url={post.cover} title={post.title} />
-          ) : (
-            <SmartImage src={post.cover} alt={post.title} sizes="(min-width: 768px) 672px, 100vw" />
-          )}
+      <div className="mx-auto max-w-2xl px-6 sm:px-10">
+        <Link
+          href="/blog"
+          data-cursor="view"
+          className="mb-8 inline-block font-mono text-label uppercase tracking-[0.15em] text-ink-muted hover:text-accent"
+        >
+          ← All notes
+        </Link>
+        <div className="mb-8 flex gap-4 font-mono text-label uppercase tracking-[0.1em] text-ink-faint">
+          <time dateTime={post.date}>{post.date}</time>
+          <span>{post.readTime} read</span>
         </div>
-      )}
-      <div className="flex flex-col gap-6">
-        {post.body.map((paragraph, i) => (
-          <p key={i} className="font-body text-body-lg leading-relaxed text-ink-muted">
-            <Linkify text={paragraph} />
-          </p>
-        ))}
+        <h1 className="mb-10 font-display text-display-lg uppercase leading-[0.9] text-ink">
+          {post.title}
+        </h1>
+        {post.cover && (
+          <div className="mb-10">
+            <CoverMedia
+              src={post.cover}
+              alt={post.title}
+              fit={post.coverFit}
+              focalPoint={post.coverFocalPoint}
+              aspect={post.coverAspect}
+              ratio="16 / 9"
+              maxHeight="75svh"
+              sizes="(min-width: 768px) 672px, 100vw"
+              priority
+              interactive
+            />
+          </div>
+        )}
+        <PostBody body={post.body} />
       </div>
+
+      {gallery.length > 0 && (
+        <section className="mx-auto mt-16 max-w-5xl px-6 sm:px-10">
+          <h2 className="mb-6 border-t border-line pt-6 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
+            More from this post
+          </h2>
+          <ProjectGallery images={gallery} />
+        </section>
+      )}
     </article>
   );
 }

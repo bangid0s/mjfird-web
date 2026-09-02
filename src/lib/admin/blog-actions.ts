@@ -4,7 +4,21 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeMediaUrl } from "@/lib/media";
-import type { ContentStatus } from "@/lib/supabase/types";
+import { parseFocalPoint, parseGallery } from "@/lib/admin/form-parse";
+import type { ContentStatus, CoverFit } from "@/lib/supabase/types";
+
+const COVER_FITS: CoverFit[] = ["cover", "contain", "natural", "stretch"];
+
+function parseCoverFit(raw: string): CoverFit {
+  return (COVER_FITS as string[]).includes(raw) ? (raw as CoverFit) : "cover";
+}
+
+// Measured in the browser when the cover is picked, so treat it as a hint:
+// anything unusable is stored as 0 and the cover falls back to sizing itself.
+function parseAspect(raw: string) {
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
 
 function parsePayload(formData: FormData) {
   const status = String(formData.get("status") ?? "draft") as ContentStatus;
@@ -20,6 +34,10 @@ function parsePayload(formData: FormData) {
       .map((p) => p.trim())
       .filter(Boolean),
     cover_image: normalizeMediaUrl(String(formData.get("cover_image") ?? "")) || null,
+    cover_fit: parseCoverFit(String(formData.get("cover_fit") ?? "")),
+    cover_focal_point: parseFocalPoint(String(formData.get("cover_focal_point") ?? "")),
+    cover_aspect: parseAspect(String(formData.get("cover_aspect") ?? "")),
+    gallery: parseGallery(String(formData.get("gallery") ?? "")),
     og_image: normalizeMediaUrl(String(formData.get("og_image") ?? "")) || null,
     tags: String(formData.get("tags") ?? "")
       .split(",")

@@ -1,3 +1,5 @@
+import type { CoverFit } from "@/lib/supabase/types";
+
 export type Project = {
   slug: string;
   title: string;
@@ -161,6 +163,14 @@ export type Post = {
   readTime: string;
   body: string[];
   cover?: string;
+  /** How the cover is framed on the card and at the top of the post. */
+  coverFit?: CoverFit;
+  /** Kept in view when `coverFit` is "cover" and the crop has to lose something. */
+  coverFocalPoint?: { x: number; y: number };
+  /** The cover's own width ÷ height, so "natural" reserves the right box. */
+  coverAspect?: number;
+  /** Extra images and videos, shown as a masonry grid under the post. */
+  gallery?: { url: string; alt?: string }[];
   /** Custom link-preview thumbnail; falls back to the generated card. */
   ogImage?: string;
 };

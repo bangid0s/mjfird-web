@@ -9,20 +9,40 @@ export default function SmartImage({
   alt = "",
   sizes = "100vw",
   className = "object-cover",
+  style,
   priority,
 }: {
   src: string;
   alt?: string;
   sizes?: string;
   className?: string;
+  /** Mostly for `objectPosition` — see `CoverMedia`'s focal point. */
+  style?: React.CSSProperties;
   priority?: boolean;
 }) {
   const resolved = mediaThumbnail(src);
 
   if (isSupabaseHosted(resolved)) {
-    return <Image src={resolved} alt={alt} fill sizes={sizes} priority={priority} className={className} />;
+    return (
+      <Image
+        src={resolved}
+        alt={alt}
+        fill
+        sizes={sizes}
+        priority={priority}
+        className={className}
+        style={style}
+      />
+    );
   }
 
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={resolved} alt={alt} className={`absolute inset-0 h-full w-full ${className}`} />;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={resolved}
+      alt={alt}
+      style={style}
+      className={`absolute inset-0 h-full w-full ${className}`}
+    />
+  );
 }
