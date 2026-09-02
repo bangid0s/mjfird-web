@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import SectionHeader from "@/components/ui/SectionHeader";
-import SmartImage from "@/components/media/SmartImage";
+import CoverMedia from "@/components/media/CoverMedia";
 import { getPosts } from "@/lib/data/blog";
 
 export const metadata: Metadata = {
@@ -23,16 +23,23 @@ export default async function BlogPage() {
               data-cursor="view"
               className="group flex flex-col gap-5 sm:flex-row sm:items-center"
             >
-              <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-bg-raised sm:w-44">
+              {/* No fixed aspect here: a "natural" cover brings its own, which
+                  is the whole point of the setting. */}
+              <div className="w-full shrink-0 overflow-hidden sm:w-44">
                 {post.cover ? (
-                  <SmartImage
+                  <CoverMedia
                     src={post.cover}
                     alt={post.title}
+                    fit={post.coverFit}
+                    focalPoint={post.coverFocalPoint}
+                    aspect={post.coverAspect}
+                    ratio="16 / 10"
+                    maxHeight="18rem"
                     sizes="(min-width: 640px) 176px, 100vw"
-                    className="object-cover transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-105"
+                    mediaClassName="transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-105"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-bg-raised to-bg-raised-2 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+                  <div className="flex aspect-[16/10] items-center justify-center bg-gradient-to-br from-bg-raised to-bg-raised-2 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
                     Notes
                   </div>
                 )}

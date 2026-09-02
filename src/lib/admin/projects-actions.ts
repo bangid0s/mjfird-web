@@ -4,34 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeMediaUrl } from "@/lib/media";
+import { parseFocalPoint, parseGallery } from "@/lib/admin/form-parse";
 import type { ContentStatus, CaseStudyTemplate } from "@/lib/supabase/types";
-
-function parseGallery(raw: string): { url: string; alt: string }[] {
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed
-        .filter((item) => typeof item?.url === "string" && item.url)
-        .map((item) => ({
-          url: normalizeMediaUrl(item.url),
-          alt: typeof item.alt === "string" ? item.alt : "",
-        }));
-    }
-  } catch {
-    // fall through to empty
-  }
-  return [];
-}
-
-function parseFocalPoint(raw: string) {
-  try {
-    const point = JSON.parse(raw);
-    if (typeof point.x === "number" && typeof point.y === "number") return point;
-  } catch {
-    // fall through to default
-  }
-  return { x: 0.5, y: 0.5 };
-}
 
 function parsePayload(formData: FormData) {
   const status = String(formData.get("status") ?? "draft") as ContentStatus;

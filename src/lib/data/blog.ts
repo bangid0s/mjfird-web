@@ -1,9 +1,17 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { posts as placeholderPosts, type Post } from "@/lib/placeholder-data";
 import { isSupabaseConfigured } from "./config";
-import type { BlogPostRow } from "@/lib/supabase/types";
+import type { BlogPostRow, CoverFit } from "@/lib/supabase/types";
 
+const COVER_FITS: CoverFit[] = ["cover", "contain", "natural", "stretch"];
+
+// The media columns arrived in migration 0023, so a database that has not run
+// it yet hands back rows without them — every read below falls back rather
+// than assuming the column is there.
 function mapRow(row: BlogPostRow): Post {
+  const fit = row.cover_fit;
+  const point = row.cover_focal_point;
+
   return {
     slug: row.slug,
     title: row.title,
@@ -12,6 +20,11 @@ function mapRow(row: BlogPostRow): Post {
     readTime: row.read_time ?? "",
     body: (row.body as string[]) ?? [],
     cover: row.cover_image ?? undefined,
+    coverFit: COVER_FITS.includes(fit) ? fit : "cover",
+    coverFocalPoint:
+      point && typeof point.x === "number" && typeof point.y === "number" ? point : undefined,
+    coverAspect: typeof row.cover_aspect === "number" ? row.cover_aspect : 0,
+    gallery: Array.isArray(row.gallery) ? row.gallery.filter((item) => item?.url) : [],
     ogImage: row.og_image ?? undefined,
   };
 }
