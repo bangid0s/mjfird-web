@@ -101,6 +101,14 @@ export type SiteSettings = {
   resumeEmail: string;
   resumeSkills: string[];
   resumePdfUrl: string;
+  /**
+   * The two portfolio downloads sitting beside the resume PDF in the /resume
+   * header. A blank URL hides its button; the label is what the button says.
+   */
+  resumeGraphicPortfolioLabel: string;
+  resumeGraphicPortfolioUrl: string;
+  resumeIllustrationPortfolioLabel: string;
+  resumeIllustrationPortfolioUrl: string;
   /** Portrait for /resume only — blank falls back to the profile avatar. */
   resumePhotoUrl: string;
   resumeLanguages: { name: string; level: string }[];
@@ -222,6 +230,10 @@ const placeholderSettings: SiteSettings = {
   resumeEmail: "",
   resumeSkills: ["Brand identity", "Art direction", "Web design", "Next.js", "Motion", "Illustration"],
   resumePdfUrl: "",
+  resumeGraphicPortfolioLabel: "Graphic Design Portfolio",
+  resumeGraphicPortfolioUrl: "",
+  resumeIllustrationPortfolioLabel: "Illustration Portfolio",
+  resumeIllustrationPortfolioUrl: "",
   resumePhotoUrl: "",
   resumeLanguages: [
     { name: "Indonesian", level: "Native" },
@@ -346,6 +358,14 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     resumeEmail: row.resume_email ?? "",
     resumeSkills: row.resume_skills ?? [],
     resumePdfUrl: row.resume_pdf_url ?? "",
+    // `||` not `??` on the labels — a label cleared while its link is still set
+    // would render a button with nothing written on it.
+    resumeGraphicPortfolioLabel:
+      row.resume_graphic_portfolio_label || placeholderSettings.resumeGraphicPortfolioLabel,
+    resumeGraphicPortfolioUrl: row.resume_graphic_portfolio_url ?? "",
+    resumeIllustrationPortfolioLabel:
+      row.resume_illustration_portfolio_label || placeholderSettings.resumeIllustrationPortfolioLabel,
+    resumeIllustrationPortfolioUrl: row.resume_illustration_portfolio_url ?? "",
     resumePhotoUrl: row.resume_photo_url ?? "",
     resumeLanguages: (row.resume_languages ?? [])
       .filter((language) => typeof language?.name === "string" && language.name)
