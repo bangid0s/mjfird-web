@@ -40,6 +40,29 @@ function SectionHeading({
 }
 
 /**
+ * An outline download button for the portfolio files in the hero — the same
+ * shape as the gallery link beside it, with the arrow pointing down instead.
+ */
+function PortfolioDownload({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group rounded-full border border-line px-7 py-3.5 font-body text-body-sm font-medium text-ink transition-colors duration-[var(--duration-fast)] hover:border-accent hover:text-accent"
+    >
+      {label}{" "}
+      <span
+        aria-hidden="true"
+        className="inline-block transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-y-1"
+      >
+        ↓
+      </span>
+    </a>
+  );
+}
+
+/**
  * A timeline row: a diamond marker on a hairline rail, the period held out to
  * the left on desktop, the detail to the right.
  */
@@ -190,6 +213,21 @@ export default async function ResumePage() {
                   Download PDF
                 </a>
               )}
+              {/* Each portfolio download stands on its own link — set one and
+                  only that button appears. */}
+              {settings.resumeGraphicPortfolioUrl && (
+                <PortfolioDownload
+                  href={settings.resumeGraphicPortfolioUrl}
+                  label={settings.resumeGraphicPortfolioLabel}
+                />
+              )}
+              {settings.resumeIllustrationPortfolioUrl && (
+                <PortfolioDownload
+                  href={settings.resumeIllustrationPortfolioUrl}
+                  label={settings.resumeIllustrationPortfolioLabel}
+                />
+              )}
+
               {/* Only offered once the gallery has something in it. */}
               {gallery.length > 0 && (
                 <Link

@@ -102,6 +102,53 @@ export default function ResumePanel({ settings }: { settings: SiteSettings }) {
         </Field>
       </div>
 
+      <div className="flex flex-col gap-6 border-t border-line pt-8">
+        <div>
+          <h3 className="font-mono text-label uppercase tracking-[0.2em] text-ink">
+            Portfolio downloads
+          </h3>
+          <p className="mt-1 font-body text-label text-ink-muted">
+            Two extra buttons next to the resume download. Each one only shows up once its link is
+            set, and the label is what the button says.
+          </p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field label="Graphic design — button label">
+            <input
+              name="resume_graphic_portfolio_label"
+              defaultValue={settings.resumeGraphicPortfolioLabel}
+              placeholder="Graphic Design Portfolio"
+              className={fieldInputClasses}
+            />
+          </Field>
+          <Field label="Graphic design — link">
+            <input
+              name="resume_graphic_portfolio_url"
+              defaultValue={settings.resumeGraphicPortfolioUrl}
+              placeholder="https://…/graphic-design-portfolio.pdf"
+              className={fieldInputClasses}
+            />
+          </Field>
+          <Field label="Illustration — button label">
+            <input
+              name="resume_illustration_portfolio_label"
+              defaultValue={settings.resumeIllustrationPortfolioLabel}
+              placeholder="Illustration Portfolio"
+              className={fieldInputClasses}
+            />
+          </Field>
+          <Field label="Illustration — link">
+            <input
+              name="resume_illustration_portfolio_url"
+              defaultValue={settings.resumeIllustrationPortfolioUrl}
+              placeholder="https://…/illustration-portfolio.pdf"
+              className={fieldInputClasses}
+            />
+          </Field>
+        </div>
+      </div>
+
       <SubmitButton className="self-start">Save header</SubmitButton>
     </form>
   );

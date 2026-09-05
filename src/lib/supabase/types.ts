@@ -264,6 +264,10 @@ export type SiteSettingsRow = {
   resume_email: string;
   resume_skills: string[];
   resume_pdf_url: string;
+  resume_graphic_portfolio_label: string;
+  resume_graphic_portfolio_url: string;
+  resume_illustration_portfolio_label: string;
+  resume_illustration_portfolio_url: string;
   resume_photo_url: string;
   resume_languages: { name: string; level?: string }[];
   gallery_headline: string;
