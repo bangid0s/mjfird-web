@@ -45,7 +45,7 @@ contact form (the form currently ships with a honeypot field only).
 
 `info@mjfird.com` is hosted on DomaiNesia (cPanel), separate from the Vercel-hosted
 site — see [`docs/mail-dns.md`](./docs/mail-dns.md) for mail client settings and the
-DNS records mail depends on.
+DNS records mail depends on. `scripts/mail-doctor.sh` diagnoses connection failures.
 
 ## Project structure
 

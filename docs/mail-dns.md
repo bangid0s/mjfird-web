@@ -127,3 +127,52 @@ openssl s_client -connect mail.mjfird.com:465 -crlf   # SMTP over SSL
 A healthy IMAP handshake greets with `* OK ... IMAP4rev1`. If it hangs instead, the
 name is still resolving to the wildcard — or your ISP is blocking the port, worth
 ruling out by testing on mobile data.
+
+## Troubleshooting: records are correct but mail still will not connect
+
+Run [`scripts/mail-doctor.sh`](../scripts/mail-doctor.sh) **on the machine running the
+mail client**, on the normal network and then again on a phone hotspot. It checks DNS,
+port reachability, the TLS certificate, and the IMAP greeting, and prints a verdict.
+
+Key point when reasoning about this: **`mail.mjfird.com` has always pointed at
+`36.50.77.62`**, before any of the DNS fixes above. So if a client configured against
+`mail.mjfird.com` still cannot connect, DNS is not the cause and no DNS edit will fix
+it. Work down this list instead.
+
+### The mail ports do not answer at all
+
+1. **Host firewall has blocked your IP.** cPanel runs cPHulk and usually CSF. Repeated
+   failed logins — including the failed attempts made while the client was pointed at
+   the wrong server — get the source IP blocked automatically. The block is silent:
+   every port stops answering, so it looks identical to an outage. This is the most
+   common cause of "it broke and now nothing I try works". Fix: ask DomaiNesia support
+   to clear the block and whitelist your IP, or check
+   cPanel → Security → *IP Blocker* / cPHulk if the panel is reachable.
+2. **ISP blocks the ports.** Some Indonesian consumer ISPs block 25 and occasionally
+   465/587/993. Re-run the script on a phone hotspot: passing there and failing at home
+   confirms it.
+3. **Account suspended or expired.** DNS lives at Vercel and keeps resolving perfectly
+   even when the hosting account is dead, so the domain looks healthy while mail is
+   entirely gone. Check the DomaiNesia billing panel, and whether webmail loads.
+
+### Did the mailbox actually move servers?
+
+The original SPF authorized `202.155.132.23` (`ankama.id.rapidplex.com`), while
+`mail.mjfird.com` points at `36.50.77.62` (`ankama.id.domainesia.com`). That gap is
+consistent with a completed server migration — but if step 4 of the script finds the
+**old** server still answering on 993/465 while the new one does not, the mailbox may
+never have been migrated, and `mail.mjfird.com` is simply aimed at the wrong host.
+
+### Propagation
+
+Vercel serves DNS from an anycast fleet, and immediately after an edit different nodes
+return different answers. Right after the `smtp`/`imap` records were added, roughly one
+query in five still returned the old wildcard answer. Allow ~30 minutes (the wildcard's
+TTL is 1800s) before treating a stale answer as a real failure, and flush the local
+resolver cache:
+
+```bash
+sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder   # macOS
+resolvectl flush-caches                                          # Linux
+ipconfig /flushdns                                               # Windows
+```
