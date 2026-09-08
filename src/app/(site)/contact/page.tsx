@@ -31,7 +31,7 @@ export default async function ContactPage() {
           </a>
         </div>
       </div>
-      <InquiryForm />
+      <InquiryForm contactEmail={settings.contactEmail} />
     </div>
   );
 }

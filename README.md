@@ -41,6 +41,12 @@ Optional: set `RESEND_API_KEY` to email yourself on new inquiries, and
 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` to add bot protection to the
 contact form (the form currently ships with a honeypot field only).
 
+## Domain mail
+
+`info@mjfird.com` is hosted on DomaiNesia (cPanel), separate from the Vercel-hosted
+site — see [`docs/mail-dns.md`](./docs/mail-dns.md) for mail client settings and the
+DNS records mail depends on.
+
 ## Project structure
 
 - `src/app/(site)` — public pages (home, work, services, about, dance, blog, contact).

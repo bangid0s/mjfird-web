@@ -212,7 +212,7 @@ const placeholderSettings: SiteSettings = {
   aboutCtaUrl: "/dance",
   footerHeading: "Let's build\nsomething",
   footerSubtext: "Got a project / a battle to plan",
-  contactEmail: "hello@mjfird.com",
+  contactEmail: "info@mjfird.com",
   servicesAvailabilityHeading: "Booking projects\nfor Q4 2026",
   servicesAvailabilityLabel: "Availability",
   processSectionEyebrow: "Process",

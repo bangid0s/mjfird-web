@@ -20,7 +20,7 @@ type Errors = Partial<Record<keyof z.infer<typeof schema>, string>>;
 const inputClasses =
   "w-full border-b border-line bg-transparent py-3 font-body text-body text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none disabled:opacity-50";
 
-export default function InquiryForm() {
+export default function InquiryForm({ contactEmail }: { contactEmail: string }) {
   const [state, setState] = useState<FormState>("idle");
   const [errors, setErrors] = useState<Errors>({});
 
@@ -124,7 +124,7 @@ export default function InquiryForm() {
 
       {state === "error" && (
         <p className="font-mono text-label text-error">
-          Something went wrong on our end — try again, or email hello@mjfird.com directly.
+          Something went wrong on our end — try again, or email {contactEmail} directly.
         </p>
       )}
 
