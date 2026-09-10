@@ -4,6 +4,13 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { getYouTubeId, youTubeEmbedUrl } from "@/lib/youtube";
 import { cn } from "@/lib/cn";
 
+// Copy runs full width, so the scrim rises from the bottom edge.
+const BOTTOM_SCRIM =
+  "linear-gradient(to top, var(--color-bg) 0%, var(--color-bg) 22%, transparent 76%)";
+// Copy sits in the left column, so the scrim clears well before mid-frame.
+const LEFT_SCRIM =
+  "linear-gradient(95deg, var(--color-bg) 0%, var(--color-bg) 20%, transparent 64%)";
+
 const ANIMATION_CLASS: Record<string, string> = {
   none: "",
   zoom: "motion-safe:animate-hero-zoom",
@@ -22,6 +29,7 @@ export default function HeroMedia({
   onGoTo,
   overlayOpacity = 60,
   animation = "none",
+  scrim = "overlay",
 }: {
   type: "image" | "video" | "youtube";
   url: string;
@@ -30,6 +38,15 @@ export default function HeroMedia({
   onGoTo?: (index: number) => void;
   overlayOpacity?: number;
   animation?: "none" | "zoom" | "drift" | "pulse";
+  /**
+   * Whether anything at all is painted over the media.
+   *
+   * "overlay" — copy sits on top of the media (/links), so a directional scrim
+   * has to carry it: bottom-anchored on narrow screens, left-anchored on wide.
+   * "none" — the caller gives the media a frame of its own with no text over
+   * it at any width (the homepage hero), so the artwork is left untouched.
+   */
+  scrim?: "overlay" | "none";
 }) {
   const reducedMotion = usePrefersReducedMotion();
   // A YouTube link pasted into the "video" slot still plays as a background embed.
@@ -45,7 +62,7 @@ export default function HeroMedia({
   if (type === "image" && slides.length === 0) return null;
 
   const goTo = (index: number) => onGoTo?.((index + slides.length) % slides.length);
-  const scrim = Math.min(100, Math.max(0, overlayOpacity)) / 100;
+  const scrimOpacity = Math.min(100, Math.max(0, overlayOpacity)) / 100;
 
   return (
     <>
@@ -104,31 +121,26 @@ export default function HeroMedia({
         ))}
 
       {/*
-        Legibility scrim. This used to be a flat wash across the entire frame,
-        which dulled the whole image just to make text readable in one corner.
-        It's directional now: solid only where the copy actually sits, and
-        fully clear over the rest of the artwork — anchored left on wide
-        screens, bottom on narrow ones where the copy runs full width.
-        Strength still comes from Site Settings.
+        Legibility scrim, and only where copy actually sits on the media.
+        Strength comes from Site Settings.
+
+        Callers that give the media a frame of its own pass scrim="none" and get
+        nothing over the artwork at any width — no tint, no bottom fade into the
+        section below. The frame just ends on the section's hairline, which
+        suits the hard edges everywhere else.
       */}
-      <div
-        className="absolute inset-0 sm:hidden"
-        style={{
-          opacity: scrim,
-          background:
-            "linear-gradient(to top, var(--color-bg) 0%, var(--color-bg) 22%, transparent 76%)",
-        }}
-      />
-      <div
-        className="absolute inset-0 hidden sm:block"
-        style={{
-          opacity: scrim,
-          background:
-            "linear-gradient(95deg, var(--color-bg) 0%, var(--color-bg) 20%, transparent 64%)",
-        }}
-      />
-      {/* Short fade into the section below — never more than the bottom eighth. */}
-      <div className="absolute inset-x-0 bottom-0 h-[12%] bg-gradient-to-t from-bg to-transparent" />
+      {scrim === "overlay" && (
+        <>
+          <div
+            className="absolute inset-0 sm:hidden"
+            style={{ opacity: scrimOpacity, background: BOTTOM_SCRIM }}
+          />
+          <div
+            className="absolute inset-0 hidden sm:block"
+            style={{ opacity: scrimOpacity, background: LEFT_SCRIM }}
+          />
+        </>
+      )}
     </div>
 
     {/* Slider navigation — only when there's more than one image. The wrapper

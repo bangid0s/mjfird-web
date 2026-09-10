@@ -67,7 +67,6 @@ export default async function Home() {
         mediaType={settings.heroMediaType}
         mediaUrl={settings.heroMediaUrl ?? ""}
         slides={settings.heroSlides}
-        overlayOpacity={settings.heroOverlayOpacity}
         animation={settings.heroAnimation}
         slideDuration={settings.heroSlideDuration}
         eyebrow={settings.heroEyebrow}
