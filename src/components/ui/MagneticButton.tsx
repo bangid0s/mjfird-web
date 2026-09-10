@@ -21,16 +21,14 @@ type Props = {
 };
 
 const VARIANTS: Record<NonNullable<Props["variant"]>, string> = {
-  primary:
-    "bg-accent text-accent-ink shadow-sm hover:shadow-md hover:brightness-110",
-  secondary:
-    "border border-line-strong text-ink hover:border-ink hover:bg-bg-raised-2",
-  ghost: "text-ink-muted hover:text-ink hover:bg-bg-raised-2",
+  primary: "bg-accent text-accent-ink hover:brightness-110",
+  secondary: "border border-ink text-ink hover:bg-ink hover:text-bg",
+  ghost: "text-ink-muted hover:text-ink",
 };
 
 const SIZES: Record<NonNullable<Props["size"]>, string> = {
-  md: "px-5 py-2.5 text-body-sm",
-  lg: "px-7 py-3.5 text-body",
+  md: "px-5 py-3",
+  lg: "px-7 py-4",
 };
 
 export default function MagneticButton({
@@ -69,7 +67,7 @@ export default function MagneticButton({
   };
 
   const classes = cn(
-    "group inline-flex items-center justify-center gap-2 rounded-full font-medium transition-[background-color,border-color,color,box-shadow,filter] duration-[var(--duration-fast)] ease-[var(--ease-swing)]",
+    "spec group inline-flex items-center justify-center gap-2.5 transition-[background-color,border-color,color,filter] duration-[var(--duration-fast)] ease-[var(--ease-swing)]",
     SIZES[size],
     VARIANTS[variant],
     className,

@@ -16,6 +16,7 @@ export default async function BlogPage() {
   return (
     <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
       <SectionHeader
+        index={1}
         eyebrow="Blog"
         title="Notes"
         action={
@@ -35,7 +36,7 @@ export default async function BlogPage() {
             >
               {/* No fixed aspect is forced here: a "natural" cover brings its
                   own, which is the whole point of the setting. */}
-              <div className="overflow-hidden rounded-[var(--radius-lg)] border border-line bg-bg-raised-2">
+              <div className="overflow-hidden border border-line bg-bg-raised-2">
                 {post.cover ? (
                   <CoverMedia
                     src={post.cover}

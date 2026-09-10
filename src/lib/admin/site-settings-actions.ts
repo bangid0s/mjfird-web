@@ -84,7 +84,7 @@ export async function saveSiteSettings(formData: FormData) {
   const supabase = await createClient();
 
   const payload = {
-    accent_color: String(formData.get("accent_color") ?? "#4b3bff"),
+    accent_color: String(formData.get("accent_color") ?? "#f04e23"),
     site_title: String(formData.get("site_title") ?? ""),
     site_description: String(formData.get("site_description") ?? ""),
     logo_url: String(formData.get("logo_url") ?? "") || null,

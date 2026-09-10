@@ -67,7 +67,7 @@ export default async function AdminSettingsPage({
               <input
                 type="color"
                 name="accent_color"
-                defaultValue={settings?.accent_color ?? "#4b3bff"}
+                defaultValue={settings?.accent_color ?? "#f04e23"}
                 className="h-11 w-16 cursor-pointer border border-line bg-transparent"
               />
               <span className="font-mono text-body-sm text-ink-muted">

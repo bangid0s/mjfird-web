@@ -30,6 +30,7 @@ export default async function DancePage() {
     <div>
       <div className="container-page pb-12 pt-14 sm:pt-20">
         <SectionHeader
+          index={1}
           eyebrow={settings.danceSectionEyebrow}
           title={settings.danceSectionTitle}
           description={settings.danceIntro}
@@ -120,7 +121,7 @@ export default async function DancePage() {
                   </td>
                   <td className="py-4 pr-4 text-body text-ink">{b.event}</td>
                   <td className="py-4 text-right">
-                    <span className="inline-block rounded-full bg-accent-soft px-3 py-1 text-body-sm font-medium text-accent">
+                    <span className="spec inline-block border border-line px-2.5 py-1 text-ink">
                       {b.result}
                     </span>
                   </td>

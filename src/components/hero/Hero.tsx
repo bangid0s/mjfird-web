@@ -11,6 +11,19 @@ import { cn } from "@/lib/cn";
 // Where the primary button points when a slide doesn't name its own link.
 const DEFAULT_CTA_HREF = "/work";
 
+/*
+  A split sheet rather than a photo with text on top of it.
+
+  On wide screens the media is a panel occupying the right of the frame and the
+  copy sits on clean ground beside it, so almost none of the artwork has
+  anything over it. Below `lg` the panel goes full-bleed behind the copy, where
+  HeroMedia's directional scrim earns its keep.
+
+  Everything else is corner work: a spec label above the wordmark, a rotated
+  label up the right edge, an outline monogram straddling the seam between
+  ground and image, and a solid accent square in the bottom corner.
+*/
+
 export default function Hero({
   mediaType,
   mediaUrl,
@@ -22,6 +35,8 @@ export default function Hero({
   intro,
   ctaPrimary,
   ctaSecondary,
+  edgeLabel,
+  monogram = "M",
 }: {
   mediaType: "none" | "image" | "video" | "youtube";
   mediaUrl: string;
@@ -33,6 +48,10 @@ export default function Hero({
   intro: string;
   ctaPrimary: string;
   ctaSecondary: string;
+  /** Rotated label up the right edge. */
+  edgeLabel?: string;
+  /** Letter inside the outline mark. */
+  monogram?: string;
 }) {
   const reducedMotion = usePrefersReducedMotion();
   const [index, setIndex] = useState(0);
@@ -71,35 +90,59 @@ export default function Hero({
   const hasMedia = mediaType !== "none" && (mediaUrl || count > 0);
 
   return (
-    <section className="relative -mt-[var(--nav-h)] overflow-hidden">
-      {hasMedia ? (
-        <HeroMedia
-          type={mediaType}
-          url={mediaUrl}
-          images={images}
-          activeIndex={index}
-          onGoTo={rotates ? goTo : undefined}
-          overlayOpacity={overlayOpacity}
-          animation={animation}
-        />
-      ) : (
-        // No hero media configured: a soft accent wash rather than a flat wall.
-        <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
-          <div className="absolute -left-[10%] top-[-20%] h-[46rem] w-[46rem] rounded-full bg-accent opacity-[0.13] blur-[120px]" />
-          <div className="absolute -right-[15%] bottom-[-25%] h-[38rem] w-[38rem] rounded-full bg-accent-echo opacity-[0.09] blur-[120px]" />
-        </div>
+    <section className="relative -mt-[var(--nav-h)] overflow-hidden border-b border-line">
+      {/* Media panel: right of the frame on wide screens, full-bleed below. */}
+      <div className={cn("absolute inset-0", hasMedia && "lg:left-[54%] lg:border-l lg:border-line")}>
+        {hasMedia && (
+          <HeroMedia
+            type={mediaType}
+            url={mediaUrl}
+            images={images}
+            activeIndex={index}
+            onGoTo={rotates ? goTo : undefined}
+            overlayOpacity={overlayOpacity}
+            animation={animation}
+          />
+        )}
+      </div>
+
+      {/* Outline monogram, straddling the seam between ground and image. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-1/2 z-[var(--z-content)] hidden -translate-x-1/2 -translate-y-1/2 lg:block"
+      >
+        <svg
+          viewBox="0 0 100 100"
+          className="h-[clamp(9rem,17vw,17rem)] w-[clamp(9rem,17vw,17rem)] text-accent"
+          fill="none"
+        >
+          <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="3.5" />
+          <text
+            x="50"
+            y="50"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fill="currentColor"
+            style={{ font: "600 46px var(--font-display)", letterSpacing: "-0.04em" }}
+          >
+            {monogram}
+          </text>
+        </svg>
+      </span>
+
+      {/* Rotated edge label. */}
+      {edgeLabel && (
+        <span
+          aria-hidden="true"
+          className="spec label-vertical absolute right-4 top-[calc(var(--nav-h)+3rem)] z-[var(--z-content)] hidden xl:block"
+        >
+          {edgeLabel}
+        </span>
       )}
 
-      <div className="container-page relative flex min-h-[88svh] flex-col justify-center gap-9 pb-20 pt-[calc(var(--nav-h)+3rem)]">
-        <div className="flex flex-col gap-7">
-          <p
-            key={`eyebrow-${index}`}
-            className={cn(
-              "inline-flex w-fit items-center gap-2.5 rounded-full border border-line bg-bg/60 px-4 py-2 text-label font-medium tracking-[0.06em] text-ink-muted uppercase backdrop-blur-sm",
-              copyAnimation,
-            )}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+      <div className="container-page relative z-[var(--z-content)] flex min-h-svh flex-col justify-between pb-24 pt-[calc(var(--nav-h)+3.5rem)]">
+        <div className="flex flex-col gap-8">
+          <p key={`eyebrow-${index}`} className={cn("spec", copyAnimation)}>
             {slideEyebrow}
           </p>
 
@@ -110,27 +153,40 @@ export default function Hero({
 
         <div
           key={`copy-${index}`}
-          className={cn(
-            "flex flex-col items-start gap-8 border-t border-line/70 pt-8 sm:flex-row sm:items-end sm:justify-between",
-            copyAnimation,
-          )}
+          className={cn("flex max-w-md flex-col items-start gap-8", copyAnimation)}
         >
-          <p className="max-w-lg text-body-lg text-pretty text-ink-muted">{slideIntro}</p>
+          <p className="text-body-lg text-pretty text-ink-muted">{slideIntro}</p>
           <div className="flex flex-wrap gap-3">
             <MagneticButton href={slideCtaHref} size="lg" arrow cursorLabel="view">
               {slideCtaLabel}
             </MagneticButton>
-            <MagneticButton
-              href="/contact"
-              size="lg"
-              variant="secondary"
-              cursorLabel="view"
-            >
+            <MagneticButton href="/contact" size="lg" variant="secondary" cursorLabel="view">
               {ctaSecondary}
             </MagneticButton>
           </div>
         </div>
       </div>
+
+      {/* Solid accent square, hard into the bottom-right corner. */}
+      <a
+        href="#work"
+        aria-label="Skip to the work"
+        data-cursor="view"
+        className="absolute bottom-0 right-0 z-[var(--z-content)] grid h-16 w-16 place-items-center bg-accent text-accent-ink transition-[filter] duration-[var(--duration-fast)] hover:brightness-110 sm:h-20 sm:w-20"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-5 w-5"
+          aria-hidden="true"
+        >
+          <path d="M12 4v16M6 14l6 6 6-6" />
+        </svg>
+      </a>
     </section>
   );
 }

@@ -30,7 +30,7 @@ export default function FilterChips({
       <div
         role="group"
         aria-label="Filter by category"
-        className="flex w-max items-center gap-1.5 rounded-full border border-line bg-bg-raised/60 p-1.5"
+        className="flex w-max items-center border border-line"
       >
         {all.map((option) => {
           const selected = active === option;
@@ -42,7 +42,7 @@ export default function FilterChips({
               aria-pressed={selected}
               data-cursor="view"
               className={cn(
-                "relative isolate rounded-full px-4 py-2 text-body-sm font-medium whitespace-nowrap transition-colors duration-[var(--duration-fast)]",
+                "spec relative isolate px-4 py-2.5 whitespace-nowrap transition-colors duration-[var(--duration-fast)]",
                 selected ? "text-accent-ink" : "text-ink-muted hover:text-ink",
               )}
             >
@@ -55,7 +55,7 @@ export default function FilterChips({
                 <motion.span
                   layoutId={layoutId}
                   transition={{ duration: 0.32, ease: easeFreeze }}
-                  className="absolute inset-0 -z-10 rounded-full bg-accent"
+                  className="absolute inset-0 -z-10 bg-accent"
                 />
               )}
               {option}

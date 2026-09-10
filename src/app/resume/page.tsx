@@ -49,7 +49,7 @@ function PortfolioDownload({ href, label }: { href: string; label: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group rounded-full border border-line px-7 py-3.5 font-body text-body-sm font-medium text-ink transition-colors duration-[var(--duration-fast)] hover:border-accent hover:text-accent"
+      className="group border border-line px-7 py-3.5 font-body text-body-sm font-medium text-ink transition-colors duration-[var(--duration-fast)] hover:border-accent hover:text-accent"
     >
       {label}{" "}
       <span
@@ -208,7 +208,7 @@ export default async function ResumePage() {
                   href={settings.resumePdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full bg-accent px-7 py-3.5 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
+                  className="bg-accent px-7 py-3.5 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
                 >
                   Download PDF
                 </a>
@@ -232,7 +232,7 @@ export default async function ResumePage() {
               {gallery.length > 0 && (
                 <Link
                   href="/gallery"
-                  className="group rounded-full border border-line px-7 py-3.5 font-body text-body-sm font-medium text-ink transition-colors duration-[var(--duration-fast)] hover:border-accent hover:text-accent"
+                  className="group border border-line px-7 py-3.5 font-body text-body-sm font-medium text-ink transition-colors duration-[var(--duration-fast)] hover:border-accent hover:text-accent"
                 >
                   View gallery{" "}
                   <span
@@ -372,7 +372,7 @@ export default async function ResumePage() {
                       {settings.resumeSkills.map((skill) => (
                         <li
                           key={skill}
-                          className="rounded-full bg-bg px-4 py-2 font-body text-body-sm text-ink-muted ring-1 ring-line"
+                          className="border border-line px-4 py-2 font-body text-body-sm text-ink-muted ring-1 ring-line"
                         >
                           {skill}
                         </li>

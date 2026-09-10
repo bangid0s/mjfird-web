@@ -21,11 +21,13 @@ const TONE_CLASS: Record<SectionTone, string> = {
  * sections should carry one.
  */
 export default function SectionBand({
+  id,
   tone = "none",
   size = "section",
   className,
   children,
 }: {
+  id?: string;
   tone?: SectionTone;
   /** "compact" is for stat strips and other one-line bands. */
   size?: "section" | "compact";
@@ -33,7 +35,7 @@ export default function SectionBand({
   children: React.ReactNode;
 }) {
   return (
-    <section className={cn(TONE_CLASS[tone], className)}>
+    <section id={id} className={cn(TONE_CLASS[tone], className)}>
       <div
         className={cn(
           "container-page",

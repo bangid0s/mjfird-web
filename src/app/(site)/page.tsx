@@ -15,11 +15,30 @@ import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL } from "@/lib/site-url";
 
 /*
-  The stats strip is the page's one loud moment. "solid" fills it with the
-  accent; "lilac" keeps it as a quiet tint like the bands around it. One line,
-  because it's the kind of decision that gets revisited.
+  The stats strip. "none" keeps it on the sheet between two hairlines, which is
+  what the near-monochrome direction wants; "solid" fills it with the accent for
+  one loud band. One line, because it's the kind of decision that gets revisited.
 */
-const STATS_TONE: SectionTone = "solid";
+const STATS_TONE: SectionTone = "none";
+
+// Small shared link, used as the trailing control on two section headers.
+function MoreLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      data-cursor="view"
+      className="spec group inline-flex items-center gap-2 transition-colors duration-[var(--duration-fast)] hover:text-ink"
+    >
+      {children}
+      <span
+        aria-hidden="true"
+        className="transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-1"
+      >
+        →
+      </span>
+    </Link>
+  );
+}
 
 export default async function Home() {
   const [projects, services, testimonials, profile, settings] = await Promise.all([
@@ -54,35 +73,23 @@ export default async function Home() {
         intro={settings.heroIntro}
         ctaPrimary={settings.heroCtaPrimary}
         ctaSecondary={settings.heroCtaSecondary}
+        edgeLabel={settings.siteTitle}
       />
 
       {/* Featured work — deliberately untinted: the artwork supplies the colour. */}
-      <SectionBand>
+      <SectionBand id="work">
         <SectionHeader
+          index={1}
           eyebrow={settings.workSectionEyebrow}
           title={settings.workSectionTitle}
-          action={
-            <Link
-              href="/work"
-              data-cursor="view"
-              className="group inline-flex items-center gap-2 text-body-sm font-medium text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-accent"
-            >
-              All work
-              <span
-                aria-hidden="true"
-                className="transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-1"
-              >
-                →
-              </span>
-            </Link>
-          }
+          action={<MoreLink href="/work">All work</MoreLink>}
         />
         <FeaturedWork projects={featured} />
       </SectionBand>
 
       {/* Stats */}
-      <SectionBand tone={STATS_TONE} size="compact">
-        <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4">
+      <SectionBand tone={STATS_TONE} size="compact" className="border-y border-line">
+        <div className="grid grid-cols-2 gap-y-10 sm:grid-cols-4">
           {settings.stats.map((stat, i) => (
             <Reveal key={stat.label} delay={i * 60}>
               <AnimatedNumber value={stat.value} suffix={stat.suffix} label={stat.label} />
@@ -91,41 +98,28 @@ export default async function Home() {
         </div>
       </SectionBand>
 
-      {/* Services */}
+      {/* Services — hairline compartments, not floating cards. */}
       <SectionBand tone="sand">
         <SectionHeader
+          index={2}
           eyebrow={settings.servicesSectionEyebrow}
           title={settings.servicesSectionTitle}
-          action={
-            <Link
-              href="/services"
-              data-cursor="view"
-              className="group inline-flex items-center gap-2 text-body-sm font-medium text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-accent"
-            >
-              How I work
-              <span
-                aria-hidden="true"
-                className="transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-1"
-              >
-                →
-              </span>
-            </Link>
-          }
+          action={<MoreLink href="/services">How I work</MoreLink>}
         />
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid border-t border-line md:grid-cols-3">
           {services.map((service, i) => (
             <Reveal
               key={service.title}
               delay={i * 70}
-              className="surface group flex flex-col gap-4 p-7 transition-[transform,box-shadow,border-color] duration-[var(--duration-base)] ease-[var(--ease-freeze)] hover:-translate-y-1 hover:border-line-strong hover:shadow-md"
+              className="flex flex-col gap-5 border-b border-line py-9 md:border-r md:px-8 md:py-10 md:last:border-r-0 md:[&:first-child]:pl-0 md:[&:last-child]:pr-0"
             >
-              <span className="mono-meta">{String(i + 1).padStart(2, "0")}</span>
+              <span className="mono-meta text-ink">{String(i + 1).padStart(2, "0")}</span>
               <h3 className="display-sm">{service.title}</h3>
               <p className="text-body-sm text-pretty text-ink-muted">{service.description}</p>
-              <ul className="mt-2 flex flex-col gap-2 border-t border-line pt-4">
+              <ul className="mt-auto flex flex-col gap-2 pt-4">
                 {service.deliverables.map((d) => (
-                  <li key={d} className="flex items-start gap-2.5 text-body-sm text-ink-faint">
-                    <span aria-hidden="true" className="mt-[0.45em] h-1 w-1 shrink-0 rounded-full bg-accent" />
+                  <li key={d} className="spec flex items-start gap-2.5">
+                    <span aria-hidden="true" className="mt-[0.5em] h-1 w-1 shrink-0 bg-accent" />
                     {d}
                   </li>
                 ))}
@@ -138,31 +132,30 @@ export default async function Home() {
       {/* Testimonials */}
       <SectionBand tone="mint">
         <SectionHeader
+          index={3}
           eyebrow={settings.testimonialsSectionEyebrow}
           title={settings.testimonialsSectionTitle}
         />
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid border-t border-line md:grid-cols-3">
           {testimonials.map((t, i) => (
             <Reveal
               key={t.name}
               delay={i * 70}
               as="figure"
-              className="surface flex flex-col justify-between gap-6 p-7"
+              className="flex flex-col justify-between gap-8 border-b border-line py-9 md:border-r md:px-8 md:py-10 md:last:border-r-0 md:[&:first-child]:pl-0 md:[&:last-child]:pr-0"
             >
               <blockquote className="text-body text-pretty text-ink">
-                <span aria-hidden="true" className="mb-3 block text-3xl leading-none text-accent">
-                  &ldquo;
-                </span>
+                <span aria-hidden="true" className="mb-4 block h-2 w-6 bg-accent" />
                 {t.quote}
               </blockquote>
-              <figcaption className="flex items-center gap-3 border-t border-line pt-5">
+              <figcaption className="flex items-center gap-3">
                 {t.avatarUrl && (
-                  <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-line">
+                  <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-line">
                     <SmartImage src={t.avatarUrl} alt={t.name} sizes="36px" />
                   </span>
                 )}
-                <span className="text-body-sm text-ink-muted">
-                  <span className="font-medium text-ink">{t.name}</span>
+                <span className="spec">
+                  {t.name}
                   {t.role ? ` — ${t.role}` : ""}
                 </span>
               </figcaption>

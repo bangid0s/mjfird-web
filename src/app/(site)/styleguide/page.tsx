@@ -108,7 +108,7 @@ export default function StyleguidePage() {
           <MagneticButton variant="primary" size="lg" arrow>
             Large
           </MagneticButton>
-          <span className="pointer-events-none inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-body-sm font-medium text-accent-ink opacity-40">
+          <span className="pointer-events-none inline-flex items-center justify-center bg-accent px-5 py-2.5 text-body-sm font-medium text-accent-ink opacity-40">
             Disabled
           </span>
         </div>

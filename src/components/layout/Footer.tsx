@@ -23,16 +23,10 @@ export default function Footer({
     <footer className="relative mt-auto border-t border-line bg-bg">
       <div className="container-page py-[var(--space-section)]">
         {/* CTA band */}
-        <Reveal className="surface relative overflow-hidden bg-bg-raised px-6 py-12 sm:px-12 sm:py-16">
-          {/* One soft accent wash, the only decorative colour in the footer. */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent opacity-[0.09] blur-3xl"
-          />
-
+        <Reveal className="relative border-t border-line pt-10">
           <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="eyebrow eyebrow-accent mb-5">{subtext}</p>
+              <p className="eyebrow mb-6">{subtext}</p>
               <h2 className="display-lg max-w-2xl">
                 {headingLines.map((line, i) => (
                   <span key={i}>
@@ -50,7 +44,7 @@ export default function Footer({
               <a
                 href={`mailto:${contactEmail}`}
                 data-cursor="view"
-                className="text-body-sm text-ink-muted underline decoration-line-strong underline-offset-4 transition-colors duration-[var(--duration-fast)] hover:text-accent hover:decoration-accent"
+                className="spec underline decoration-line-strong underline-offset-4 transition-colors duration-[var(--duration-fast)] hover:text-ink"
               >
                 {contactEmail}
               </a>
@@ -68,7 +62,7 @@ export default function Footer({
                   <Link
                     href={item.href}
                     data-cursor="view"
-                    className="text-body-sm text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-accent"
+                    className="spec transition-colors duration-[var(--duration-fast)] hover:text-ink"
                   >
                     {item.label}
                   </Link>
@@ -87,12 +81,12 @@ export default function Footer({
                     target="_blank"
                     rel="noopener noreferrer"
                     data-cursor="view"
-                    className="group inline-flex items-center gap-1.5 text-body-sm text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-accent"
+                    className="spec group inline-flex items-center gap-1.5 transition-colors duration-[var(--duration-fast)] hover:text-ink"
                   >
                     {item.label}
                     <span
                       aria-hidden="true"
-                      className="text-ink-faint transition-transform duration-[var(--duration-fast)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent"
+                      className="text-ink-faint transition-transform duration-[var(--duration-fast)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                     >
                       ↗
                     </span>
@@ -107,7 +101,7 @@ export default function Footer({
             <a
               href={`mailto:${contactEmail}`}
               data-cursor="view"
-              className="text-body-sm text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-accent"
+              className="spec transition-colors duration-[var(--duration-fast)] hover:text-ink"
             >
               {contactEmail}
             </a>
