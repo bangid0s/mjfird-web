@@ -12,8 +12,17 @@ export default async function WorkPage() {
   const projects = await getProjects();
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10">
-      <SectionHeader eyebrow="Selected Work" title="Everything I've shipped" />
+    <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
+      <SectionHeader
+        index={1}
+        eyebrow="Selected Work"
+        title="Everything I've shipped"
+        action={
+          <p className="mono-meta">
+            {projects.length} {projects.length === 1 ? "project" : "projects"}
+          </p>
+        }
+      />
       <WorkGrid projects={projects} />
     </div>
   );

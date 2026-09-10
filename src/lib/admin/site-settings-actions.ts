@@ -84,7 +84,7 @@ export async function saveSiteSettings(formData: FormData) {
   const supabase = await createClient();
 
   const payload = {
-    accent_color: String(formData.get("accent_color") ?? "#ff2e88"),
+    accent_color: String(formData.get("accent_color") ?? "#f04e23"),
     site_title: String(formData.get("site_title") ?? ""),
     site_description: String(formData.get("site_description") ?? ""),
     logo_url: String(formData.get("logo_url") ?? "") || null,
@@ -133,7 +133,6 @@ export async function saveSiteSettings(formData: FormData) {
     hero_intro: String(formData.get("hero_intro") ?? ""),
     hero_cta_primary: String(formData.get("hero_cta_primary") ?? ""),
     hero_cta_secondary: String(formData.get("hero_cta_secondary") ?? ""),
-    marquee_items: linesToList(String(formData.get("marquee_items") ?? "")),
     stats: parseStats(String(formData.get("stats") ?? "")),
     work_section_eyebrow: String(formData.get("work_section_eyebrow") ?? ""),
     work_section_title: String(formData.get("work_section_title") ?? ""),

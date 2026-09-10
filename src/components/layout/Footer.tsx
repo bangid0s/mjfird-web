@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MagneticButton from "@/components/ui/MagneticButton";
+import Reveal from "@/components/motion/Reveal";
 
 export default function Footer({
   socials,
@@ -20,42 +21,48 @@ export default function Footer({
 
   return (
     <footer className="relative mt-auto border-t border-line bg-bg">
-      <div className="relative h-2 w-full overflow-hidden">
-        <div className="absolute -inset-x-4 top-1/2 h-3 -translate-y-1/2 -rotate-1 bg-accent/90" />
-      </div>
+      <div className="container-page py-[var(--space-section)]">
+        {/* CTA band */}
+        <Reveal className="relative border-t border-line pt-10">
+          <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="eyebrow mb-6">{subtext}</p>
+              <h2 className="display-lg max-w-2xl">
+                {headingLines.map((line, i) => (
+                  <span key={i}>
+                    {line}
+                    {i < headingLines.length - 1 && <br />}
+                  </span>
+                ))}
+              </h2>
+            </div>
 
-      <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10">
-        <div className="flex flex-col gap-8 border-b border-line pb-16 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="mb-4 font-mono text-label uppercase tracking-[0.2em] text-ink-muted">
-              {subtext}
-            </p>
-            <h2 className="font-display text-display-md uppercase leading-[0.95] text-ink">
-              {headingLines.map((line, i) => (
-                <span key={i}>
-                  {line}
-                  {i < headingLines.length - 1 && <br />}
-                </span>
-              ))}
-            </h2>
+            <div className="flex shrink-0 flex-col items-start gap-4">
+              <MagneticButton href="/contact" cursorLabel="view">
+                Start an inquiry
+              </MagneticButton>
+              <a
+                href={`mailto:${contactEmail}`}
+                data-cursor="view"
+                className="spec underline decoration-line-strong underline-offset-4 transition-colors duration-[var(--duration-fast)] hover:text-ink"
+              >
+                {contactEmail}
+              </a>
+            </div>
           </div>
-          <MagneticButton href="/contact" cursorLabel="view">
-            Start an inquiry →
-          </MagneticButton>
-        </div>
+        </Reveal>
 
-        <div className="grid grid-cols-2 gap-10 pt-16 sm:grid-cols-4">
+        {/* Columns */}
+        <div className="mt-16 grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4">
           <div>
-            <p className="mb-4 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
-              Sitemap
-            </p>
-            <ul className="flex flex-col gap-2">
+            <p className="eyebrow mb-4">Sitemap</p>
+            <ul className="flex flex-col gap-2.5">
               {sitemap.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     data-cursor="view"
-                    className="font-body text-body-sm text-ink-muted transition-colors hover:text-accent"
+                    className="spec transition-colors duration-[var(--duration-fast)] hover:text-ink"
                   >
                     {item.label}
                   </Link>
@@ -63,11 +70,10 @@ export default function Footer({
               ))}
             </ul>
           </div>
+
           <div>
-            <p className="mb-4 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
-              Elsewhere
-            </p>
-            <ul className="flex flex-col gap-2">
+            <p className="eyebrow mb-4">Elsewhere</p>
+            <ul className="flex flex-col gap-2.5">
               {socials.map((item) => (
                 <li key={item.url}>
                   <a
@@ -75,30 +81,34 @@ export default function Footer({
                     target="_blank"
                     rel="noopener noreferrer"
                     data-cursor="view"
-                    className="font-body text-body-sm text-ink-muted transition-colors hover:text-accent"
+                    className="spec group inline-flex items-center gap-1.5 transition-colors duration-[var(--duration-fast)] hover:text-ink"
                   >
                     {item.label}
+                    <span
+                      aria-hidden="true"
+                      className="text-ink-faint transition-transform duration-[var(--duration-fast)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                    >
+                      ↗
+                    </span>
                   </a>
                 </li>
               ))}
             </ul>
           </div>
+
           <div>
-            <p className="mb-4 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
-              Contact
-            </p>
+            <p className="eyebrow mb-4">Contact</p>
             <a
               href={`mailto:${contactEmail}`}
               data-cursor="view"
-              className="font-body text-body-sm text-ink-muted transition-colors hover:text-accent"
+              className="spec transition-colors duration-[var(--duration-fast)] hover:text-ink"
             >
               {contactEmail}
             </a>
           </div>
-          <div className="col-span-2 flex items-end justify-end sm:col-span-1">
-            <p className="font-mono text-label text-ink-faint">
-              © {new Date().getFullYear()} MJFIRD
-            </p>
+
+          <div className="col-span-2 flex items-end sm:col-span-1 sm:justify-end">
+            <p className="mono-meta">© {new Date().getFullYear()} MJFIRD</p>
           </div>
         </div>
       </div>

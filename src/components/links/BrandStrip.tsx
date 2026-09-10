@@ -30,7 +30,7 @@ export default function BrandStrip({
                   className="max-h-10 w-full object-contain"
                 />
               ) : (
-                <span className="font-display text-body-lg uppercase leading-none text-ink">
+                <span className="font-display text-body-lg font-semibold tracking-[-0.02em] text-ink">
                   {brand.name}
                 </span>
               )}

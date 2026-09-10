@@ -58,17 +58,17 @@ export default function CaseStudyNarrative({
       {sections.map(({ key, label }) => {
         const { prose, videos } = splitVideos(narrative[key]!);
         return (
-          <section key={key} className="flex flex-col gap-3">
-            <p className="font-mono text-label uppercase tracking-[0.2em] text-accent">{label}</p>
+          <section key={key} className="flex flex-col gap-3.5">
+            <p className="eyebrow eyebrow-accent">{label}</p>
             {prose && (
-              <p className="max-w-2xl font-body text-body-lg leading-relaxed text-ink">
+              <p className="max-w-2xl text-body-lg leading-relaxed text-pretty text-ink">
                 <Linkify text={prose} />
               </p>
             )}
             {videos.map((url, i) => (
               <div
                 key={`${url}-${i}`}
-                className="relative aspect-video w-full max-w-2xl overflow-hidden border border-line bg-bg-raised"
+                className="relative aspect-video w-full max-w-2xl overflow-hidden rounded-[var(--radius-lg)] border border-line bg-bg-raised"
               >
                 <VideoEmbed url={url} title={label} />
               </div>

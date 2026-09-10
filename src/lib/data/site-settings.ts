@@ -71,7 +71,6 @@ export type SiteSettings = {
   heroIntro: string;
   heroCtaPrimary: string;
   heroCtaSecondary: string;
-  marqueeItems: string[];
   stats: { value: number; suffix: string; label: string }[];
   workSectionEyebrow: string;
   workSectionTitle: string;
@@ -101,6 +100,14 @@ export type SiteSettings = {
   resumeEmail: string;
   resumeSkills: string[];
   resumePdfUrl: string;
+  /**
+   * The two portfolio downloads sitting beside the resume PDF in the /resume
+   * header. A blank URL hides its button; the label is what the button says.
+   */
+  resumeGraphicPortfolioLabel: string;
+  resumeGraphicPortfolioUrl: string;
+  resumeIllustrationPortfolioLabel: string;
+  resumeIllustrationPortfolioUrl: string;
   /** Portrait for /resume only — blank falls back to the profile avatar. */
   resumePhotoUrl: string;
   resumeLanguages: { name: string; level: string }[];
@@ -120,7 +127,7 @@ export const defaultNavLinks = [
 ];
 
 const placeholderSettings: SiteSettings = {
-  accentColor: "#ff2e88",
+  accentColor: "#f04e23",
   siteTitle: "MJFIRD — breaker, designer, builder",
   siteDescription:
     "MJFIRD is a designer and developer with a decade in the cypher. Portfolio, services, and case studies.",
@@ -175,7 +182,6 @@ const placeholderSettings: SiteSettings = {
     "A decade in the cypher taught me rhythm and restraint. I bring both to brand, motion, and web work for people who don't want to look like a template.",
   heroCtaPrimary: "See the work",
   heroCtaSecondary: "Start a project",
-  marqueeItems: ["Brand Identity", "Motion Design", "Web Build", "Art Direction", "Cypher-tested"],
   stats: [
     { value: 10, suffix: "+", label: "Years in the cypher" },
     { value: 38, suffix: "", label: "Projects shipped" },
@@ -222,6 +228,10 @@ const placeholderSettings: SiteSettings = {
   resumeEmail: "",
   resumeSkills: ["Brand identity", "Art direction", "Web design", "Next.js", "Motion", "Illustration"],
   resumePdfUrl: "",
+  resumeGraphicPortfolioLabel: "Graphic Design Portfolio",
+  resumeGraphicPortfolioUrl: "",
+  resumeIllustrationPortfolioLabel: "Illustration Portfolio",
+  resumeIllustrationPortfolioUrl: "",
   resumePhotoUrl: "",
   resumeLanguages: [
     { name: "Indonesian", level: "Native" },
@@ -316,7 +326,6 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     heroIntro: row.hero_intro,
     heroCtaPrimary: row.hero_cta_primary,
     heroCtaSecondary: row.hero_cta_secondary,
-    marqueeItems: row.marquee_items?.length ? row.marquee_items : placeholderSettings.marqueeItems,
     stats: row.stats?.length ? row.stats : placeholderSettings.stats,
     workSectionEyebrow: row.work_section_eyebrow || placeholderSettings.workSectionEyebrow,
     workSectionTitle: row.work_section_title || placeholderSettings.workSectionTitle,
@@ -346,6 +355,14 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     resumeEmail: row.resume_email ?? "",
     resumeSkills: row.resume_skills ?? [],
     resumePdfUrl: row.resume_pdf_url ?? "",
+    // `||` not `??` on the labels — a label cleared while its link is still set
+    // would render a button with nothing written on it.
+    resumeGraphicPortfolioLabel:
+      row.resume_graphic_portfolio_label || placeholderSettings.resumeGraphicPortfolioLabel,
+    resumeGraphicPortfolioUrl: row.resume_graphic_portfolio_url ?? "",
+    resumeIllustrationPortfolioLabel:
+      row.resume_illustration_portfolio_label || placeholderSettings.resumeIllustrationPortfolioLabel,
+    resumeIllustrationPortfolioUrl: row.resume_illustration_portfolio_url ?? "",
     resumePhotoUrl: row.resume_photo_url ?? "",
     resumeLanguages: (row.resume_languages ?? [])
       .filter((language) => typeof language?.name === "string" && language.name)

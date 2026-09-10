@@ -79,7 +79,7 @@ export default function Lightbox({
         type="button"
         onClick={onClose}
         aria-label="Close"
-        className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full font-mono text-lg text-ink-muted transition-colors hover:text-accent"
+        className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center font-mono text-lg text-ink-muted transition-colors hover:text-accent"
       >
         ✕
       </button>
@@ -93,7 +93,7 @@ export default function Lightbox({
               prev();
             }}
             aria-label="Previous image"
-            className="absolute left-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full font-mono text-2xl text-ink-muted transition-colors hover:text-accent sm:left-6"
+            className="absolute left-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center font-mono text-2xl text-ink-muted transition-colors hover:text-accent sm:left-6"
           >
             ‹
           </button>
@@ -104,7 +104,7 @@ export default function Lightbox({
               next();
             }}
             aria-label="Next image"
-            className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full font-mono text-2xl text-ink-muted transition-colors hover:text-accent sm:right-6"
+            className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center font-mono text-2xl text-ink-muted transition-colors hover:text-accent sm:right-6"
           >
             ›
           </button>
@@ -119,7 +119,7 @@ export default function Lightbox({
         <img
           src={mediaThumbnail(item.imageUrl)}
           alt={item.title || ""}
-          className="max-h-[78svh] w-auto rounded-2xl object-contain"
+          className="max-h-[78svh] w-auto object-contain"
         />
 
         {(item.title || item.caption || item.linkUrl || item.tags.length > 0) && (
@@ -143,14 +143,14 @@ export default function Lightbox({
                   href={item.linkUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1 rounded-full bg-accent px-6 py-2.5 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
+                  className="mt-1 bg-accent px-6 py-2.5 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
                 >
                   Visit link ↗
                 </a>
               ) : (
                 <Link
                   href={item.linkUrl}
-                  className="mt-1 rounded-full bg-accent px-6 py-2.5 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
+                  className="mt-1 bg-accent px-6 py-2.5 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
                 >
                   Visit link →
                 </Link>

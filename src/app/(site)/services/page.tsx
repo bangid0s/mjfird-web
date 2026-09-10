@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import SectionHeader from "@/components/ui/SectionHeader";
 import MagneticButton from "@/components/ui/MagneticButton";
 import SmartImage from "@/components/media/SmartImage";
+import Reveal from "@/components/motion/Reveal";
 import { getServices } from "@/lib/data/services";
 import { getSiteSettings } from "@/lib/data/site-settings";
 
@@ -16,59 +17,69 @@ export default async function ServicesPage() {
 
   return (
     <div>
-      <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10">
-        <SectionHeader eyebrow="Services" title="What I build" />
-        <div className="grid gap-px overflow-hidden border border-line bg-line sm:grid-cols-3">
-          {services.map((service) => (
-            <div key={service.title} className="flex flex-col gap-4 bg-bg p-8">
+      <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
+        <SectionHeader index={1} eyebrow="Services" title="What I build" />
+
+        <div className="grid border-t border-line md:grid-cols-3">
+          {services.map((service, i) => (
+            <Reveal
+              key={service.title}
+              delay={i * 70}
+              className="group flex flex-col border-b border-line md:border-r md:px-8 md:last:border-r-0 md:[&:first-child]:pl-0 md:[&:last-child]:pr-0"
+            >
               {service.imageUrl && (
-                <div className="relative aspect-[4/3] overflow-hidden border border-line">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-bg-raised-2">
                   <SmartImage
                     src={service.imageUrl}
                     alt={service.title}
-                    sizes="(min-width: 640px) 33vw, 100vw"
+                    sizes="(min-width: 768px) 33vw, 100vw"
+                    className="object-cover transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.04]"
                   />
                 </div>
               )}
-              <h2 className="font-display text-xl uppercase text-ink">{service.title}</h2>
-              <p className="font-body text-body-sm text-ink-muted">{service.description}</p>
-              <ul className="mt-2 flex flex-col gap-1">
-                {service.deliverables.map((d) => (
-                  <li key={d} className="font-mono text-label text-ink-faint">
-                    · {d}
-                  </li>
-                ))}
-              </ul>
-            </div>
+
+              <div className="flex flex-1 flex-col gap-5 py-9 md:py-10">
+                <span className="mono-meta">{String(i + 1).padStart(2, "0")}</span>
+                <h2 className="display-sm">{service.title}</h2>
+                <p className="text-body-sm text-pretty text-ink-muted">{service.description}</p>
+                <ul className="mt-auto flex flex-col gap-2 pt-5">
+                  {service.deliverables.map((d) => (
+                    <li key={d} className="spec flex items-start gap-2.5">
+                      <span aria-hidden="true" className="mt-[0.5em] h-1 w-1 shrink-0 bg-accent" />
+                      {d}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
           ))}
         </div>
       </div>
 
-      <div className="border-t border-line bg-bg-raised">
-        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10">
+      <div className="border-y border-line bg-bg-raised/60">
+        <div className="container-page py-[var(--space-section)]">
           <SectionHeader
+            index={2}
             eyebrow={settings.processSectionEyebrow}
             title={settings.processSectionTitle}
           />
-          <ol className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {settings.processSteps.map((step, i) => (
-              <li key={step.title} className="flex flex-col gap-3 border-t border-line pt-6">
-                <span className="font-mono text-label text-accent">
-                  {String(i + 1).padStart(2, "0")}
+              <Reveal as="li" key={step.title} delay={i * 70} className="flex flex-col gap-3">
+                <span className="grid h-9 w-9 place-items-center bg-accent text-body-sm font-medium text-accent-ink">
+                  {i + 1}
                 </span>
-                <h3 className="font-display text-lg uppercase text-ink">{step.title}</h3>
-                <p className="font-body text-body-sm text-ink-muted">{step.description}</p>
-              </li>
+                <h3 className="display-sm mt-1">{step.title}</h3>
+                <p className="text-body-sm text-pretty text-ink-muted">{step.description}</p>
+              </Reveal>
             ))}
           </ol>
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 py-24 sm:px-10">
-        <p className="font-mono text-label uppercase tracking-[0.2em] text-ink-muted">
-          {settings.servicesAvailabilityLabel}
-        </p>
-        <h2 className="font-display text-display-md uppercase leading-[0.9] text-ink">
+      <div className="container-page flex flex-col items-start gap-7 py-[var(--space-section)]">
+        <p className="eyebrow eyebrow-accent">{settings.servicesAvailabilityLabel}</p>
+        <h2 className="display-lg max-w-3xl">
           {availabilityLines.map((line, i) => (
             <span key={i}>
               {line}
@@ -76,8 +87,8 @@ export default async function ServicesPage() {
             </span>
           ))}
         </h2>
-        <MagneticButton href="/contact" cursorLabel="view">
-          Start an inquiry →
+        <MagneticButton href="/contact" size="lg" arrow cursorLabel="view">
+          Start an inquiry
         </MagneticButton>
       </div>
     </div>

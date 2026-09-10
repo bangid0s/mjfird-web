@@ -45,6 +45,7 @@ export default function HeroMedia({
   if (type === "image" && slides.length === 0) return null;
 
   const goTo = (index: number) => onGoTo?.((index + slides.length) % slides.length);
+  const scrim = Math.min(100, Math.max(0, overlayOpacity)) / 100;
 
   return (
     <>
@@ -102,12 +103,32 @@ export default function HeroMedia({
           />
         ))}
 
-      {/* Legibility scrim — strength set from Site Settings (hero overlay %) */}
+      {/*
+        Legibility scrim. This used to be a flat wash across the entire frame,
+        which dulled the whole image just to make text readable in one corner.
+        It's directional now: solid only where the copy actually sits, and
+        fully clear over the rest of the artwork — anchored left on wide
+        screens, bottom on narrow ones where the copy runs full width.
+        Strength still comes from Site Settings.
+      */}
       <div
-        className="absolute inset-0 bg-bg"
-        style={{ opacity: Math.min(100, Math.max(0, overlayOpacity)) / 100 }}
+        className="absolute inset-0 sm:hidden"
+        style={{
+          opacity: scrim,
+          background:
+            "linear-gradient(to top, var(--color-bg) 0%, var(--color-bg) 22%, transparent 76%)",
+        }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
+      <div
+        className="absolute inset-0 hidden sm:block"
+        style={{
+          opacity: scrim,
+          background:
+            "linear-gradient(95deg, var(--color-bg) 0%, var(--color-bg) 20%, transparent 64%)",
+        }}
+      />
+      {/* Short fade into the section below — never more than the bottom eighth. */}
+      <div className="absolute inset-x-0 bottom-0 h-[12%] bg-gradient-to-t from-bg to-transparent" />
     </div>
 
     {/* Slider navigation — only when there's more than one image. The wrapper
@@ -119,7 +140,7 @@ export default function HeroMedia({
           type="button"
           onClick={() => goTo(current - 1)}
           aria-label="Previous slide"
-          className="pointer-events-auto absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg/50 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg/80 sm:left-6"
+          className="pointer-events-auto absolute left-0 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center bg-bg/70 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg"
         >
           ‹
         </button>
@@ -127,11 +148,11 @@ export default function HeroMedia({
           type="button"
           onClick={() => goTo(current + 1)}
           aria-label="Next slide"
-          className="pointer-events-auto absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg/50 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg/80 sm:right-6"
+          className="pointer-events-auto absolute right-0 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center bg-bg/70 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg"
         >
           ›
         </button>
-        <div className="pointer-events-auto absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2.5">
+        <div className="pointer-events-auto absolute bottom-5 left-5 flex items-center gap-2">
           {slides.map((_, i) => (
             <button
               key={i}
@@ -140,8 +161,8 @@ export default function HeroMedia({
               aria-label={`Go to slide ${i + 1}`}
               aria-current={i === current}
               className={cn(
-                "h-2 rounded-full transition-all duration-[var(--duration-fast)]",
-                i === current ? "w-6 bg-accent" : "w-2 bg-ink/40 hover:bg-ink/70",
+                "h-1.5 transition-all duration-[var(--duration-fast)]",
+                i === current ? "w-8 bg-accent" : "w-4 bg-ink/35 hover:bg-ink/60",
               )}
             />
           ))}

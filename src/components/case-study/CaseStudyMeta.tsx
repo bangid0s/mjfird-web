@@ -9,11 +9,11 @@ export default function CaseStudyMeta({ project }: { project: Project }) {
   ];
 
   return (
-    <dl className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+    <dl className="grid grid-cols-2 gap-x-6 gap-y-6 border-y border-line py-7 sm:grid-cols-4">
       {rows.map(([label, value]) => (
-        <div key={label}>
-          <dt className="font-mono text-label uppercase tracking-[0.15em] text-ink-faint">{label}</dt>
-          <dd className="mt-1 font-body text-body-sm text-ink">{value}</dd>
+        <div key={label} className="flex flex-col gap-1.5">
+          <dt className="eyebrow">{label}</dt>
+          <dd className="text-body text-ink">{value}</dd>
         </div>
       ))}
     </dl>

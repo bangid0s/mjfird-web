@@ -18,16 +18,16 @@ export default function MediaSlot({
   if (image?.url) {
     if (isYouTubeUrl(image.url) || isVideoFile(image.url)) {
       return (
-        <div className={cn("relative overflow-hidden", className)}>
+        <div className={cn("relative overflow-hidden rounded-[var(--radius-lg)] border border-line bg-bg-raised-2", className)}>
           <VideoEmbed url={image.url} title={image.alt} />
         </div>
       );
     }
     return (
-      <div className={cn("relative overflow-hidden", className)}>
+      <div className={cn("relative overflow-hidden rounded-[var(--radius-lg)] border border-line bg-bg-raised-2", className)}>
         <SmartImage src={image.url} alt={image.alt ?? ""} sizes={sizes} />
       </div>
     );
   }
-  return <div className={cn("bg-gradient-to-br from-bg-raised to-bg-raised-2", className)} />;
+  return <div className={cn("rounded-[var(--radius-lg)] bg-gradient-to-br from-bg-raised to-bg-raised-2", className)} />;
 }

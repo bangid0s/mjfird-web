@@ -9,6 +9,7 @@ import CaseStudyNext from "@/components/case-study/CaseStudyNext";
 import CaseStudyNarrative from "@/components/case-study/CaseStudyNarrative";
 import SmartImage from "@/components/media/SmartImage";
 import ProjectGallery from "@/components/media/ProjectGallery";
+import Reveal from "@/components/motion/Reveal";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -27,7 +28,7 @@ export default function ImmersiveTemplate({
   useEffect(() => {
     if (reducedMotion || !heroImgRef.current) return;
     const tween = gsap.to(heroImgRef.current, {
-      yPercent: 18,
+      yPercent: 14,
       ease: "none",
       scrollTrigger: {
         trigger: heroImgRef.current,
@@ -43,37 +44,41 @@ export default function ImmersiveTemplate({
 
   return (
     <article>
-      <section className="relative flex h-[90svh] items-end overflow-hidden">
+      <section className="relative flex h-[92svh] items-end overflow-hidden">
         <div
           ref={heroImgRef}
-          className="absolute inset-0 -top-[10%] h-[120%] bg-gradient-to-br from-bg-raised via-bg-raised-2 to-bg"
+          className="absolute inset-0 -top-[8%] h-[116%] bg-gradient-to-br from-bg-raised via-bg-raised-2 to-bg"
         >
-          {hasCover && <SmartImage src={project.cover} sizes="100vw" priority className="object-cover" />}
+          {hasCover && (
+            <SmartImage src={project.cover} sizes="100vw" priority className="object-cover" />
+          )}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
-        <div className="relative z-[var(--z-content)] mx-auto w-full max-w-6xl px-6 pb-16 sm:px-10">
-          <p className="mb-4 font-mono text-label uppercase tracking-[0.25em] text-accent">
-            {project.category}
-          </p>
-          <h1 className="font-display text-display-xl uppercase leading-[0.82] text-ink">
-            {project.title}
-          </h1>
-          <p className="mt-6 max-w-xl font-body text-body-lg text-ink-muted">{project.hook}</p>
+
+        {/* Bottom-anchored: only the strip under the title is darkened, so the
+            top half of the cover keeps its colour untouched. */}
+        <div className="absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-bg via-bg/40 to-transparent" />
+
+        <div className="container-page relative z-[var(--z-content)] w-full pb-16 sm:pb-20">
+          <p className="eyebrow eyebrow-accent mb-5">{project.category}</p>
+          <h1 className="display-xl max-w-4xl">{project.title}</h1>
+          <p className="mt-6 max-w-xl text-body-lg text-pretty text-ink-muted">{project.hook}</p>
         </div>
       </section>
 
-      <div className="mx-auto max-w-6xl px-6 py-16 sm:px-10">
+      <div className="container-page py-14">
         <CaseStudyMeta project={project} />
       </div>
 
-      <div className="mx-auto max-w-3xl px-6 pb-16 sm:px-10">
-        <CaseStudyNarrative narrative={project.narrative} />
+      <div className="container-page pb-16">
+        <div className="max-w-3xl">
+          <CaseStudyNarrative narrative={project.narrative} />
+        </div>
       </div>
 
       {project.gallery && project.gallery.length > 0 && (
-        <div className="mx-auto max-w-6xl px-6 pb-24 sm:px-10">
+        <Reveal className="container-page pb-[var(--space-section)]">
           <ProjectGallery images={project.gallery} />
-        </div>
+        </Reveal>
       )}
 
       <CaseStudyNext project={next} />

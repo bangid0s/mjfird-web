@@ -29,7 +29,7 @@ export default function StandaloneWindow({
       <EscapeToHome />
 
       <main
-        className={`relative z-10 mx-auto w-full overflow-hidden rounded-3xl border border-line bg-bg-raised/60 backdrop-blur-sm ${
+        className={`relative z-10 mx-auto w-full overflow-hidden border border-line bg-bg-raised/60 backdrop-blur-sm ${
           width === "wide" ? "max-w-2xl lg:max-w-6xl" : "max-w-2xl lg:max-w-4xl"
         }`}
       >

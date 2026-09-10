@@ -57,7 +57,7 @@ export default function GalleryBrowser({ items }: { items: GalleryItem[] }) {
       )}
 
       {filtered.length === 0 ? (
-        <p className="rounded-2xl bg-bg-raised p-5 font-body text-body-sm text-ink-faint lg:p-6">
+        <p className="border border-line p-5 font-body text-body-sm text-ink-faint lg:p-6">
           Nothing tagged “{active}” yet.
         </p>
       ) : (

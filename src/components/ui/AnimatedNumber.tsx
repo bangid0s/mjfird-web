@@ -45,12 +45,12 @@ export default function AnimatedNumber({
   }, [value, reducedMotion]);
 
   return (
-    <div className="flex flex-col gap-1">
-      <p className="font-display text-display-md text-ink">
+    <div className="flex flex-col gap-2.5">
+      <p className="display-md tabular-nums">
         <span ref={ref}>0</span>
         {suffix}
       </p>
-      <p className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted">{label}</p>
+      <p className="spec">{label}</p>
     </div>
   );
 }

@@ -23,7 +23,7 @@ export default function Avatar({
   sizes?: string;
 }) {
   return (
-    <div className={cn("relative overflow-hidden bg-accent", className)}>
+    <div className={cn("relative overflow-hidden rounded-[var(--radius-xl)] bg-accent", className)}>
       <SmartImage
         src={src}
         alt={alt}

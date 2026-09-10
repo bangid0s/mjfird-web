@@ -26,7 +26,6 @@ export default async function AdminSettingsPage({
     .limit(1)
     .single<SiteSettingsRow>();
 
-  const marqueeText = settings?.marquee_items?.join("\n") ?? "";
   const statsText =
     settings?.stats?.map((s) => `${s.value}|${s.suffix}|${s.label}`).join("\n") ?? "";
   const timelineText =
@@ -68,7 +67,7 @@ export default async function AdminSettingsPage({
               <input
                 type="color"
                 name="accent_color"
-                defaultValue={settings?.accent_color ?? "#ff2e88"}
+                defaultValue={settings?.accent_color ?? "#f04e23"}
                 className="h-11 w-16 cursor-pointer border border-line bg-transparent"
               />
               <span className="font-mono text-body-sm text-ink-muted">
@@ -210,15 +209,6 @@ export default async function AdminSettingsPage({
               <input name="hero_cta_secondary" defaultValue={settings?.hero_cta_secondary ?? ""} className={fieldInputClasses} />
             </Field>
           </div>
-
-          <Field label="Running text (ticker) — one item per line">
-            <textarea
-              name="marquee_items"
-              rows={5}
-              defaultValue={marqueeText}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
 
           <Field label="Stats — one per line, “value|suffix|label”">
             <textarea
