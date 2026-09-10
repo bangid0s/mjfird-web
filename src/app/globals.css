@@ -247,6 +247,15 @@
   }
 }
 
+@keyframes page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -535,6 +544,21 @@ html[data-cursor="custom"] [contenteditable="true"] {
     [data-reveal] {
       opacity: 1;
       transform: none;
+    }
+  }
+
+  /*
+    Route enter. Opacity only: a transform here would turn the wrapper into a
+    containing block for any fixed-position child (the lightboxes) for as long
+    as the animation ran.
+  */
+  .page-enter {
+    animation: page-enter var(--duration-base) var(--ease-freeze) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-enter {
+      animation: none;
     }
   }
 
