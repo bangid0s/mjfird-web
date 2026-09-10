@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { cn } from "@/lib/cn";
+import FilterChips from "@/components/ui/FilterChips";
 import MasonryGrid from "@/components/gallery/MasonryGrid";
 import Lightbox from "@/components/gallery/Lightbox";
 import type { GalleryItem } from "@/lib/data/gallery";
@@ -28,37 +28,21 @@ export default function GalleryBrowser({ items }: { items: GalleryItem[] }) {
     active === ALL ? items : items.filter((item) => item.tags.includes(active));
 
   return (
-    <div className="flex flex-col gap-4 lg:gap-5">
+    <div className="flex flex-col gap-10">
+      {/* The same chip row as /work — this page used to roll its own. */}
       {tags.length > 0 && (
-        <div role="group" aria-label="Filter by tag" className="flex flex-wrap gap-2">
-          {[ALL, ...tags].map((tag) => {
-            const selected = tag === active;
-            return (
-              <button
-                key={tag}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => {
-                  setActive(tag);
-                  setOpen(null);
-                }}
-                className={cn(
-                  "rounded-xl px-4 py-2 font-mono text-label uppercase tracking-[0.15em] transition-colors duration-[var(--duration-fast)]",
-                  selected
-                    ? "bg-accent/15 text-accent ring-1 ring-accent/50"
-                    : "bg-bg-raised text-ink-muted hover:text-ink",
-                )}
-              >
-                {tag}
-              </button>
-            );
-          })}
-        </div>
+        <FilterChips
+          options={tags}
+          onChange={(tag) => {
+            setActive(tag);
+            setOpen(null);
+          }}
+        />
       )}
 
       {filtered.length === 0 ? (
-        <p className="border border-line p-5 font-body text-body-sm text-ink-faint lg:p-6">
-          Nothing tagged “{active}” yet.
+        <p className="border border-dashed border-line px-6 py-14 text-center text-body-sm text-ink-muted">
+          Nothing tagged &ldquo;{active}&rdquo; yet.
         </p>
       ) : (
         <MasonryGrid items={filtered} onOpen={setOpen} />

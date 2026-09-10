@@ -1,14 +1,13 @@
 import { cn } from "@/lib/cn";
 
-export type SectionTone = "none" | "sand" | "mint" | "lilac" | "rose" | "solid";
+export type SectionTone = "none" | "accent" | "invert";
 
 const TONE_CLASS: Record<SectionTone, string> = {
   none: "",
-  sand: "tone tone-sand",
-  mint: "tone tone-mint",
-  lilac: "tone tone-lilac",
-  rose: "tone tone-rose",
-  solid: "tone-solid",
+  /** Filled with the site accent. One per page, as punctuation. */
+  accent: "tone-accent",
+  /** The opposite sheet: dark on a light page, light on a dark page. */
+  invert: "tone-invert",
 };
 
 /**
@@ -17,8 +16,10 @@ const TONE_CLASS: Record<SectionTone, string> = {
  * Sections used to declare their own background and padding one by one, which
  * is how a page ends up with four slightly different section rhythms. This
  * keeps the band, the gutter and the vertical rhythm in one place, and takes
- * the colour as a prop — see the tone rules in `globals.css` for which
- * sections should carry one.
+ * the colour as a prop.
+ *
+ * A band that carries colour carries the *accent* — there is no separate tint
+ * palette. See the tone rules in `globals.css`.
  */
 export default function SectionBand({
   id,
