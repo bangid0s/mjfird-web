@@ -20,8 +20,7 @@ const DEFAULT_CTA_HREF = "/work";
   HeroMedia's directional scrim earns its keep.
 
   Everything else is corner work: a spec label above the wordmark, a rotated
-  label up the right edge, an outline monogram straddling the seam between
-  ground and image, and a solid accent square in the bottom corner.
+  label up the right edge, and a solid accent square in the bottom corner.
 */
 
 export default function Hero({
@@ -36,7 +35,6 @@ export default function Hero({
   ctaPrimary,
   ctaSecondary,
   edgeLabel,
-  monogram = "M",
 }: {
   mediaType: "none" | "image" | "video" | "youtube";
   mediaUrl: string;
@@ -50,8 +48,6 @@ export default function Hero({
   ctaSecondary: string;
   /** Rotated label up the right edge. */
   edgeLabel?: string;
-  /** Letter inside the outline mark. */
-  monogram?: string;
 }) {
   const reducedMotion = usePrefersReducedMotion();
   const [index, setIndex] = useState(0);
@@ -105,30 +101,6 @@ export default function Hero({
           />
         )}
       </div>
-
-      {/* Outline monogram, straddling the seam between ground and image. */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 z-[var(--z-content)] hidden -translate-x-1/2 -translate-y-1/2 lg:block"
-      >
-        <svg
-          viewBox="0 0 100 100"
-          className="h-[clamp(9rem,17vw,17rem)] w-[clamp(9rem,17vw,17rem)] text-accent"
-          fill="none"
-        >
-          <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="3.5" />
-          <text
-            x="50"
-            y="50"
-            textAnchor="middle"
-            dominantBaseline="central"
-            fill="currentColor"
-            style={{ font: "600 46px var(--font-display)", letterSpacing: "-0.04em" }}
-          >
-            {monogram}
-          </text>
-        </svg>
-      </span>
 
       {/* Rotated edge label. */}
       {edgeLabel && (
