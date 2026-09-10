@@ -147,7 +147,20 @@ export default function Hero({
         overlaid, at any width.
       */}
       {hasMedia && (
-        <div className="relative h-[46svh] min-h-[280px] w-full lg:absolute lg:inset-x-0 lg:bottom-0 lg:left-[54%] lg:top-[var(--nav-h)] lg:h-auto lg:min-h-0 lg:border-l lg:border-line">
+        <div
+          className={cn(
+            // Narrow: a band in the flow, sized by height.
+            "relative h-[46svh] min-h-[280px] w-full",
+            // Wide: a panel pinned to the right of the sheet, sized by its own
+            // offsets. Every mobile sizing utility has to be handed back for
+            // that to work — `w-full` in particular, because a box with left,
+            // right *and* an explicit width drops the right offset and
+            // overflows, which crops the image off-centre instead of covering
+            // the frame.
+            "lg:absolute lg:bottom-0 lg:left-[54%] lg:right-0 lg:top-[var(--nav-h)] lg:h-auto lg:min-h-0 lg:w-auto",
+            "lg:border-l lg:border-line",
+          )}
+        >
           <HeroMedia
             type={mediaType}
             url={mediaUrl}
