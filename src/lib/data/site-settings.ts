@@ -128,7 +128,7 @@ export const defaultNavLinks = [
 ];
 
 const placeholderSettings: SiteSettings = {
-  accentColor: "#ff2e88",
+  accentColor: "#4b3bff",
   siteTitle: "MJFIRD — breaker, designer, builder",
   siteDescription:
     "MJFIRD is a designer and developer with a decade in the cypher. Portfolio, services, and case studies.",

@@ -1,3 +1,4 @@
 export const PRELOADER_SESSION_KEY = "mjfird:preloaded";
-// Roughly matches Preloader's counter (1.1s) + hold (0.1s) + wipe (0.68s).
-export const PRELOADER_DURATION = 1.9;
+// Curtain total: mark settles (0.42s) + hold (0.08s) + lift (0.44s). Kept
+// deliberately short — a portfolio that makes you wait doesn't read as fast.
+export const PRELOADER_DURATION = 0.94;

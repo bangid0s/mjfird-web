@@ -7,6 +7,13 @@ import { PRELOADER_SESSION_KEY, PRELOADER_DURATION } from "@/lib/preloader";
 
 const WORD = "MJFIRD";
 
+/*
+  The wordmark still enters letter by letter, but as a mask reveal — each glyph
+  slides up out of its own clipped box — instead of the blur-and-scale it used
+  to do. Cleaner, cheaper to composite, and it reads as typography rather than
+  as an effect.
+*/
+
 export default function KineticWordmark() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const lettersRef = useRef<(HTMLSpanElement | null)[]>([]);
@@ -17,22 +24,20 @@ export default function KineticWordmark() {
     if (!letters.length) return;
 
     if (reducedMotion) {
-      gsap.set(letters, { opacity: 1, y: 0, scaleY: 1, filter: "blur(0px)" });
+      gsap.set(letters, { yPercent: 0, opacity: 1 });
       return;
     }
 
     const alreadySeen = sessionStorage.getItem(PRELOADER_SESSION_KEY);
-    const delay = alreadySeen ? 0.1 : PRELOADER_DURATION;
+    // Overlaps the tail of the curtain lift so the hero settles ~0.5s sooner.
+    const delay = alreadySeen ? 0.06 : PRELOADER_DURATION - 0.35;
 
     const tl = gsap.timeline({ delay });
-    tl.set(letters, { opacity: 0, yPercent: 55, scaleY: 1.6, filter: "blur(14px)" }).to(letters, {
-      opacity: 1,
+    tl.set(letters, { yPercent: 110, opacity: 1 }).to(letters, {
       yPercent: 0,
-      scaleY: 1,
-      filter: "blur(0px)",
-      duration: 0.68,
-      ease: "cubic-bezier(0.16, 1, 0.3, 1)",
-      stagger: 0.055,
+      duration: 0.6,
+      ease: "cubic-bezier(0.22, 1, 0.36, 1)",
+      stagger: 0.035,
     });
 
     return () => {
@@ -40,7 +45,7 @@ export default function KineticWordmark() {
     };
   }, [reducedMotion]);
 
-  // Cursor reactivity: subtle toprock-style sway, skipped for reduced motion.
+  // A few pixels of pointer parallax — present, but not a toy.
   useEffect(() => {
     if (reducedMotion) return;
     const section = sectionRef.current;
@@ -48,28 +53,16 @@ export default function KineticWordmark() {
     if (!section || !letters.length) return;
 
     const movers = letters.map((el, i) =>
-      gsap.quickTo(el, "x", { duration: 0.5 + i * 0.02, ease: "power3.out" }),
-    );
-    const moversY = letters.map((el, i) =>
-      gsap.quickTo(el, "y", { duration: 0.5 + i * 0.02, ease: "power3.out" }),
+      gsap.quickTo(el, "x", { duration: 0.6 + i * 0.03, ease: "power3.out" }),
     );
 
     const handleMove = (e: MouseEvent) => {
       const rect = section.getBoundingClientRect();
       const relX = (e.clientX - rect.left - rect.width / 2) / rect.width;
-      const relY = (e.clientY - rect.top - rect.height / 2) / rect.height;
-      letters.forEach((_, i) => {
-        movers[i](relX * 14);
-        moversY[i](relY * 8);
-      });
+      letters.forEach((_, i) => movers[i](relX * 7));
     };
 
-    const handleLeave = () => {
-      letters.forEach((_, i) => {
-        movers[i](0);
-        moversY[i](0);
-      });
-    };
+    const handleLeave = () => letters.forEach((_, i) => movers[i](0));
 
     section.addEventListener("mousemove", handleMove);
     section.addEventListener("mouseleave", handleLeave);
@@ -81,20 +74,18 @@ export default function KineticWordmark() {
 
   return (
     <div ref={sectionRef} className="select-none">
-      <h1
-        className="font-display flex flex-wrap text-display-xl font-black uppercase leading-[0.85] tracking-tight text-ink"
-        aria-label={WORD}
-      >
+      <h1 className="display-xl flex flex-wrap font-semibold uppercase" aria-label={WORD}>
         {WORD.split("").map((char, i) => (
-          <span
-            key={`${char}-${i}`}
-            ref={(el) => {
-              lettersRef.current[i] = el;
-            }}
-            className="inline-block will-change-transform"
-            aria-hidden="true"
-          >
-            {char}
+          <span key={`${char}-${i}`} className="inline-block overflow-hidden pb-[0.06em]">
+            <span
+              ref={(el) => {
+                lettersRef.current[i] = el;
+              }}
+              className="inline-block will-change-transform"
+              aria-hidden="true"
+            >
+              {char}
+            </span>
           </span>
         ))}
       </h1>

@@ -5,12 +5,19 @@ import gsap from "gsap";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { PRELOADER_SESSION_KEY as SESSION_KEY } from "@/lib/preloader";
 
+/*
+  A curtain, not a loading bar. The percentage counter it replaces was both
+  the most dated element on the site and a second of dead time on every first
+  visit; this is a single short brand beat that lifts away, and it still only
+  runs once per session.
+*/
+
 export default function Preloader() {
   const [shouldShow, setShouldShow] = useState(false);
   const [done, setDone] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const barRef = useRef<HTMLDivElement>(null);
-  const countRef = useRef<HTMLSpanElement>(null);
+  const markRef = useRef<HTMLDivElement>(null);
+  const lineRef = useRef<HTMLDivElement>(null);
   const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
@@ -36,25 +43,25 @@ export default function Preloader() {
       return;
     }
 
-    const counter = { value: 0 };
-    const tl = gsap.timeline({
-      onComplete: () => setDone(true),
-    });
+    const tl = gsap.timeline({ onComplete: () => setDone(true) });
 
-    tl.to(counter, {
-      value: 100,
-      duration: 1.1,
-      ease: "power2.inOut",
-      onUpdate: () => {
-        if (countRef.current) countRef.current.textContent = String(Math.round(counter.value));
-        if (barRef.current) barRef.current.style.transform = `scaleX(${counter.value / 100})`;
-      },
-    }).to(wrapRef.current, {
-      yPercent: -100,
-      duration: 0.68,
-      ease: "cubic-bezier(0.16, 1, 0.3, 1)",
-      delay: 0.1,
-    });
+    tl.fromTo(
+      markRef.current,
+      { opacity: 0, y: 14, filter: "blur(8px)" },
+      { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.42, ease: "power3.out" },
+    )
+      .fromTo(
+        lineRef.current,
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.42, ease: "power2.inOut" },
+        0,
+      )
+      .to(wrapRef.current, {
+        yPercent: -100,
+        duration: 0.44,
+        ease: "cubic-bezier(0.22, 1, 0.36, 1)",
+        delay: 0.08,
+      });
 
     return () => {
       tl.kill();
@@ -71,26 +78,23 @@ export default function Preloader() {
   return (
     <div
       ref={wrapRef}
-      className="fixed inset-0 z-[var(--z-preloader)] flex flex-col items-center justify-center gap-6 bg-bg"
+      className="fixed inset-0 z-[var(--z-preloader)] flex flex-col items-center justify-center gap-5 bg-bg"
       role="status"
       aria-label="Loading"
     >
-      <div className="font-mono text-label uppercase tracking-[0.3em] text-ink-muted">
-        MJFIRD — cueing up
+      <div
+        ref={markRef}
+        className="font-display text-display-md font-semibold tracking-[-0.04em] text-ink"
+      >
+        MJFIRD
       </div>
-      <div className="relative h-[3px] w-48 -rotate-1 bg-line sm:w-64">
-        <div
-          ref={barRef}
-          className="absolute inset-y-0 left-0 w-full origin-left scale-x-0 bg-accent"
-        />
-      </div>
-      <div className="font-mono text-sm text-ink">
-        <span ref={countRef}>0</span>%
+      <div className="h-px w-40 overflow-hidden bg-line sm:w-56">
+        <div ref={lineRef} className="h-full w-full origin-left scale-x-0 bg-accent" />
       </div>
       <button
         type="button"
         onClick={handleSkip}
-        className="absolute bottom-8 right-8 font-mono text-label uppercase tracking-[0.15em] text-ink-faint transition-colors duration-[var(--duration-fast)] hover:text-accent"
+        className="absolute bottom-8 right-6 text-label font-medium text-ink-faint transition-colors duration-[var(--duration-fast)] hover:text-ink sm:right-8"
       >
         Skip
       </button>

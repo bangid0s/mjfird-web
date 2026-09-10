@@ -14,7 +14,7 @@ export default function PostBody({ body }: { body: string[] }) {
         block.type === "media" ? (
           <figure key={i} className="my-2 flex flex-col gap-3">
             {isYouTubeUrl(block.url) || isVideoFile(block.url) ? (
-              <div className="relative aspect-video w-full overflow-hidden bg-bg-raised">
+              <div className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-lg)] border border-line bg-bg-raised">
                 <VideoEmbed url={block.url} title={block.caption} />
               </div>
             ) : (
@@ -26,17 +26,17 @@ export default function PostBody({ body }: { body: string[] }) {
                 alt={block.caption}
                 loading="lazy"
                 decoding="async"
-                className="h-auto w-full bg-bg-raised"
+                className="h-auto w-full rounded-[var(--radius-lg)] border border-line bg-bg-raised"
               />
             )}
             {block.caption && (
-              <figcaption className="font-mono text-label uppercase tracking-[0.1em] text-ink-faint">
+              <figcaption className="meta">
                 {block.caption}
               </figcaption>
             )}
           </figure>
         ) : (
-          <p key={i} className="font-body text-body-lg leading-relaxed text-ink-muted">
+          <p key={i} className="text-body-lg leading-relaxed text-pretty text-ink-muted">
             <Linkify text={block.text} />
           </p>
         ),

@@ -1,8 +1,11 @@
+import Link from "next/link";
 import Hero from "@/components/hero/Hero";
 import SectionHeader from "@/components/ui/SectionHeader";
 import FeaturedWork from "@/components/work/FeaturedWork";
 import Marquee from "@/components/ui/Marquee";
 import AnimatedNumber from "@/components/ui/AnimatedNumber";
+import Reveal from "@/components/motion/Reveal";
+import SmartImage from "@/components/media/SmartImage";
 import { getProjects } from "@/lib/data/projects";
 import { getServices } from "@/lib/data/services";
 import { getTestimonials } from "@/lib/data/testimonials";
@@ -48,62 +51,117 @@ export default async function Home() {
 
       <Marquee items={settings.marqueeItems} />
 
-      <section className="mx-auto max-w-6xl px-6 py-24 sm:px-10">
-        <SectionHeader eyebrow={settings.workSectionEyebrow} title={settings.workSectionTitle} />
+      {/* Featured work */}
+      <section className="container-page py-[var(--space-section)]">
+        <SectionHeader
+          eyebrow={settings.workSectionEyebrow}
+          title={settings.workSectionTitle}
+          action={
+            <Link
+              href="/work"
+              data-cursor="view"
+              className="group inline-flex items-center gap-2 text-body-sm font-medium text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-accent"
+            >
+              All work
+              <span
+                aria-hidden="true"
+                className="transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </Link>
+          }
+        />
         <FeaturedWork projects={featured} />
       </section>
 
-      <section className="border-y border-line bg-bg-raised">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-6 py-16 sm:grid-cols-4 sm:px-10">
-          {settings.stats.map((stat) => (
-            <AnimatedNumber key={stat.label} value={stat.value} suffix={stat.suffix} label={stat.label} />
+      {/* Stats */}
+      <section className="border-y border-line bg-bg-raised/60">
+        <div className="container-page grid grid-cols-2 gap-x-8 gap-y-10 py-14 sm:grid-cols-4">
+          {settings.stats.map((stat, i) => (
+            <Reveal key={stat.label} delay={i * 60}>
+              <AnimatedNumber value={stat.value} suffix={stat.suffix} label={stat.label} />
+            </Reveal>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-24 sm:px-10">
-        <SectionHeader eyebrow={settings.servicesSectionEyebrow} title={settings.servicesSectionTitle} />
-        <div className="grid gap-px overflow-hidden border border-line bg-line sm:grid-cols-3">
-          {services.map((service) => (
-            <div key={service.title} className="flex flex-col gap-4 bg-bg p-8">
-              <h3 className="font-display text-xl uppercase text-ink">{service.title}</h3>
-              <p className="font-body text-body-sm text-ink-muted">{service.description}</p>
-              <ul className="mt-2 flex flex-col gap-1">
+      {/* Services */}
+      <section className="container-page py-[var(--space-section)]">
+        <SectionHeader
+          eyebrow={settings.servicesSectionEyebrow}
+          title={settings.servicesSectionTitle}
+          action={
+            <Link
+              href="/services"
+              data-cursor="view"
+              className="group inline-flex items-center gap-2 text-body-sm font-medium text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-accent"
+            >
+              How I work
+              <span
+                aria-hidden="true"
+                className="transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </Link>
+          }
+        />
+        <div className="grid gap-5 md:grid-cols-3">
+          {services.map((service, i) => (
+            <Reveal
+              key={service.title}
+              delay={i * 70}
+              className="surface group flex flex-col gap-4 p-7 transition-[transform,box-shadow,border-color] duration-[var(--duration-base)] ease-[var(--ease-freeze)] hover:-translate-y-1 hover:border-line-strong hover:shadow-md"
+            >
+              <span className="mono-meta">{String(i + 1).padStart(2, "0")}</span>
+              <h3 className="display-sm">{service.title}</h3>
+              <p className="text-body-sm text-pretty text-ink-muted">{service.description}</p>
+              <ul className="mt-2 flex flex-col gap-2 border-t border-line pt-4">
                 {service.deliverables.map((d) => (
-                  <li key={d} className="font-mono text-label text-ink-faint">
-                    · {d}
+                  <li key={d} className="flex items-start gap-2.5 text-body-sm text-ink-faint">
+                    <span aria-hidden="true" className="mt-[0.45em] h-1 w-1 shrink-0 rounded-full bg-accent" />
+                    {d}
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-24 sm:px-10">
+      {/* Testimonials */}
+      <section className="container-page pb-[var(--space-section)]">
         <SectionHeader
           eyebrow={settings.testimonialsSectionEyebrow}
           title={settings.testimonialsSectionTitle}
         />
-        <div className="grid gap-8 sm:grid-cols-3">
-          {testimonials.map((t) => (
-            <figure key={t.name} className="flex flex-col justify-between gap-6 border-t border-line pt-6">
-              <blockquote className="font-body text-body text-ink">&ldquo;{t.quote}&rdquo;</blockquote>
-              <figcaption className="flex items-center gap-3">
+        <div className="grid gap-5 md:grid-cols-3">
+          {testimonials.map((t, i) => (
+            <Reveal
+              key={t.name}
+              delay={i * 70}
+              as="figure"
+              className="surface flex flex-col justify-between gap-6 p-7"
+            >
+              <blockquote className="text-body text-pretty text-ink">
+                <span aria-hidden="true" className="mb-3 block text-3xl leading-none text-accent">
+                  &ldquo;
+                </span>
+                {t.quote}
+              </blockquote>
+              <figcaption className="flex items-center gap-3 border-t border-line pt-5">
                 {t.avatarUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={t.avatarUrl}
-                    alt={t.name}
-                    className="h-10 w-10 shrink-0 rounded-full border border-line object-cover"
-                  />
+                  <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-line">
+                    <SmartImage src={t.avatarUrl} alt={t.name} sizes="36px" />
+                  </span>
                 )}
-                <span className="font-mono text-label uppercase tracking-[0.1em] text-ink-muted">
-                  {t.name}
+                <span className="text-body-sm text-ink-muted">
+                  <span className="font-medium text-ink">{t.name}</span>
                   {t.role ? ` — ${t.role}` : ""}
                 </span>
               </figcaption>
-            </figure>
+            </Reveal>
           ))}
         </div>
       </section>

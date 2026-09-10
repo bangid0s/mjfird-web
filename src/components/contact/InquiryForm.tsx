@@ -18,7 +18,16 @@ type FormState = "idle" | "loading" | "success" | "error";
 type Errors = Partial<Record<keyof z.infer<typeof schema>, string>>;
 
 const inputClasses =
-  "w-full border-b border-line bg-transparent py-3 font-body text-body text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none disabled:opacity-50";
+  "w-full rounded-[var(--radius-md)] border border-line bg-bg-raised px-4 py-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--duration-fast)] placeholder:text-ink-faint focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/15 disabled:opacity-50";
+
+// Native selects need their own arrow back once appearance is stripped.
+const selectClasses = cn(
+  inputClasses,
+  "appearance-none bg-[length:1.1rem] bg-[right_0.9rem_center] bg-no-repeat pr-11",
+);
+
+const CHEVRON =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237e7e89' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")";
 
 export default function InquiryForm() {
   const [state, setState] = useState<FormState>("idle");
@@ -58,9 +67,23 @@ export default function InquiryForm() {
 
   if (state === "success") {
     return (
-      <div className="border border-accent px-6 py-10 text-center">
-        <p className="font-display text-display-sm uppercase text-ink">Message sent</p>
-        <p className="mt-3 font-body text-body-sm text-ink-muted">
+      <div className="surface flex flex-col items-center gap-3 px-6 py-14 text-center">
+        <span className="grid h-12 w-12 place-items-center rounded-full bg-accent text-accent-ink">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5"
+            aria-hidden="true"
+          >
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+        </span>
+        <p className="display-sm mt-1">Message sent</p>
+        <p className="max-w-sm text-body-sm text-ink-muted">
           Got it — I&apos;ll get back to you within a couple of days.
         </p>
       </div>
@@ -68,7 +91,7 @@ export default function InquiryForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-8" noValidate>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
       <input
         type="text"
         name="company"
@@ -78,29 +101,53 @@ export default function InquiryForm() {
         aria-hidden="true"
       />
 
-      <div className="grid gap-8 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2">
         <Field label="Name" error={errors.name}>
-          <input name="name" type="text" placeholder="Your name" className={inputClasses} disabled={state === "loading"} />
+          <input
+            name="name"
+            type="text"
+            placeholder="Your name"
+            className={inputClasses}
+            disabled={state === "loading"}
+          />
         </Field>
         <Field label="Email" error={errors.email}>
-          <input name="email" type="email" placeholder="you@studio.com" className={inputClasses} disabled={state === "loading"} />
+          <input
+            name="email"
+            type="email"
+            placeholder="you@studio.com"
+            className={inputClasses}
+            disabled={state === "loading"}
+          />
         </Field>
       </div>
 
-      <div className="grid gap-8 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2">
         <Field label="Project type" error={errors.projectType}>
-          <select name="projectType" defaultValue="" className={cn(inputClasses, "appearance-none")} disabled={state === "loading"}>
+          <select
+            name="projectType"
+            defaultValue=""
+            className={selectClasses}
+            style={{ backgroundImage: CHEVRON }}
+            disabled={state === "loading"}
+          >
             <option value="" disabled>
               Select one
             </option>
             <option value="brand">Brand / identity</option>
-            <option value="web">Web design & build</option>
+            <option value="web">Web design &amp; build</option>
             <option value="motion">Motion / interaction</option>
             <option value="other">Something else</option>
           </select>
         </Field>
         <Field label="Budget range" error={errors.budget}>
-          <select name="budget" defaultValue="" className={cn(inputClasses, "appearance-none")} disabled={state === "loading"}>
+          <select
+            name="budget"
+            defaultValue=""
+            className={selectClasses}
+            style={{ backgroundImage: CHEVRON }}
+            disabled={state === "loading"}
+          >
             <option value="" disabled>
               Select one
             </option>
@@ -115,7 +162,7 @@ export default function InquiryForm() {
       <Field label="Tell me about the project" error={errors.message}>
         <textarea
           name="message"
-          rows={5}
+          rows={6}
           placeholder="What are you building, and what's the timeline?"
           className={cn(inputClasses, "resize-none")}
           disabled={state === "loading"}
@@ -123,14 +170,22 @@ export default function InquiryForm() {
       </Field>
 
       {state === "error" && (
-        <p className="font-mono text-label text-error">
+        <p className="rounded-[var(--radius-md)] border border-error/40 bg-error/10 px-4 py-3 text-body-sm text-error">
           Something went wrong on our end — try again, or email hello@mjfird.com directly.
         </p>
       )}
 
-      <MagneticButton type="submit" cursorLabel="view" className={state === "loading" ? "opacity-60" : undefined}>
-        {state === "loading" ? "Sending…" : "Send inquiry →"}
-      </MagneticButton>
+      <div className="mt-2">
+        <MagneticButton
+          type="submit"
+          size="lg"
+          arrow={state !== "loading"}
+          cursorLabel="view"
+          className={state === "loading" ? "opacity-60" : undefined}
+        >
+          {state === "loading" ? "Sending…" : "Send inquiry"}
+        </MagneticButton>
+      </div>
     </form>
   );
 }
@@ -146,9 +201,9 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted">{label}</span>
+      <span className="text-body-sm font-medium text-ink">{label}</span>
       {children}
-      {error && <span className="font-mono text-label text-error">{error}</span>}
+      {error && <span className="text-body-sm text-error">{error}</span>}
     </label>
   );
 }

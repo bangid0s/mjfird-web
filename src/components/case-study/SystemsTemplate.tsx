@@ -4,6 +4,7 @@ import CaseStudyNext from "@/components/case-study/CaseStudyNext";
 import CaseStudyNarrative from "@/components/case-study/CaseStudyNarrative";
 import MediaSlot from "@/components/case-study/MediaSlot";
 import ProjectGallery from "@/components/media/ProjectGallery";
+import Reveal from "@/components/motion/Reveal";
 
 export default function SystemsTemplate({
   project,
@@ -13,53 +14,45 @@ export default function SystemsTemplate({
   next: Project;
 }) {
   const hasCover = project.cover && !project.cover.startsWith("/placeholder");
+  const gallery = project.gallery ?? [];
 
   return (
     <article>
-      <header className="mx-auto max-w-6xl px-6 pt-16 pb-12 sm:px-10">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <header className="container-page pb-12 pt-16 sm:pt-24">
+        <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="mb-4 font-mono text-label uppercase tracking-[0.25em] text-accent">
-              {project.category}
-            </p>
-            <h1 className="font-display text-display-lg uppercase leading-[0.9] text-ink">
-              {project.title}
-            </h1>
+            <p className="eyebrow eyebrow-accent mb-5">{project.category}</p>
+            <h1 className="display-lg max-w-3xl">{project.title}</h1>
           </div>
-          <p className="max-w-sm font-body text-body text-ink-muted">{project.hook}</p>
+          <p className="max-w-sm text-body-lg text-pretty text-ink-muted">{project.hook}</p>
         </div>
       </header>
 
       {hasCover && (
-        <div className="mx-auto max-w-6xl px-6 pb-16 sm:px-10">
+        <Reveal className="container-page pb-14">
           <MediaSlot
             image={{ url: project.cover, alt: project.title }}
             className="aspect-[16/9] w-full"
             sizes="(min-width: 1024px) 1152px, 100vw"
           />
-        </div>
+        </Reveal>
       )}
 
-      <div className="mx-auto max-w-6xl px-6 pb-16 sm:px-10">
+      <div className="container-page pb-14">
         <CaseStudyMeta project={project} />
       </div>
 
-      <div className="mx-auto max-w-3xl px-6 pb-16 sm:px-10">
-        <CaseStudyNarrative narrative={project.narrative} />
+      <div className="container-page pb-16">
+        <div className="max-w-3xl">
+          <CaseStudyNarrative narrative={project.narrative} />
+        </div>
       </div>
 
-      {project.gallery && project.gallery.length > 0 && (
-        <div className="mx-auto max-w-6xl px-6 pb-4 sm:px-10">
-          <p className="mb-6 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
-            The system, applied
-          </p>
-        </div>
-      )}
-
-      {project.gallery && project.gallery.length > 0 && (
-        <div className="mx-auto max-w-6xl px-6 pb-24 sm:px-10">
-          <ProjectGallery images={project.gallery} />
-        </div>
+      {gallery.length > 0 && (
+        <Reveal className="container-page pb-[var(--space-section)]">
+          <p className="eyebrow mb-6">The system, applied</p>
+          <ProjectGallery images={gallery} />
+        </Reveal>
       )}
 
       <CaseStudyNext project={next} />

@@ -47,7 +47,7 @@ export default function ProjectGallery({ images }: { images: GalleryImage[] }) {
 
   return (
     <>
-      <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4">
+      <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 [&>*]:mb-5">
         {images.map((image, i) => {
           const playable = isPlayable(image.url);
           return (
@@ -56,7 +56,7 @@ export default function ProjectGallery({ images }: { images: GalleryImage[] }) {
               type="button"
               onClick={() => setOpen(i)}
               data-cursor={playable ? "play" : "view"}
-              className="group relative block w-full overflow-hidden break-inside-avoid border border-line bg-bg-raised"
+              className="group relative block w-full overflow-hidden break-inside-avoid rounded-[var(--radius-md)] border border-line bg-bg-raised"
               aria-label={playable ? "Play media" : "View full image"}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -140,18 +140,18 @@ export default function ProjectGallery({ images }: { images: GalleryImage[] }) {
               <img
                 src={active.url}
                 alt={active.alt ?? ""}
-                className="mx-auto max-h-[85svh] w-auto object-contain"
+                className="mx-auto max-h-[85svh] w-auto rounded-[var(--radius-md)] object-contain"
               />
             )}
             {active.alt && (
-              <p className="mt-3 text-center font-mono text-label uppercase tracking-[0.15em] text-ink-muted">
+              <p className="mt-3 text-center text-body-sm text-ink-muted">
                 {active.alt}
               </p>
             )}
           </div>
 
           {images.length > 1 && (
-            <span className="absolute bottom-4 left-1/2 -translate-x-1/2 font-mono text-label text-ink-faint">
+            <span className="mono-meta absolute bottom-4 left-1/2 -translate-x-1/2">
               {open! + 1} / {images.length}
             </span>
           )}

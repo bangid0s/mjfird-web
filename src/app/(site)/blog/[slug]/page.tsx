@@ -48,7 +48,7 @@ export default async function PostPage({
   const gallery = post.gallery ?? [];
 
   return (
-    <article className="py-20">
+    <article className="py-[var(--space-section)]">
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -70,23 +70,25 @@ export default async function PostPage({
           ],
         }}
       />
-      <div className="mx-auto max-w-2xl px-6 sm:px-10">
+      <div className="container-prose">
         <Link
           href="/blog"
           data-cursor="view"
-          className="mb-8 inline-block font-mono text-label uppercase tracking-[0.15em] text-ink-muted hover:text-accent"
+          className="group mb-10 inline-flex items-center gap-2 text-body-sm font-medium text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-accent"
         >
-          ← All notes
+          <span aria-hidden="true" className="transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:-translate-x-1">←</span>
+          All notes
         </Link>
-        <div className="mb-8 flex gap-4 font-mono text-label uppercase tracking-[0.1em] text-ink-faint">
+        <div className="mono-meta mb-6 flex flex-wrap items-center gap-x-3">
           <time dateTime={post.date}>{post.date}</time>
+          <span aria-hidden="true" className="opacity-50">/</span>
           <span>{post.readTime} read</span>
         </div>
-        <h1 className="mb-10 font-display text-display-lg uppercase leading-[0.9] text-ink">
+        <h1 className="display-lg mb-10">
           {post.title}
         </h1>
         {post.cover && (
-          <div className="mb-10">
+          <div className="mb-12 overflow-hidden rounded-[var(--radius-lg)] border border-line">
             <CoverMedia
               src={post.cover}
               alt={post.title}
@@ -105,8 +107,8 @@ export default async function PostPage({
       </div>
 
       {gallery.length > 0 && (
-        <section className="mx-auto mt-16 max-w-5xl px-6 sm:px-10">
-          <h2 className="mb-6 border-t border-line pt-6 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
+        <section className="container-page mt-20 max-w-6xl">
+          <h2 className="eyebrow mb-6 border-t border-line pt-8">
             More from this post
           </h2>
           <ProjectGallery images={gallery} />

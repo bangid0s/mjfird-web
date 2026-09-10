@@ -4,6 +4,7 @@ import CaseStudyNext from "@/components/case-study/CaseStudyNext";
 import CaseStudyNarrative from "@/components/case-study/CaseStudyNarrative";
 import MediaSlot from "@/components/case-study/MediaSlot";
 import ProjectGallery from "@/components/media/ProjectGallery";
+import Reveal from "@/components/motion/Reveal";
 
 export default function EditorialTemplate({
   project,
@@ -16,38 +17,34 @@ export default function EditorialTemplate({
 
   return (
     <article>
-      <header className="mx-auto max-w-3xl px-6 pt-16 pb-12 sm:px-10">
-        <p className="mb-6 font-mono text-label uppercase tracking-[0.25em] text-accent">
-          {project.category}
-        </p>
-        <h1 className="font-display text-display-lg uppercase leading-[0.9] text-ink">
-          {project.title}
-        </h1>
-        <p className="mt-6 font-body text-body-lg text-ink-muted">{project.hook}</p>
+      <header className="container-prose pb-12 pt-16 sm:pt-24">
+        <p className="eyebrow eyebrow-accent mb-5">{project.category}</p>
+        <h1 className="display-lg">{project.title}</h1>
+        <p className="mt-6 max-w-xl text-body-lg text-pretty text-ink-muted">{project.hook}</p>
       </header>
 
       {hasCover && (
-        <div className="mx-auto max-w-5xl px-6 sm:px-10">
+        <Reveal className="container-page max-w-6xl">
           <MediaSlot
             image={{ url: project.cover, alt: project.title }}
             className="aspect-[16/10] w-full"
             sizes="(min-width: 1024px) 1024px, 100vw"
           />
-        </div>
+        </Reveal>
       )}
 
-      <div className="mx-auto max-w-3xl px-6 py-16 sm:px-10">
+      <div className="container-prose py-14">
         <CaseStudyMeta project={project} />
       </div>
 
-      <div className="mx-auto max-w-2xl px-6 pb-16 sm:px-10">
+      <div className="container-prose pb-16">
         <CaseStudyNarrative narrative={project.narrative} />
       </div>
 
       {project.gallery && project.gallery.length > 0 && (
-        <div className="mx-auto max-w-5xl px-6 pb-24 sm:px-10">
+        <Reveal className="container-page max-w-6xl pb-[var(--space-section)]">
           <ProjectGallery images={project.gallery} />
-        </div>
+        </Reveal>
       )}
 
       <CaseStudyNext project={next} />
