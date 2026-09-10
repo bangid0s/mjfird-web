@@ -140,7 +140,7 @@ export default function HeroMedia({
           type="button"
           onClick={() => goTo(current - 1)}
           aria-label="Previous slide"
-          className="pointer-events-auto absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg/50 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg/80 sm:left-6"
+          className="pointer-events-auto absolute left-0 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center bg-bg/70 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg"
         >
           ‹
         </button>
@@ -148,11 +148,11 @@ export default function HeroMedia({
           type="button"
           onClick={() => goTo(current + 1)}
           aria-label="Next slide"
-          className="pointer-events-auto absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg/50 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg/80 sm:right-6"
+          className="pointer-events-auto absolute right-0 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center bg-bg/70 text-lg text-ink backdrop-blur-sm transition-colors duration-[var(--duration-fast)] hover:bg-bg"
         >
           ›
         </button>
-        <div className="pointer-events-auto absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2.5">
+        <div className="pointer-events-auto absolute bottom-5 left-5 flex items-center gap-2">
           {slides.map((_, i) => (
             <button
               key={i}
@@ -161,8 +161,8 @@ export default function HeroMedia({
               aria-label={`Go to slide ${i + 1}`}
               aria-current={i === current}
               className={cn(
-                "h-2 rounded-full transition-all duration-[var(--duration-fast)]",
-                i === current ? "w-6 bg-accent" : "w-2 bg-ink/40 hover:bg-ink/70",
+                "h-1.5 transition-all duration-[var(--duration-fast)]",
+                i === current ? "w-8 bg-accent" : "w-4 bg-ink/35 hover:bg-ink/60",
               )}
             />
           ))}

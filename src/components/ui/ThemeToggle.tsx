@@ -56,7 +56,7 @@ export default function ThemeToggle({ className }: { className?: string }) {
       data-cursor="view"
       className={cn(
         className ??
-          "flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition-colors duration-[var(--duration-fast)] hover:bg-bg-raised-2 hover:text-ink",
+          "flex h-9 w-9 items-center justify-center text-ink-muted transition-colors duration-[var(--duration-fast)] hover:bg-bg-raised-2 hover:text-ink",
       )}
     >
       <svg

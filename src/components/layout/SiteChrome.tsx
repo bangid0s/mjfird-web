@@ -38,7 +38,7 @@ export default function SiteChrome({
       <SmoothScroll>
         <a
           href="#main-content"
-          className="fixed left-4 top-4 z-[var(--z-modal)] -translate-y-24 rounded-full bg-accent px-5 py-2.5 text-body-sm font-medium text-accent-ink shadow-md transition-transform focus:translate-y-0"
+          className="fixed left-4 top-4 z-[var(--z-modal)] -translate-y-24 bg-accent px-5 py-2.5 text-body-sm font-medium text-accent-ink transition-transform focus:translate-y-0"
         >
           Skip to content
         </a>

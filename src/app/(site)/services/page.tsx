@@ -18,17 +18,17 @@ export default async function ServicesPage() {
   return (
     <div>
       <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
-        <SectionHeader eyebrow="Services" title="What I build" />
+        <SectionHeader index={1} eyebrow="Services" title="What I build" />
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid border-t border-line md:grid-cols-3">
           {services.map((service, i) => (
             <Reveal
               key={service.title}
               delay={i * 70}
-              className="surface group flex flex-col overflow-hidden transition-[transform,box-shadow,border-color] duration-[var(--duration-base)] ease-[var(--ease-freeze)] hover:-translate-y-1 hover:border-line-strong hover:shadow-md"
+              className="group flex flex-col border-b border-line md:border-r md:px-8 md:last:border-r-0 md:[&:first-child]:pl-0 md:[&:last-child]:pr-0"
             >
               {service.imageUrl && (
-                <div className="relative aspect-[4/3] w-full overflow-hidden border-b border-line bg-bg-raised-2">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-bg-raised-2">
                   <SmartImage
                     src={service.imageUrl}
                     alt={service.title}
@@ -38,14 +38,14 @@ export default async function ServicesPage() {
                 </div>
               )}
 
-              <div className="flex flex-1 flex-col gap-4 p-7">
+              <div className="flex flex-1 flex-col gap-5 py-9 md:py-10">
                 <span className="mono-meta">{String(i + 1).padStart(2, "0")}</span>
                 <h2 className="display-sm">{service.title}</h2>
                 <p className="text-body-sm text-pretty text-ink-muted">{service.description}</p>
-                <ul className="mt-auto flex flex-col gap-2 border-t border-line pt-4">
+                <ul className="mt-auto flex flex-col gap-2 pt-5">
                   {service.deliverables.map((d) => (
-                    <li key={d} className="flex items-start gap-2.5 text-body-sm text-ink-faint">
-                      <span aria-hidden="true" className="mt-[0.45em] h-1 w-1 shrink-0 rounded-full bg-accent" />
+                    <li key={d} className="spec flex items-start gap-2.5">
+                      <span aria-hidden="true" className="mt-[0.5em] h-1 w-1 shrink-0 bg-accent" />
                       {d}
                     </li>
                   ))}
@@ -59,13 +59,14 @@ export default async function ServicesPage() {
       <div className="border-y border-line bg-bg-raised/60">
         <div className="container-page py-[var(--space-section)]">
           <SectionHeader
+            index={2}
             eyebrow={settings.processSectionEyebrow}
             title={settings.processSectionTitle}
           />
           <ol className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {settings.processSteps.map((step, i) => (
               <Reveal as="li" key={step.title} delay={i * 70} className="flex flex-col gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-accent text-body-sm font-medium text-accent-ink">
+                <span className="grid h-9 w-9 place-items-center bg-accent text-body-sm font-medium text-accent-ink">
                   {i + 1}
                 </span>
                 <h3 className="display-sm mt-1">{step.title}</h3>

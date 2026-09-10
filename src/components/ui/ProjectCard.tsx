@@ -51,7 +51,7 @@ export default function ProjectCard({
           <h3 className="display-sm transition-colors duration-[var(--duration-fast)] group-hover:text-accent">
             {project.title}
           </h3>
-          <span className="rounded-full border border-line px-2.5 py-1 text-label font-medium text-ink-faint">
+          <span className="spec border border-line px-2 py-1">
             {project.category}
           </span>
         </div>
@@ -68,7 +68,7 @@ export default function ProjectCard({
           </p>
           <span
             aria-hidden="true"
-            className="flex shrink-0 items-center gap-1.5 text-body-sm font-medium text-accent opacity-0 transition-[opacity,transform] duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-0 group-hover:opacity-100 sm:translate-x-2"
+            className="spec flex shrink-0 items-center gap-1.5 text-accent-strong opacity-0 transition-[opacity,transform] duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-0 group-hover:opacity-100 sm:translate-x-2"
           >
             View project →
           </span>

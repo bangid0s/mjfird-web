@@ -12,7 +12,7 @@ const OBJECT_FIT: Record<Exclude<CoverFit, "natural">, string> = {
 
 function PlayGlyph() {
   return (
-    <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-accent pl-0.5 text-accent-ink">
+    <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-accent pl-0.5 text-accent-ink">
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
         <path d="M8 5v14l11-7z" />
       </svg>

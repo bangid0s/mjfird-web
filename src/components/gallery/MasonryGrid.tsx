@@ -22,7 +22,7 @@ export default function MasonryGrid({
           type="button"
           onClick={() => onOpen(i)}
           aria-label={item.title ? `Enlarge: ${item.title}` : "Enlarge image"}
-          className="group relative mb-3 block w-full break-inside-avoid overflow-hidden rounded-2xl bg-bg-raised shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] lg:mb-4"
+          className="group relative mb-3 block w-full break-inside-avoid overflow-hidden border border-line bg-bg-raised lg:mb-4"
         >
           {/* Pasted addresses have unknown dimensions, so the image sets its
               own height — that is what the masonry column needs. */}

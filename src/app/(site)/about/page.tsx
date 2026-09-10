@@ -33,7 +33,7 @@ export default async function AboutPage() {
               className="aspect-[4/5] w-full"
             />
           ) : (
-            <div className="aspect-[4/5] w-full rounded-[var(--radius-xl)] bg-gradient-to-br from-bg-raised to-bg-raised-2" />
+            <div className="aspect-[4/5] w-full border border-line bg-bg-raised-2" />
           )}
         </Reveal>
 
@@ -59,7 +59,7 @@ export default async function AboutPage() {
 
       <div className="border-y border-line bg-bg-raised/60">
         <div className="container-page py-[var(--space-section)]">
-          <SectionHeader eyebrow="Timeline" title="How I got here" />
+          <SectionHeader index={1} eyebrow="Timeline" title="How I got here" />
           <ol className="flex flex-col">
             {settings.aboutTimeline.map((item, i) => (
               <Reveal
@@ -80,13 +80,13 @@ export default async function AboutPage() {
       </div>
 
       <div className="container-page py-[var(--space-section)]">
-        <SectionHeader eyebrow="Toolkit" title="What I work with" />
+        <SectionHeader index={2} eyebrow="Toolkit" title="What I work with" />
         <div className="flex flex-wrap gap-2.5">
           {settings.aboutSkills.map((skill, i) => (
             <Reveal
               key={skill}
               delay={Math.min(i * 30, 240)}
-              className="rounded-full border border-line bg-bg-raised px-4 py-2 text-body-sm text-ink-muted transition-colors duration-[var(--duration-fast)] hover:border-line-strong hover:text-ink"
+              className="spec border border-line px-3.5 py-2 transition-colors duration-[var(--duration-fast)] hover:border-line-strong hover:text-ink"
             >
               {skill}
             </Reveal>

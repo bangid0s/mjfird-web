@@ -18,7 +18,7 @@ type FormState = "idle" | "loading" | "success" | "error";
 type Errors = Partial<Record<keyof z.infer<typeof schema>, string>>;
 
 const inputClasses =
-  "w-full rounded-[var(--radius-md)] border border-line bg-bg-raised px-4 py-3 text-body text-ink transition-[border-color,box-shadow] duration-[var(--duration-fast)] placeholder:text-ink-faint focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/15 disabled:opacity-50";
+  "w-full border border-line bg-bg-raised px-4 py-3.5 text-body text-ink transition-colors duration-[var(--duration-fast)] placeholder:text-ink-faint focus:border-ink focus:outline-none disabled:opacity-50";
 
 // Native selects need their own arrow back once appearance is stripped.
 const selectClasses = cn(
@@ -67,8 +67,8 @@ export default function InquiryForm() {
 
   if (state === "success") {
     return (
-      <div className="surface flex flex-col items-center gap-3 px-6 py-14 text-center">
-        <span className="grid h-12 w-12 place-items-center rounded-full bg-accent text-accent-ink">
+      <div className="border border-line flex flex-col items-center gap-3 px-6 py-16 text-center">
+        <span className="grid h-12 w-12 place-items-center bg-accent text-accent-ink">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -170,7 +170,7 @@ export default function InquiryForm() {
       </Field>
 
       {state === "error" && (
-        <p className="rounded-[var(--radius-md)] border border-error/40 bg-error/10 px-4 py-3 text-body-sm text-error">
+        <p className="border border-error/50 px-4 py-3 text-body-sm text-error">
           Something went wrong on our end — try again, or email hello@mjfird.com directly.
         </p>
       )}
@@ -201,9 +201,9 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="text-body-sm font-medium text-ink">{label}</span>
+      <span className="spec">{label}</span>
       {children}
-      {error && <span className="text-body-sm text-error">{error}</span>}
+      {error && <span className="spec text-error">{error}</span>}
     </label>
   );
 }

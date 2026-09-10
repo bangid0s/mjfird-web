@@ -14,6 +14,7 @@ export default async function WorkPage() {
   return (
     <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
       <SectionHeader
+        index={1}
         eyebrow="Selected Work"
         title="Everything I've shipped"
         action={
