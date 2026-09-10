@@ -71,7 +71,6 @@ export type SiteSettings = {
   heroIntro: string;
   heroCtaPrimary: string;
   heroCtaSecondary: string;
-  marqueeItems: string[];
   stats: { value: number; suffix: string; label: string }[];
   workSectionEyebrow: string;
   workSectionTitle: string;
@@ -183,7 +182,6 @@ const placeholderSettings: SiteSettings = {
     "A decade in the cypher taught me rhythm and restraint. I bring both to brand, motion, and web work for people who don't want to look like a template.",
   heroCtaPrimary: "See the work",
   heroCtaSecondary: "Start a project",
-  marqueeItems: ["Brand Identity", "Motion Design", "Web Build", "Art Direction", "Cypher-tested"],
   stats: [
     { value: 10, suffix: "+", label: "Years in the cypher" },
     { value: 38, suffix: "", label: "Projects shipped" },
@@ -328,7 +326,6 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     heroIntro: row.hero_intro,
     heroCtaPrimary: row.hero_cta_primary,
     heroCtaSecondary: row.hero_cta_secondary,
-    marqueeItems: row.marquee_items?.length ? row.marquee_items : placeholderSettings.marqueeItems,
     stats: row.stats?.length ? row.stats : placeholderSettings.stats,
     workSectionEyebrow: row.work_section_eyebrow || placeholderSettings.workSectionEyebrow,
     workSectionTitle: row.work_section_title || placeholderSettings.workSectionTitle,

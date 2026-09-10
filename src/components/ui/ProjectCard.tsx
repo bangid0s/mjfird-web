@@ -7,6 +7,10 @@ import type { Project } from "@/lib/placeholder-data";
   gets the space: a large 4:3 frame with the title underneath, rather than the
   224px thumbnail in a list row this replaces. Every card is framed the same
   way — a portfolio grid shouldn't rank its own pieces by crop.
+
+  Nothing is painted on top of the artwork. The index and the hover affordance
+  used to sit on the image as translucent chips; they live in the meta line
+  below it now, so the cover renders at full colour with nothing over it.
 */
 
 export default function ProjectCard({
@@ -26,7 +30,7 @@ export default function ProjectCard({
       data-cursor="view"
       className="group flex flex-col gap-5"
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)] border border-line bg-bg-raised-2">
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)] border border-line bg-bg-raised-2 transition-colors duration-[var(--duration-fast)] group-hover:border-line-strong">
         {hasCover ? (
           <SmartImage
             src={project.cover}
@@ -40,18 +44,6 @@ export default function ProjectCard({
             <span className="eyebrow">{project.category}</span>
           </div>
         )}
-
-        {/* Index, and the hover affordance. Both sit above the image. */}
-        <span className="mono-meta absolute left-4 top-4 rounded-full bg-bg/75 px-2.5 py-1 text-ink backdrop-blur-sm">
-          {String(index + 1).padStart(2, "0")}
-        </span>
-
-        <span className="pointer-events-none absolute inset-x-4 bottom-4 flex translate-y-2 items-center justify-between rounded-full bg-bg/80 px-4 py-2.5 opacity-0 backdrop-blur-md transition-[opacity,transform] duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-y-0 group-hover:opacity-100">
-          <span className="text-body-sm font-medium text-ink">View project</span>
-          <span aria-hidden="true" className="text-accent">
-            →
-          </span>
-        </span>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -66,11 +58,21 @@ export default function ProjectCard({
 
         <p className="max-w-xl text-body-sm text-pretty text-ink-muted">{project.hook}</p>
 
-        <p className="mono-meta mt-1">
-          {project.client}
-          <span className="px-2 opacity-50">/</span>
-          {project.year}
-        </p>
+        <div className="mt-1 flex items-center justify-between gap-4">
+          <p className="mono-meta">
+            {String(index + 1).padStart(2, "0")}
+            <span className="px-2 opacity-50">/</span>
+            {project.client}
+            <span className="px-2 opacity-50">/</span>
+            {project.year}
+          </p>
+          <span
+            aria-hidden="true"
+            className="flex shrink-0 items-center gap-1.5 text-body-sm font-medium text-accent opacity-0 transition-[opacity,transform] duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-0 group-hover:opacity-100 sm:translate-x-2"
+          >
+            View project →
+          </span>
+        </div>
       </div>
     </Link>
   );

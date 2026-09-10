@@ -96,8 +96,6 @@
 
   --cursor-visible: 1;
 
-  /* Paper grain, kept subtle enough to read as texture, not noise. */
-  --grain-opacity: 0.035;
 
   color-scheme: light;
 }
@@ -130,7 +128,6 @@
     --shadow-md: 0 16px 38px -14px hsl(var(--shadow-color) / 0.7);
     --shadow-lg: 0 40px 78px -30px hsl(var(--shadow-color) / 0.8);
 
-    --grain-opacity: 0.05;
 
     color-scheme: dark;
   }
@@ -162,7 +159,6 @@
   --shadow-md: 0 16px 38px -14px hsl(var(--shadow-color) / 0.7);
   --shadow-lg: 0 40px 78px -30px hsl(var(--shadow-color) / 0.8);
 
-  --grain-opacity: 0.05;
 
   color-scheme: dark;
 }
@@ -218,7 +214,6 @@
 
   --breakpoint-3xl: 1920px;
 
-  --animate-marquee: marquee 60s linear infinite;
   --animate-rise: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-hero-zoom: hero-zoom 24s ease-in-out infinite alternate;
   --animate-hero-drift: hero-drift 30s ease-in-out infinite alternate;
@@ -252,12 +247,12 @@
   }
 }
 
-@keyframes marquee {
+@keyframes page-enter {
   from {
-    transform: translateX(0);
+    opacity: 0;
   }
   to {
-    transform: translateX(-50%);
+    opacity: 1;
   }
 }
 
@@ -286,27 +281,6 @@ body {
   transition:
     background-color var(--duration-base) var(--ease-swing),
     color var(--duration-base) var(--ease-swing);
-}
-
-/*
-  Paper grain. One tiled 180px turbulence square, painted above the page and
-  below the chrome — cheap to composite, and it keeps large flat areas from
-  reading as dead screen.
-*/
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: var(--grain-opacity);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body::after {
-    display: none;
-  }
 }
 
 ::selection {
@@ -486,6 +460,64 @@ html[data-cursor="custom"] [contenteditable="true"] {
     border: 1px solid var(--color-line);
     border-radius: var(--radius-lg);
   }
+
+  /*
+    Section tones — full-bleed bands that give a long page some colour rhythm.
+
+    The tint is *mixed against the page ground* rather than being a fixed hex,
+    so one declaration serves both themes: the same hue lands as a pale wash on
+    paper and a deep stain on ink. Dark needs a stronger mix to register at all,
+    which is what --tone-strength is for.
+
+    House rule: tone the sections that talk (services, stats, testimonials),
+    never the sections that look. A work grid sits on neutral ground, because
+    a tinted band behind artwork competes with the artwork.
+  */
+  .tone {
+    background-color: color-mix(
+      in oklab,
+      var(--tone-hue, transparent) var(--tone-strength, 7%),
+      var(--color-bg)
+    );
+  }
+
+  .tone-sand {
+    --tone-hue: #e0a33a;
+  }
+  .tone-mint {
+    --tone-hue: #2fb39a;
+  }
+  .tone-lilac {
+    --tone-hue: var(--color-accent-base);
+  }
+  .tone-rose {
+    --tone-hue: #ff5c3d;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .tone {
+      --tone-strength: 11%;
+    }
+  }
+  :root[data-theme="dark"] .tone {
+    --tone-strength: 11%;
+  }
+
+  /*
+    The loud one: a band filled with the accent itself, used once per page as
+    punctuation. Re-pointing the ink and line tokens inside it means every
+    child component inverts on its own — nothing needs an "on dark" variant.
+  */
+  .tone-solid {
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+
+    --color-ink: var(--color-accent-ink);
+    --color-ink-muted: color-mix(in oklab, var(--color-accent-ink) 76%, transparent);
+    --color-ink-faint: color-mix(in oklab, var(--color-accent-ink) 62%, transparent);
+    --color-line: color-mix(in oklab, var(--color-accent-ink) 24%, transparent);
+    --color-line-strong: color-mix(in oklab, var(--color-accent-ink) 38%, transparent);
+  }
 }
 
 @layer utilities {
@@ -512,6 +544,21 @@ html[data-cursor="custom"] [contenteditable="true"] {
     [data-reveal] {
       opacity: 1;
       transform: none;
+    }
+  }
+
+  /*
+    Route enter. Opacity only: a transform here would turn the wrapper into a
+    containing block for any fixed-position child (the lightboxes) for as long
+    as the animation ran.
+  */
+  .page-enter {
+    animation: page-enter var(--duration-base) var(--ease-freeze) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-enter {
+      animation: none;
     }
   }
 
