@@ -5,6 +5,7 @@ import FeaturedWork from "@/components/work/FeaturedWork";
 import Marquee from "@/components/ui/Marquee";
 import AnimatedNumber from "@/components/ui/AnimatedNumber";
 import Reveal from "@/components/motion/Reveal";
+import SectionBand, { type SectionTone } from "@/components/layout/SectionBand";
 import SmartImage from "@/components/media/SmartImage";
 import { getProjects } from "@/lib/data/projects";
 import { getServices } from "@/lib/data/services";
@@ -13,6 +14,13 @@ import { getProfile } from "@/lib/data/profile";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL } from "@/lib/site-url";
+
+/*
+  The stats strip is the page's one loud moment. "solid" fills it with the
+  accent; "lilac" keeps it as a quiet tint like the bands around it. One line,
+  because it's the kind of decision that gets revisited.
+*/
+const STATS_TONE: SectionTone = "solid";
 
 export default async function Home() {
   const [projects, services, testimonials, profile, settings] = await Promise.all([
@@ -51,8 +59,8 @@ export default async function Home() {
 
       <Marquee items={settings.marqueeItems} />
 
-      {/* Featured work */}
-      <section className="container-page py-[var(--space-section)]">
+      {/* Featured work — deliberately untinted: the artwork supplies the colour. */}
+      <SectionBand>
         <SectionHeader
           eyebrow={settings.workSectionEyebrow}
           title={settings.workSectionTitle}
@@ -73,21 +81,21 @@ export default async function Home() {
           }
         />
         <FeaturedWork projects={featured} />
-      </section>
+      </SectionBand>
 
       {/* Stats */}
-      <section className="border-y border-line bg-bg-raised/60">
-        <div className="container-page grid grid-cols-2 gap-x-8 gap-y-10 py-14 sm:grid-cols-4">
+      <SectionBand tone={STATS_TONE} size="compact">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4">
           {settings.stats.map((stat, i) => (
             <Reveal key={stat.label} delay={i * 60}>
               <AnimatedNumber value={stat.value} suffix={stat.suffix} label={stat.label} />
             </Reveal>
           ))}
         </div>
-      </section>
+      </SectionBand>
 
       {/* Services */}
-      <section className="container-page py-[var(--space-section)]">
+      <SectionBand tone="sand">
         <SectionHeader
           eyebrow={settings.servicesSectionEyebrow}
           title={settings.servicesSectionTitle}
@@ -128,10 +136,10 @@ export default async function Home() {
             </Reveal>
           ))}
         </div>
-      </section>
+      </SectionBand>
 
       {/* Testimonials */}
-      <section className="container-page pb-[var(--space-section)]">
+      <SectionBand tone="mint">
         <SectionHeader
           eyebrow={settings.testimonialsSectionEyebrow}
           title={settings.testimonialsSectionTitle}
@@ -164,7 +172,7 @@ export default async function Home() {
             </Reveal>
           ))}
         </div>
-      </section>
+      </SectionBand>
     </>
   );
 }

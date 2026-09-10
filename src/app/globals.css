@@ -486,6 +486,64 @@ html[data-cursor="custom"] [contenteditable="true"] {
     border: 1px solid var(--color-line);
     border-radius: var(--radius-lg);
   }
+
+  /*
+    Section tones — full-bleed bands that give a long page some colour rhythm.
+
+    The tint is *mixed against the page ground* rather than being a fixed hex,
+    so one declaration serves both themes: the same hue lands as a pale wash on
+    paper and a deep stain on ink. Dark needs a stronger mix to register at all,
+    which is what --tone-strength is for.
+
+    House rule: tone the sections that talk (services, stats, testimonials),
+    never the sections that look. A work grid sits on neutral ground, because
+    a tinted band behind artwork competes with the artwork.
+  */
+  .tone {
+    background-color: color-mix(
+      in oklab,
+      var(--tone-hue, transparent) var(--tone-strength, 7%),
+      var(--color-bg)
+    );
+  }
+
+  .tone-sand {
+    --tone-hue: #e0a33a;
+  }
+  .tone-mint {
+    --tone-hue: #2fb39a;
+  }
+  .tone-lilac {
+    --tone-hue: var(--color-accent-base);
+  }
+  .tone-rose {
+    --tone-hue: #ff5c3d;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .tone {
+      --tone-strength: 11%;
+    }
+  }
+  :root[data-theme="dark"] .tone {
+    --tone-strength: 11%;
+  }
+
+  /*
+    The loud one: a band filled with the accent itself, used once per page as
+    punctuation. Re-pointing the ink and line tokens inside it means every
+    child component inverts on its own — nothing needs an "on dark" variant.
+  */
+  .tone-solid {
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+
+    --color-ink: var(--color-accent-ink);
+    --color-ink-muted: color-mix(in oklab, var(--color-accent-ink) 76%, transparent);
+    --color-ink-faint: color-mix(in oklab, var(--color-accent-ink) 62%, transparent);
+    --color-line: color-mix(in oklab, var(--color-accent-ink) 24%, transparent);
+    --color-line-strong: color-mix(in oklab, var(--color-accent-ink) 38%, transparent);
+  }
 }
 
 @layer utilities {
