@@ -32,7 +32,14 @@ export default function HeroMediaPicker({
   initialSlideDuration?: number;
 }) {
   const [type, setType] = useState<MediaType>(initialType ?? "none");
-  const [overlay, setOverlay] = useState(initialOverlay ?? 60);
+  /*
+    Kept as a hidden round-trip rather than a control. The hero used to run the
+    image behind the copy and needed a tint to keep the text readable; it now
+    gives the media a frame of its own at every width, so nothing is painted
+    over the artwork and there is no overlay left for a slider to set. The value
+    still submits unchanged so the stored setting survives a save.
+  */
+  const overlay = initialOverlay ?? 60;
   const [slideDuration, setSlideDuration] = useState(initialSlideDuration ?? 5);
 
   return (
@@ -125,22 +132,7 @@ export default function HeroMediaPicker({
         </>
       )}
 
-      {type !== "none" ? (
-        <Field label={`Dark overlay on the hero media — ${overlay}% (higher = darker, more readable text)`}>
-          <input
-            type="range"
-            name="hero_overlay_opacity"
-            min={0}
-            max={100}
-            step={5}
-            value={overlay}
-            onChange={(e) => setOverlay(Number(e.target.value))}
-            className="w-full accent-accent"
-          />
-        </Field>
-      ) : (
-        <input type="hidden" name="hero_overlay_opacity" value={overlay} />
-      )}
+      <input type="hidden" name="hero_overlay_opacity" value={overlay} />
     </div>
   );
 }

@@ -14,20 +14,20 @@ const DEFAULT_CTA_HREF = "/work";
 /*
   A split sheet rather than a photo with text on top of it.
 
-  On wide screens the media is a panel occupying the right of the frame and the
-  copy sits on clean ground beside it, so almost none of the artwork has
-  anything over it. Below `lg` the panel goes full-bleed behind the copy, where
-  HeroMedia's directional scrim earns its keep.
+  The media never sits behind the copy. On wide screens it is a panel occupying
+  the right of the frame with the copy on clean ground beside it; below `lg` the
+  split turns vertical and the panel becomes a band under the copy. Either way
+  no text crosses the artwork, so nothing is painted over it — no tint, no
+  gradient — and the image keeps its own colour.
 
   Everything else is corner work: a spec label above the wordmark, a rotated
-  label up the right edge, and a solid accent square in the bottom corner.
+  label up the left gutter, and a solid accent square in the bottom corner.
 */
 
 export default function Hero({
   mediaType,
   mediaUrl,
   slides,
-  overlayOpacity,
   animation,
   slideDuration,
   eyebrow,
@@ -39,14 +39,13 @@ export default function Hero({
   mediaType: "none" | "image" | "video" | "youtube";
   mediaUrl: string;
   slides: HeroSlide[];
-  overlayOpacity: number;
   animation: "none" | "zoom" | "drift" | "pulse";
   slideDuration: number;
   eyebrow: string;
   intro: string;
   ctaPrimary: string;
   ctaSecondary: string;
-  /** Rotated label up the right edge. */
+  /** Rotated label up the left gutter, on the widest screens only. */
   edgeLabel?: string;
 }) {
   const reducedMotion = usePrefersReducedMotion();
@@ -87,32 +86,29 @@ export default function Hero({
 
   return (
     <section className="relative -mt-[var(--nav-h)] overflow-hidden border-b border-line">
-      {/* Media panel: right of the frame on wide screens, full-bleed below. */}
-      <div className={cn("absolute inset-0", hasMedia && "lg:left-[54%] lg:border-l lg:border-line")}>
-        {hasMedia && (
-          <HeroMedia
-            type={mediaType}
-            url={mediaUrl}
-            images={images}
-            activeIndex={index}
-            onGoTo={rotates ? goTo : undefined}
-            overlayOpacity={overlayOpacity}
-            animation={animation}
-          />
-        )}
-      </div>
-
-      {/* Rotated edge label. */}
+      {/*
+        Rotated edge label, in the left gutter. It used to run up the right
+        edge, which is where the media panel now is — dark spec type over
+        whatever colour the artwork happened to be. The left gutter is always
+        clean ground.
+      */}
       {edgeLabel && (
         <span
           aria-hidden="true"
-          className="spec label-vertical absolute right-4 top-[calc(var(--nav-h)+3rem)] z-[var(--z-content)] hidden xl:block"
+          className="spec label-vertical absolute left-4 top-[calc(var(--nav-h)+3rem)] z-[var(--z-content)] hidden xl:block"
         >
           {edgeLabel}
         </span>
       )}
 
-      <div className="container-page relative z-[var(--z-content)] flex min-h-svh flex-col justify-between pb-24 pt-[calc(var(--nav-h)+3.5rem)]">
+      <div
+        className={cn(
+          "container-page relative z-[var(--z-content)] flex flex-col gap-16 pb-16 pt-[calc(var(--nav-h)+3rem)] lg:justify-between lg:gap-0 lg:pb-24 lg:pt-[calc(var(--nav-h)+3.5rem)]",
+          // With no media there is nothing to stack under, so the copy fills the
+          // frame on its own at every width and spreads to the corners.
+          hasMedia ? "lg:min-h-svh" : "min-h-svh justify-between",
+        )}
+      >
         <div className="flex flex-col gap-8">
           <p key={`eyebrow-${index}`} className={cn("spec", copyAnimation)}>
             {slideEyebrow}
@@ -138,6 +134,31 @@ export default function Hero({
           </div>
         </div>
       </div>
+
+      {/*
+        Media frame. A band in the flow under the copy on narrow screens, an
+        absolutely placed panel on the right from `lg` up.
+
+        Two things it is deliberately not. It is not behind the copy on mobile:
+        that needed a bottom-anchored scrim to keep the intro readable, and the
+        scrim washed the bottom third of the artwork out. And it does not run
+        under the nav, which left the labels unreadable over whatever the image
+        happened to be. Both fixes buy the same thing — the image is never
+        overlaid, at any width.
+      */}
+      {hasMedia && (
+        <div className="relative h-[46svh] min-h-[280px] w-full lg:absolute lg:inset-x-0 lg:bottom-0 lg:left-[54%] lg:top-[var(--nav-h)] lg:h-auto lg:min-h-0 lg:border-l lg:border-line">
+          <HeroMedia
+            type={mediaType}
+            url={mediaUrl}
+            images={images}
+            activeIndex={index}
+            onGoTo={rotates ? goTo : undefined}
+            animation={animation}
+            scrim="none"
+          />
+        </div>
+      )}
 
       {/* Solid accent square, hard into the bottom-right corner. */}
       <a
