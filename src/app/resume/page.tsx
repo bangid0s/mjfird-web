@@ -30,7 +30,7 @@ function SectionHeading({
 }) {
   return (
     <h2
-      className={`font-display text-display-sm uppercase leading-[0.9] ${
+      className={`display-sm ${
         tone === "accent" ? "text-accent" : tone === "on-accent" ? "text-accent-ink" : "text-ink"
       }`}
     >
@@ -150,7 +150,7 @@ function ToolTile({ tool }: { tool: ResumeTool }) {
             className="h-8 w-8 object-contain"
           />
         ) : (
-          <span aria-hidden="true" className="font-display text-xl uppercase text-accent">
+          <span aria-hidden="true" className="font-display text-xl font-semibold tracking-[-0.03em] text-accent">
             {tool.name.slice(0, 2)}
           </span>
         )}
@@ -188,7 +188,7 @@ export default async function ResumePage() {
         {/* ---------- Hero: name and intro left, portrait stack right ---------- */}
         <section className={`grid gap-10 ${BAND} lg:grid-cols-[1.05fr_0.95fr] lg:gap-14`}>
           <div className="flex flex-col justify-center gap-5">
-            <h1 className="font-display text-display-lg uppercase leading-[0.82] text-ink">
+            <h1 className="display-lg">
               Hello,
               <br />
               I&rsquo;m {name}
@@ -285,7 +285,7 @@ export default async function ResumePage() {
                 photo ? "-mt-8 mr-auto w-full max-w-[24rem] sm:-mt-14" : ""
               }`}
             >
-              <h2 className="font-display text-display-sm uppercase leading-none text-ink">
+              <h2 className="display-sm">
                 Contact
               </h2>
               <ul className="mt-3 flex flex-col gap-2">
@@ -332,7 +332,7 @@ export default async function ResumePage() {
                 stays a texture behind the grid rather than competing with it. */}
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute -right-6 -top-6 select-none font-display text-[clamp(5rem,13vw,11rem)] uppercase leading-[0.78] text-transparent opacity-[0.09] [-webkit-text-stroke:1px_var(--color-accent)]"
+              className="pointer-events-none absolute -right-6 -top-6 select-none font-display text-[clamp(5rem,13vw,11rem)] font-semibold uppercase leading-[0.78] tracking-[-0.05em] text-transparent opacity-[0.09] [-webkit-text-stroke:1px_var(--color-accent)]"
             >
               Resume
               <br />
@@ -417,7 +417,7 @@ export default async function ResumePage() {
                 <ul className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-3">
                   {settings.resumeLanguages.map((language) => (
                     <li key={language.name} className="border-t border-line pt-3">
-                      <span className="block font-display text-xl uppercase leading-none text-ink">
+                      <span className="block font-display text-xl font-semibold tracking-[-0.03em] text-ink">
                         {language.name}
                       </span>
                       {language.level && (

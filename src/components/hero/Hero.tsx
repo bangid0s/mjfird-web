@@ -68,10 +68,11 @@ export default function Hero({
   const slideCtaHref = active?.ctaUrl || DEFAULT_CTA_HREF;
 
   const copyAnimation = hasChanged ? "motion-safe:animate-rise" : "";
+  const hasMedia = mediaType !== "none" && (mediaUrl || count > 0);
 
   return (
-    <section className="relative">
-      {mediaType !== "none" && (mediaUrl || count > 0) && (
+    <section className="relative -mt-[var(--nav-h)] overflow-hidden">
+      {hasMedia ? (
         <HeroMedia
           type={mediaType}
           url={mediaUrl}
@@ -81,36 +82,50 @@ export default function Hero({
           overlayOpacity={overlayOpacity}
           animation={animation}
         />
+      ) : (
+        // No hero media configured: a soft accent wash rather than a flat wall.
+        <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+          <div className="absolute -left-[10%] top-[-20%] h-[46rem] w-[46rem] rounded-full bg-accent opacity-[0.13] blur-[120px]" />
+          <div className="absolute -right-[15%] bottom-[-25%] h-[38rem] w-[38rem] rounded-full bg-accent-echo opacity-[0.09] blur-[120px]" />
+        </div>
       )}
 
-      <div className="relative mx-auto flex min-h-[calc(100svh-5rem)] max-w-6xl flex-col justify-center gap-8 px-6 py-20 sm:px-10">
-        <p
-          key={`eyebrow-${index}`}
-          className={cn(
-            "font-mono text-label uppercase tracking-[0.3em] text-ink-muted",
-            copyAnimation,
-          )}
-        >
-          {slideEyebrow}
-        </p>
+      <div className="container-page relative flex min-h-[88svh] flex-col justify-center gap-9 pb-20 pt-[calc(var(--nav-h)+3rem)]">
+        <div className="flex flex-col gap-7">
+          <p
+            key={`eyebrow-${index}`}
+            className={cn(
+              "inline-flex w-fit items-center gap-2.5 rounded-full border border-line bg-bg/60 px-4 py-2 text-label font-medium tracking-[0.06em] text-ink-muted uppercase backdrop-blur-sm",
+              copyAnimation,
+            )}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            {slideEyebrow}
+          </p>
 
-        {/* Outside the keyed copy: the wordmark keeps its own entrance and
-            shouldn't replay on every slide. */}
-        <KineticWordmark />
+          {/* Outside the keyed copy: the wordmark keeps its own entrance and
+              shouldn't replay on every slide. */}
+          <KineticWordmark />
+        </div>
 
         <div
           key={`copy-${index}`}
           className={cn(
-            "flex flex-col items-start gap-8 sm:flex-row sm:items-end sm:justify-between",
+            "flex flex-col items-start gap-8 border-t border-line/70 pt-8 sm:flex-row sm:items-end sm:justify-between",
             copyAnimation,
           )}
         >
-          <p className="max-w-md font-body text-body-lg text-ink-muted">{slideIntro}</p>
-          <div className="flex gap-4">
-            <MagneticButton href={slideCtaHref} cursorLabel="view">
+          <p className="max-w-lg text-body-lg text-pretty text-ink-muted">{slideIntro}</p>
+          <div className="flex flex-wrap gap-3">
+            <MagneticButton href={slideCtaHref} size="lg" arrow cursorLabel="view">
               {slideCtaLabel}
             </MagneticButton>
-            <MagneticButton href="/contact" variant="secondary" cursorLabel="view">
+            <MagneticButton
+              href="/contact"
+              size="lg"
+              variant="secondary"
+              cursorLabel="view"
+            >
               {ctaSecondary}
             </MagneticButton>
           </div>

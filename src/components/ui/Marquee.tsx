@@ -11,10 +11,12 @@ function MarqueeBlock({ items, ariaHidden }: { items: string[]; ariaHidden?: boo
       {repeated.map((item, i) => (
         <span
           key={i}
-          className="flex items-center whitespace-nowrap font-display text-2xl uppercase tracking-tight text-ink-muted"
+          className="flex items-center whitespace-nowrap font-display text-body-lg font-medium tracking-[-0.01em] text-ink-muted"
         >
           {item}
-          <span className="px-10 text-accent">●</span>
+          <span aria-hidden="true" className="px-7 text-accent opacity-60">
+            ✳
+          </span>
         </span>
       ))}
     </div>
@@ -25,7 +27,17 @@ export default function Marquee({ items }: { items: string[] }) {
   if (items.length === 0) return null;
 
   return (
-    <div className="relative overflow-hidden border-y border-line bg-bg-raised py-5">
+    <div
+      className="relative overflow-hidden border-y border-line bg-bg-raised/50 py-4"
+      // Fade the strip out at both edges so it reads as continuous motion
+      // rather than text being clipped by the viewport.
+      style={{
+        maskImage:
+          "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+      }}
+    >
       <div className="animate-marquee flex w-max motion-reduce:animate-none">
         <MarqueeBlock items={items} />
         <MarqueeBlock items={items} ariaHidden />

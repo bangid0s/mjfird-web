@@ -3,17 +3,23 @@ import type { Project } from "@/lib/placeholder-data";
 
 export default function CaseStudyNext({ project }: { project: Project }) {
   return (
-    <Link
-      href={`/work/${project.slug}`}
-      data-cursor="view"
-      className="group flex flex-col gap-4 border-t border-line px-6 py-16 sm:px-10"
-    >
-      <p className="font-mono text-label uppercase tracking-[0.25em] text-ink-muted">
-        Next up
-      </p>
-      <h3 className="font-display text-display-lg uppercase leading-[0.9] text-ink transition-colors duration-[var(--duration-base)] group-hover:text-accent">
-        {project.title} →
-      </h3>
-    </Link>
+    <div className="border-t border-line">
+      <Link
+        href={`/work/${project.slug}`}
+        data-cursor="view"
+        className="group container-page flex flex-col gap-4 py-[var(--space-section)]"
+      >
+        <p className="eyebrow eyebrow-accent">Next up</p>
+        <h3 className="display-lg flex flex-wrap items-center gap-x-5 transition-colors duration-[var(--duration-base)] group-hover:text-accent">
+          {project.title}
+          <span
+            aria-hidden="true"
+            className="text-ink-faint transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-2 group-hover:text-accent"
+          >
+            →
+          </span>
+        </h3>
+      </Link>
+    </div>
   );
 }

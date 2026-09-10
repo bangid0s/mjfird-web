@@ -1,56 +1,90 @@
 @import "tailwindcss";
 
 /*
-  MJFIRD design tokens.
-  Direction: "the cypher floor" — underground battle-flyer graphics
-  (xerox/riso texture, gaffer-tape dividers, stencil type) crossed with
-  disciplined editorial-agency execution. One electric accent (riso
-  fluorescent pink), one motion-only "echo" color for freeze-frame
-  duotone mis-registration effects.
+  MJFIRD design tokens — "Signal".
+
+  Direction: a quiet, modern gallery for loud work. The canvas is near-neutral
+  so illustration supplies the colour; one saturated signal accent (electric
+  indigo) carries every interactive moment, with a coral echo for rare
+  emphasis. Type is a mixed-case grotesk — no all-caps condensed, no
+  wide-tracked mono on every label. Corners are soft, elevation is real,
+  motion is short.
+
+  Light is the base. Dark is a full peer, reached either by the visitor's OS
+  preference or by an explicit toggle, which always wins.
 */
 
 :root {
-  /* ---- Color ---- */
-  --color-bg: #0c0b0d;
-  --color-bg-raised: #17151a;
-  --color-bg-raised-2: #201d24;
-  --color-ink: #f5f1e8;
-  --color-ink-muted: #9a9499;
-  --color-ink-faint: #827c86;
-  --color-accent: #ff2e88;
-  --color-accent-ink: #0c0b0d;
-  --color-accent-echo: #2ee6d6;
-  --color-line: #2a262d;
-  --color-success: #3ddc84;
-  --color-error: #ff5c5c;
+  /* ---- Surfaces ---- */
+  --color-bg: #f7f7f5;
+  --color-bg-raised: #ffffff;
+  --color-bg-raised-2: #efefea;
 
-  /* ---- Type scale (fluid, clamp-based) ---- */
-  --text-display-xl: clamp(3.5rem, 3rem + 7vw, 11rem);
-  --text-display-lg: clamp(2.75rem, 2.2rem + 5vw, 7rem);
-  --text-display-md: clamp(2rem, 1.6rem + 3vw, 4rem);
-  --text-display-sm: clamp(1.5rem, 1.3rem + 1.5vw, 2.25rem);
-  --text-body-lg: clamp(1.125rem, 1.05rem + 0.3vw, 1.375rem);
+  /* ---- Ink ---- */
+  --color-ink: #0e0e10;
+  --color-ink-muted: #4a4a53;
+  --color-ink-faint: #6f6f79;
+
+  /* ---- Lines ---- */
+  --color-line: #e4e3de;
+  --color-line-strong: #d1d0c8;
+
+  /*
+    Accent. The admin's chosen colour arrives as --color-accent-base on <html>;
+    everything else derives from it, so a custom brand colour still lands
+    readable on both grounds. Dark mode lifts it toward white rather than
+    using the raw hex, which would sink into a dark background.
+  */
+  --color-accent-base: #4b3bff;
+  --color-accent: var(--color-accent-base);
+  --color-accent-ink: var(--color-accent-ink-light, #ffffff);
+  --color-accent-ink-light: #ffffff;
+  --color-accent-soft: color-mix(in oklab, var(--color-accent-base) 12%, var(--color-bg));
+  --color-accent-echo: #ff5c3d;
+
+  --color-success: #12805a;
+  --color-error: #c8352f;
+
+  /* ---- Elevation ---- */
+  --shadow-color: 220 12% 20%;
+  --shadow-xs: 0 1px 2px hsl(var(--shadow-color) / 0.06);
+  --shadow-sm: 0 2px 10px -3px hsl(var(--shadow-color) / 0.1);
+  --shadow-md: 0 14px 34px -14px hsl(var(--shadow-color) / 0.18);
+  --shadow-lg: 0 36px 70px -30px hsl(var(--shadow-color) / 0.26);
+
+  /* ---- Type scale (fluid, tuned for mixed-case grotesk) ---- */
+  --text-display-xl: clamp(2.75rem, 2rem + 5vw, 6.5rem);
+  --text-display-lg: clamp(2.25rem, 1.8rem + 3.2vw, 4.25rem);
+  --text-display-md: clamp(1.875rem, 1.6rem + 1.8vw, 3rem);
+  --text-display-sm: clamp(1.25rem, 1.15rem + 0.7vw, 1.625rem);
+  --text-body-lg: clamp(1.0625rem, 1.02rem + 0.25vw, 1.25rem);
   --text-body: 1rem;
   --text-body-sm: 0.875rem;
   --text-label: 0.75rem;
 
   /* ---- Spacing rhythm ---- */
-  --space-section: clamp(5rem, 4rem + 5vw, 9rem);
+  --space-section: clamp(4.5rem, 3.5rem + 4.5vw, 8rem);
   --space-block: clamp(2.5rem, 2rem + 2vw, 4rem);
 
-  /* ---- Radii: mostly square (flyer/stencil), circular only for signature marks ---- */
+  /* ---- Radii: soft, generous ---- */
   --radius-none: 0;
-  --radius-sm: 2px;
-  --radius-md: 6px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
   --radius-full: 999px;
 
-  /* ---- Motion: one physics family ---- */
-  --duration-fast: 180ms;
-  --duration-base: 380ms;
-  --duration-expressive: 680ms;
-  --ease-freeze: cubic-bezier(0.16, 1, 0.3, 1); /* snap-then-settle, like landing a freeze */
-  --ease-swing: cubic-bezier(0.65, 0, 0.35, 1); /* toprock sway, hover/quick response */
+  /* ---- Motion: short, soft, one family ---- */
+  --duration-fast: 160ms;
+  --duration-base: 320ms;
+  --duration-expressive: 620ms;
+  --ease-freeze: cubic-bezier(0.22, 1, 0.36, 1); /* settle — reveals, layout */
+  --ease-swing: cubic-bezier(0.4, 0, 0.2, 1); /* response — hover, toggles */
   --ease-linear: linear;
+
+  /* ---- Layout ---- */
+  --nav-h: 4.5rem;
 
   /* ---- Z-index scale ---- */
   --z-content: 10;
@@ -61,20 +95,76 @@
   --z-toast: 80;
 
   --cursor-visible: 1;
+
+  /* Paper grain, kept subtle enough to read as texture, not noise. */
+  --grain-opacity: 0.035;
+
+  color-scheme: light;
 }
 
-/* ---- Light theme: same system, riso paper instead of the dark floor ---- */
-[data-theme="light"] {
-  --color-bg: #f5f1e8;
-  --color-bg-raised: #ebe6d9;
-  --color-bg-raised-2: #e1dbca;
-  --color-ink: #17141a;
-  --color-ink-muted: #5c5662;
-  --color-ink-faint: #6e6875;
-  --color-line: #d7d0c0;
-  --color-success: #17904f;
-  --color-error: #d43535;
-  --color-accent-echo: #0d9488;
+/* ---- Dark tokens, shared by the OS preference and the explicit toggle ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #0b0b0d;
+    --color-bg-raised: #141419;
+    --color-bg-raised-2: #1c1c22;
+
+    --color-ink: #f4f4f2;
+    --color-ink-muted: #9e9eaa;
+    --color-ink-faint: #7e7e89;
+
+    --color-line: #26262c;
+    --color-line-strong: #35353d;
+
+    --color-accent: color-mix(in oklab, var(--color-accent-base) 66%, #ffffff);
+    --color-accent-ink: #0b0b0d;
+    --color-accent-soft: color-mix(in oklab, var(--color-accent-base) 22%, var(--color-bg));
+    --color-accent-echo: #ff7b5e;
+
+    --color-success: #3ddc84;
+    --color-error: #ff6b63;
+
+    --shadow-color: 240 30% 2%;
+    --shadow-xs: 0 1px 2px hsl(var(--shadow-color) / 0.5);
+    --shadow-sm: 0 2px 12px -3px hsl(var(--shadow-color) / 0.6);
+    --shadow-md: 0 16px 38px -14px hsl(var(--shadow-color) / 0.7);
+    --shadow-lg: 0 40px 78px -30px hsl(var(--shadow-color) / 0.8);
+
+    --grain-opacity: 0.05;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #0b0b0d;
+  --color-bg-raised: #141419;
+  --color-bg-raised-2: #1c1c22;
+
+  --color-ink: #f4f4f2;
+  --color-ink-muted: #9e9eaa;
+  --color-ink-faint: #7e7e89;
+
+  --color-line: #26262c;
+  --color-line-strong: #35353d;
+
+  --color-accent: color-mix(in oklab, var(--color-accent-base) 66%, #ffffff);
+  --color-accent-ink: #0b0b0d;
+  --color-accent-soft: color-mix(in oklab, var(--color-accent-base) 22%, var(--color-bg));
+  --color-accent-echo: #ff7b5e;
+
+  --color-success: #3ddc84;
+  --color-error: #ff6b63;
+
+  --shadow-color: 240 30% 2%;
+  --shadow-xs: 0 1px 2px hsl(var(--shadow-color) / 0.5);
+  --shadow-sm: 0 2px 12px -3px hsl(var(--shadow-color) / 0.6);
+  --shadow-md: 0 16px 38px -14px hsl(var(--shadow-color) / 0.7);
+  --shadow-lg: 0 40px 78px -30px hsl(var(--shadow-color) / 0.8);
+
+  --grain-opacity: 0.05;
+
+  color-scheme: dark;
 }
 
 /* Reduced motion: collapse the whole physics family to near-instant */
@@ -95,14 +185,16 @@
   --color-ink-faint: var(--color-ink-faint);
   --color-accent: var(--color-accent);
   --color-accent-ink: var(--color-accent-ink);
+  --color-accent-soft: var(--color-accent-soft);
   --color-accent-echo: var(--color-accent-echo);
   --color-line: var(--color-line);
+  --color-line-strong: var(--color-line-strong);
   --color-success: var(--color-success);
   --color-error: var(--color-error);
 
-  --font-display: var(--font-big-shoulders);
-  --font-body: var(--font-plex-sans);
-  --font-mono: var(--font-plex-mono);
+  --font-display: var(--font-instrument-sans);
+  --font-body: var(--font-geist);
+  --font-mono: var(--font-jetbrains-mono);
 
   --text-display-xl: var(--text-display-xl);
   --text-display-lg: var(--text-display-lg);
@@ -112,10 +204,10 @@
   --text-body-sm: var(--text-body-sm);
   --text-label: var(--text-label);
 
-  --radius-none: var(--radius-none);
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-full: var(--radius-full);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
 
   --z-content: var(--z-content);
   --z-nav: var(--z-nav);
@@ -126,8 +218,8 @@
 
   --breakpoint-3xl: 1920px;
 
-  --animate-marquee: marquee 45s linear infinite;
-  --animate-rise: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-marquee: marquee 60s linear infinite;
+  --animate-rise: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-hero-zoom: hero-zoom 24s ease-in-out infinite alternate;
   --animate-hero-drift: hero-drift 30s ease-in-out infinite alternate;
   --animate-hero-pulse: hero-pulse 9s ease-in-out infinite alternate;
@@ -182,21 +274,39 @@
 
 html {
   scroll-behavior: auto;
-  color-scheme: dark;
-}
-
-html[data-theme="light"] {
-  color-scheme: light;
 }
 
 body {
   background: var(--color-bg);
   color: var(--color-ink);
   font-family: var(--font-body);
+  font-synthesis-weight: none;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   transition:
-    background-color var(--duration-base) var(--ease-freeze),
-    color var(--duration-base) var(--ease-freeze);
+    background-color var(--duration-base) var(--ease-swing),
+    color var(--duration-base) var(--ease-swing);
+}
+
+/*
+  Paper grain. One tiled 180px turbulence square, painted above the page and
+  below the chrome — cheap to composite, and it keeps large flat areas from
+  reading as dead screen.
+*/
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after {
+    display: none;
+  }
 }
 
 ::selection {
@@ -208,17 +318,34 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
+  border-radius: var(--radius-xs);
 }
 
 /* Theme-paired assets (e.g. dark-mode vs light-mode logo) */
 .theme-light-only {
   display: none;
 }
-[data-theme="light"] .theme-light-only {
+[data-theme="light"] .theme-light-only,
+:root:not([data-theme="dark"]) .theme-light-only {
   display: block;
 }
-[data-theme="light"] .theme-dark-only {
+[data-theme="light"] .theme-dark-only,
+:root:not([data-theme="dark"]) .theme-dark-only {
   display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-light-only {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .theme-dark-only {
+    display: block;
+  }
+}
+[data-theme="dark"] .theme-light-only {
+  display: none;
+}
+[data-theme="dark"] .theme-dark-only {
+  display: block;
 }
 
 /* Hide native cursor only once the custom cursor is confirmed active (JS-driven) */
@@ -228,4 +355,183 @@ html[data-cursor="custom"] {
 html[data-cursor="custom"] a,
 html[data-cursor="custom"] button {
   cursor: none;
+}
+
+/*
+  ...except where the native cursor carries real information. Typing into a
+  field with no caret cursor feels broken, so text entry and selection keep
+  the system cursor even while the custom one is active.
+*/
+html[data-cursor="custom"] input,
+html[data-cursor="custom"] textarea,
+html[data-cursor="custom"] select,
+html[data-cursor="custom"] [contenteditable="true"] {
+  cursor: auto;
+}
+
+@layer components {
+  /*
+    Display type. One class sets family, size, weight, tracking and leading
+    together so headings can't drift apart across pages. Grotesk at display
+    size wants negative tracking; the bigger the step, the tighter it goes.
+  */
+  .display-xl,
+  .display-lg,
+  .display-md,
+  .display-sm {
+    font-family: var(--font-display);
+    color: var(--color-ink);
+    text-wrap: balance;
+  }
+
+  .display-xl {
+    font-size: var(--text-display-xl);
+    font-weight: 600;
+    line-height: 0.94;
+    letter-spacing: -0.042em;
+  }
+
+  .display-lg {
+    font-size: var(--text-display-lg);
+    font-weight: 600;
+    line-height: 0.98;
+    letter-spacing: -0.036em;
+  }
+
+  .display-md {
+    font-size: var(--text-display-md);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+  }
+
+  .display-sm {
+    font-size: var(--text-display-sm);
+    font-weight: 600;
+    line-height: 1.16;
+    letter-spacing: -0.02em;
+  }
+
+  /*
+    Eyebrow. The old system put wide-tracked mono on every label on the site,
+    which is the single loudest "template" tell. This is the restrained
+    replacement: sans, small, medium weight, gentle tracking.
+  */
+  .eyebrow {
+    font-family: var(--font-body);
+    font-size: var(--text-label);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .eyebrow-accent {
+    color: var(--color-accent);
+  }
+
+  /* Small print that isn't a label: captions, bylines, counts. */
+  .meta {
+    font-family: var(--font-body);
+    font-size: var(--text-body-sm);
+    color: var(--color-ink-faint);
+    letter-spacing: 0;
+  }
+
+  /* Genuinely numeric/technical strings — years, indices, timestamps. */
+  .mono-meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-label);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--color-ink-faint);
+  }
+
+  /* Page gutter, one definition, used by every public page. */
+  .container-page {
+    width: 100%;
+    max-width: 84rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container-page {
+      padding-inline: 3rem;
+    }
+  }
+
+  .container-prose {
+    width: 100%;
+    max-width: 44rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-prose {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* A raised panel: the default surface for cards, forms and callouts. */
+  .surface {
+    background: var(--color-bg-raised);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+  }
+}
+
+@layer utilities {
+  /*
+    Scroll reveal. `Reveal` flips data-revealed once the element enters the
+    viewport; until then it sits translated and transparent. Anything that
+    never gets observed still ends visible, so content can't be trapped.
+  */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity var(--duration-expressive) var(--ease-freeze),
+      transform var(--duration-expressive) var(--ease-freeze);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  [data-reveal][data-revealed="true"] {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal] {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Hairline that fades out at both ends — used for section rules. */
+  .rule-fade {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--color-line-strong) 12%,
+      var(--color-line-strong) 88%,
+      transparent
+    );
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
 }
