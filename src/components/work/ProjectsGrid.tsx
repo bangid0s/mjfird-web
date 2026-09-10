@@ -6,23 +6,28 @@ import FilterChips from "@/components/ui/FilterChips";
 import ProjectCard from "@/components/ui/ProjectCard";
 import type { Project } from "@/lib/placeholder-data";
 import { easeFreeze } from "@/lib/motion";
+import { cn } from "@/lib/cn";
 
 /*
   Shared by /work and the homepage's featured strip, which were two copies of
   the same component before.
 
-  Two columns of large 4:3 cards, every piece framed the same way. A wide
-  "lead" card was tried here and dropped: at desktop width it filled the
+  Large 4:3 cards, every piece framed the same way; `columns` picks two or three
+  across at the widest breakpoint. A wide "lead" card was tried here and
+  dropped: at desktop width it filled the
   viewport on its own, so nothing else was visible without scrolling, and the
   crop it needed cut vertical illustration in half.
 */
 
 export default function ProjectsGrid({
   projects,
+  columns = 2,
   showFilterWhenSingleCategory = true,
   emptyHint = "check back soon",
 }: {
   projects: Project[];
+  /** Widest breakpoint's column count. Three reads as an index, two as a feature. */
+  columns?: 2 | 3;
   /** The homepage hides a filter that would only ever have one option. */
   showFilterWhenSingleCategory?: boolean;
   emptyHint?: string;
@@ -45,7 +50,12 @@ export default function ProjectsGrid({
     <div className="flex flex-col gap-10">
       {showFilter && <FilterChips options={categories} onChange={setFilter} />}
 
-      <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 sm:gap-y-16">
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 sm:gap-y-16",
+          columns === 3 && "lg:grid-cols-3",
+        )}
+      >
         <AnimatePresence mode="popLayout">
           {filtered.map((project, i) => (
             <motion.div
@@ -56,7 +66,7 @@ export default function ProjectsGrid({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.34, ease: easeFreeze }}
             >
-              <ProjectCard project={project} index={i} priority={i < 2} />
+              <ProjectCard project={project} index={i} priority={i < 3} columns={columns} />
             </motion.div>
           ))}
         </AnimatePresence>

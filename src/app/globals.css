@@ -31,10 +31,13 @@
   --color-line-strong: #b9b9b4;
 
   /*
-    Accent. The admin's chosen colour arrives as --color-accent-base on <html>;
-    everything else derives from it, so a custom brand colour still lands
-    readable on both grounds. Dark mode lifts it toward white rather than
-    using the raw hex, which would sink into a dark background.
+    Accent. The admin's chosen colour arrives as --color-accent-base on <html>
+    and is used verbatim in both themes — switching to dark does not shift it.
+    The text colour that sits on top of it is derived from its luminance, so a
+    custom brand colour still lands readable wherever it is filled.
+
+    The trade-off of holding the hue fixed: a very dark accent would be low
+    contrast on the dark ground. The default orange measures 5.2:1 there.
   */
   --color-accent-base: #f04e23;
   --color-accent: var(--color-accent-base);
@@ -42,7 +45,18 @@
   --color-accent-ink-light: #ffffff;
   --color-accent-soft: color-mix(in oklab, var(--color-accent-base) 12%, var(--color-bg));
   --color-accent-strong: color-mix(in oklab, var(--color-accent-base) 76%, #000000);
+  /* Accent-as-text for an inverted band, which has the opposite ground. */
+  --color-accent-strong-inverse: var(--color-accent-base);
   --color-accent-echo: #1b1b1f;
+
+  /* The opposite sheet, for a section that flips light and dark. */
+  --color-inverse-bg: #141416;
+  --color-inverse-bg-raised: #1e1e21;
+  --color-inverse-ink: #ebebe9;
+  --color-inverse-ink-muted: #a2a2a8;
+  --color-inverse-ink-faint: #84848b;
+  --color-inverse-line: #2e2e33;
+  --color-inverse-line-strong: #3f3f45;
 
   --color-success: #12805a;
   --color-error: #c8352f;
@@ -115,11 +129,23 @@
     --color-line: #2a2a2e;
     --color-line-strong: #3a3a40;
 
-    --color-accent: color-mix(in oklab, var(--color-accent-base) 76%, #ffffff);
-    --color-accent-ink: #0b0b0d;
+    /*
+      The accent is deliberately NOT re-mixed here: it stays the exact hex the
+      admin chose, on paper and on ink alike. --color-accent and
+      --color-accent-ink therefore inherit from :root untouched.
+    */
     --color-accent-soft: color-mix(in oklab, var(--color-accent-base) 22%, var(--color-bg));
-    --color-accent-strong: color-mix(in oklab, var(--color-accent-base) 60%, #ffffff);
+    --color-accent-strong: var(--color-accent-base);
+    --color-accent-strong-inverse: color-mix(in oklab, var(--color-accent-base) 76%, #000000);
     --color-accent-echo: #ededea;
+
+    --color-inverse-bg: #ebebe9;
+    --color-inverse-bg-raised: #f4f4f2;
+    --color-inverse-ink: #141416;
+    --color-inverse-ink-muted: #46464c;
+    --color-inverse-ink-faint: #65656b;
+    --color-inverse-line: #d6d6d2;
+    --color-inverse-line-strong: #b9b9b4;
 
     --color-success: #3ddc84;
     --color-error: #ff6b63;
@@ -146,11 +172,19 @@
   --color-line: #2a2a2e;
   --color-line-strong: #3a3a40;
 
-  --color-accent: color-mix(in oklab, var(--color-accent-base) 76%, #ffffff);
-  --color-accent-ink: #0b0b0d;
+  /* See the note above: the accent does not shift with the theme. */
   --color-accent-soft: color-mix(in oklab, var(--color-accent-base) 22%, var(--color-bg));
-  --color-accent-strong: color-mix(in oklab, var(--color-accent-base) 60%, #ffffff);
+  --color-accent-strong: var(--color-accent-base);
+  --color-accent-strong-inverse: color-mix(in oklab, var(--color-accent-base) 76%, #000000);
   --color-accent-echo: #ededea;
+
+  --color-inverse-bg: #ebebe9;
+  --color-inverse-bg-raised: #f4f4f2;
+  --color-inverse-ink: #141416;
+  --color-inverse-ink-muted: #46464c;
+  --color-inverse-ink-faint: #65656b;
+  --color-inverse-line: #d6d6d2;
+  --color-inverse-line-strong: #b9b9b4;
 
   --color-success: #3ddc84;
   --color-error: #ff6b63;
@@ -480,53 +514,17 @@ html[data-cursor="custom"] [contenteditable="true"] {
   }
 
   /*
-    Section tones — full-bleed bands that give a long page some colour rhythm.
+    Section tones — full-bleed bands that give a long page some rhythm.
 
-    The tint is *mixed against the page ground* rather than being a fixed hex,
-    so one declaration serves both themes: the same hue lands as a pale wash on
-    paper and a deep stain on ink. Dark needs a stronger mix to register at all,
-    which is what --tone-strength is for.
-
-    House rule: tone the sections that talk (services, stats, testimonials),
-    never the sections that look. A work grid sits on neutral ground, because
-    a tinted band behind artwork competes with the artwork.
+    There is no separate palette of tints any more: a band that is coloured is
+    coloured with the site accent, and a band that wants to stand apart without
+    colour flips the sheet instead. Both re-point the ink and line tokens
+    inside themselves, so every child component adapts on its own and nothing
+    needs an "on dark" variant.
   */
-  .tone {
-    background-color: color-mix(
-      in oklab,
-      var(--tone-hue, transparent) var(--tone-strength, 3.5%),
-      var(--color-bg)
-    );
-  }
 
-  .tone-sand {
-    --tone-hue: #e0a33a;
-  }
-  .tone-mint {
-    --tone-hue: #2fb39a;
-  }
-  .tone-lilac {
-    --tone-hue: var(--color-accent-base);
-  }
-  .tone-rose {
-    --tone-hue: #ff5c3d;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .tone {
-      --tone-strength: 7%;
-    }
-  }
-  :root[data-theme="dark"] .tone {
-    --tone-strength: 7%;
-  }
-
-  /*
-    The loud one: a band filled with the accent itself, used once per page as
-    punctuation. Re-pointing the ink and line tokens inside it means every
-    child component inverts on its own — nothing needs an "on dark" variant.
-  */
-  .tone-solid {
+  /* Filled with the accent itself. Used once per page, as punctuation. */
+  .tone-accent {
     background: var(--color-accent);
     color: var(--color-accent-ink);
 
@@ -535,6 +533,28 @@ html[data-cursor="custom"] [contenteditable="true"] {
     --color-ink-faint: color-mix(in oklab, var(--color-accent-ink) 62%, transparent);
     --color-line: color-mix(in oklab, var(--color-accent-ink) 24%, transparent);
     --color-line-strong: color-mix(in oklab, var(--color-accent-ink) 38%, transparent);
+    /* Accent-coloured text would vanish on an accent fill. */
+    --color-accent-strong: var(--color-accent-ink);
+  }
+
+  /*
+    The opposite sheet: dark on a light page, light on a dark page. The accent
+    is untouched — it is the same hex in both modes, and clears AA on either
+    ground — but accent-as-text swaps to the variant built for the other side.
+  */
+  .tone-invert {
+    background: var(--color-inverse-bg);
+    color: var(--color-inverse-ink);
+
+    --color-bg: var(--color-inverse-bg);
+    --color-bg-raised: var(--color-inverse-bg-raised);
+    --color-bg-raised-2: var(--color-inverse-bg-raised);
+    --color-ink: var(--color-inverse-ink);
+    --color-ink-muted: var(--color-inverse-ink-muted);
+    --color-ink-faint: var(--color-inverse-ink-faint);
+    --color-line: var(--color-inverse-line);
+    --color-line-strong: var(--color-inverse-line-strong);
+    --color-accent-strong: var(--color-accent-strong-inverse);
   }
 }
 

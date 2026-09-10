@@ -15,11 +15,12 @@ import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL } from "@/lib/site-url";
 
 /*
-  The stats strip. "none" keeps it on the sheet between two hairlines, which is
-  what the near-monochrome direction wants; "solid" fills it with the accent for
-  one loud band. One line, because it's the kind of decision that gets revisited.
+  Which band carries what. A coloured band is filled with the accent; a band
+  that wants to stand apart without colour flips the sheet instead. Both are one
+  line, because this is the kind of decision that gets revisited.
 */
-const STATS_TONE: SectionTone = "none";
+const STATS_TONE: SectionTone = "accent";
+const SERVICES_TONE: SectionTone = "invert";
 
 // Small shared link, used as the trailing control on two section headers.
 function MoreLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -88,7 +89,7 @@ export default async function Home() {
       </SectionBand>
 
       {/* Stats */}
-      <SectionBand tone={STATS_TONE} size="compact" className="border-y border-line">
+      <SectionBand tone={STATS_TONE} size="compact">
         <div className="grid grid-cols-2 gap-y-10 sm:grid-cols-4">
           {settings.stats.map((stat, i) => (
             <Reveal key={stat.label} delay={i * 60}>
@@ -99,7 +100,7 @@ export default async function Home() {
       </SectionBand>
 
       {/* Services — hairline compartments, not floating cards. */}
-      <SectionBand tone="sand">
+      <SectionBand tone={SERVICES_TONE}>
         <SectionHeader
           index={2}
           eyebrow={settings.servicesSectionEyebrow}
@@ -130,7 +131,7 @@ export default async function Home() {
       </SectionBand>
 
       {/* Testimonials */}
-      <SectionBand tone="mint">
+      <SectionBand>
         <SectionHeader
           index={3}
           eyebrow={settings.testimonialsSectionEyebrow}

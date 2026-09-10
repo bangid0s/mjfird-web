@@ -17,10 +17,13 @@ export default function ProjectCard({
   project,
   index,
   priority = false,
+  columns = 2,
 }: {
   project: Project;
   index: number;
   priority?: boolean;
+  /** Only used to size the image request correctly. */
+  columns?: 2 | 3;
 }) {
   const hasCover = Boolean(project.cover) && !project.cover.startsWith("/placeholder");
 
@@ -36,7 +39,11 @@ export default function ProjectCard({
             src={project.cover}
             alt={project.title}
             priority={priority}
-            sizes="(min-width: 1280px) 620px, (min-width: 640px) 46vw, 100vw"
+            sizes={
+              columns === 3
+                ? "(min-width: 1024px) 30vw, (min-width: 640px) 46vw, 100vw"
+                : "(min-width: 1280px) 620px, (min-width: 640px) 46vw, 100vw"
+            }
             className="object-cover transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.04]"
           />
         ) : (

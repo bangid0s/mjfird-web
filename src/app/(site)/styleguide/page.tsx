@@ -118,8 +118,10 @@ export default function StyleguidePage() {
               <span className="eyebrow eyebrow-accent">Accent as text</span>
             </span>
             <p className="text-body-sm text-ink-muted">
-              --color-accent-strong, darkened to clear AA. The raw accent is only
-              3:1 on this ground and is not a text colour.
+              --color-accent-strong. The accent itself is the same hex in both
+              themes, so this is the token that moves: darkened on the light
+              sheet, where the raw accent is only 3:1, and the raw accent on the
+              dark one, where it already clears AA.
             </p>
           </div>
           <div className="flex flex-col gap-3 bg-bg p-6">
