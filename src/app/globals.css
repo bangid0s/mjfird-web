@@ -96,8 +96,6 @@
 
   --cursor-visible: 1;
 
-  /* Paper grain, kept subtle enough to read as texture, not noise. */
-  --grain-opacity: 0.035;
 
   color-scheme: light;
 }
@@ -130,7 +128,6 @@
     --shadow-md: 0 16px 38px -14px hsl(var(--shadow-color) / 0.7);
     --shadow-lg: 0 40px 78px -30px hsl(var(--shadow-color) / 0.8);
 
-    --grain-opacity: 0.05;
 
     color-scheme: dark;
   }
@@ -162,7 +159,6 @@
   --shadow-md: 0 16px 38px -14px hsl(var(--shadow-color) / 0.7);
   --shadow-lg: 0 40px 78px -30px hsl(var(--shadow-color) / 0.8);
 
-  --grain-opacity: 0.05;
 
   color-scheme: dark;
 }
@@ -218,7 +214,6 @@
 
   --breakpoint-3xl: 1920px;
 
-  --animate-marquee: marquee 60s linear infinite;
   --animate-rise: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-hero-zoom: hero-zoom 24s ease-in-out infinite alternate;
   --animate-hero-drift: hero-drift 30s ease-in-out infinite alternate;
@@ -252,15 +247,6 @@
   }
 }
 
-@keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 @keyframes rise {
   from {
     opacity: 0;
@@ -286,27 +272,6 @@ body {
   transition:
     background-color var(--duration-base) var(--ease-swing),
     color var(--duration-base) var(--ease-swing);
-}
-
-/*
-  Paper grain. One tiled 180px turbulence square, painted above the page and
-  below the chrome — cheap to composite, and it keeps large flat areas from
-  reading as dead screen.
-*/
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: var(--grain-opacity);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body::after {
-    display: none;
-  }
 }
 
 ::selection {

@@ -56,7 +56,7 @@ export default function ProjectGallery({ images }: { images: GalleryImage[] }) {
               type="button"
               onClick={() => setOpen(i)}
               data-cursor={playable ? "play" : "view"}
-              className="group relative block w-full overflow-hidden break-inside-avoid rounded-[var(--radius-md)] border border-line bg-bg-raised"
+              className="group relative block w-full overflow-hidden break-inside-avoid rounded-[var(--radius-md)] border border-line bg-bg-raised transition-colors duration-[var(--duration-fast)] hover:border-line-strong"
               aria-label={playable ? "Play media" : "View full image"}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -66,7 +66,6 @@ export default function ProjectGallery({ images }: { images: GalleryImage[] }) {
                 loading="lazy"
                 className="w-full transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.03]"
               />
-              <span className="pointer-events-none absolute inset-0 bg-bg/0 transition-colors duration-[var(--duration-base)] group-hover:bg-bg/20" />
               {playable && (
                 <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-accent pl-1 text-accent-ink">
                   <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">

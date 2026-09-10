@@ -2,7 +2,6 @@ import Link from "next/link";
 import Hero from "@/components/hero/Hero";
 import SectionHeader from "@/components/ui/SectionHeader";
 import FeaturedWork from "@/components/work/FeaturedWork";
-import Marquee from "@/components/ui/Marquee";
 import AnimatedNumber from "@/components/ui/AnimatedNumber";
 import Reveal from "@/components/motion/Reveal";
 import SectionBand, { type SectionTone } from "@/components/layout/SectionBand";
@@ -56,8 +55,6 @@ export default async function Home() {
         ctaPrimary={settings.heroCtaPrimary}
         ctaSecondary={settings.heroCtaSecondary}
       />
-
-      <Marquee items={settings.marqueeItems} />
 
       {/* Featured work — deliberately untinted: the artwork supplies the colour. */}
       <SectionBand>

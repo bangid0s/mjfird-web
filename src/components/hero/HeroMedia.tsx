@@ -45,6 +45,7 @@ export default function HeroMedia({
   if (type === "image" && slides.length === 0) return null;
 
   const goTo = (index: number) => onGoTo?.((index + slides.length) % slides.length);
+  const scrim = Math.min(100, Math.max(0, overlayOpacity)) / 100;
 
   return (
     <>
@@ -102,12 +103,32 @@ export default function HeroMedia({
           />
         ))}
 
-      {/* Legibility scrim — strength set from Site Settings (hero overlay %) */}
+      {/*
+        Legibility scrim. This used to be a flat wash across the entire frame,
+        which dulled the whole image just to make text readable in one corner.
+        It's directional now: solid only where the copy actually sits, and
+        fully clear over the rest of the artwork — anchored left on wide
+        screens, bottom on narrow ones where the copy runs full width.
+        Strength still comes from Site Settings.
+      */}
       <div
-        className="absolute inset-0 bg-bg"
-        style={{ opacity: Math.min(100, Math.max(0, overlayOpacity)) / 100 }}
+        className="absolute inset-0 sm:hidden"
+        style={{
+          opacity: scrim,
+          background:
+            "linear-gradient(to top, var(--color-bg) 0%, var(--color-bg) 22%, transparent 76%)",
+        }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
+      <div
+        className="absolute inset-0 hidden sm:block"
+        style={{
+          opacity: scrim,
+          background:
+            "linear-gradient(95deg, var(--color-bg) 0%, var(--color-bg) 20%, transparent 64%)",
+        }}
+      />
+      {/* Short fade into the section below — never more than the bottom eighth. */}
+      <div className="absolute inset-x-0 bottom-0 h-[12%] bg-gradient-to-t from-bg to-transparent" />
     </div>
 
     {/* Slider navigation — only when there's more than one image. The wrapper

@@ -54,8 +54,9 @@ export default function ImmersiveTemplate({
           )}
         </div>
 
-        {/* Scrim: strong at the base where the title sits, gone by mid-frame. */}
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/45 to-transparent" />
+        {/* Bottom-anchored: only the strip under the title is darkened, so the
+            top half of the cover keeps its colour untouched. */}
+        <div className="absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-bg via-bg/40 to-transparent" />
 
         <div className="container-page relative z-[var(--z-content)] w-full pb-16 sm:pb-20">
           <p className="eyebrow eyebrow-accent mb-5">{project.category}</p>
