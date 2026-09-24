@@ -66,7 +66,9 @@ export default function HeroMedia({
 
   return (
     <>
-    <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+    {/* `data-hero-media` is the hook HeroMotionFrame moves; the slider
+        controls below sit outside it so they stay still. */}
+    <div className="absolute inset-0 overflow-hidden" aria-hidden="true" data-hero-media>
       {isUploadedVideo && (
         // Uploaded file: no controls attribute, so it's a clean autoplay wall.
         // Without autoplay (reduced motion) it shows its first frame as a fallback.

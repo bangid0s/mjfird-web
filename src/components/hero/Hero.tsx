@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import HeroMedia from "@/components/hero/HeroMedia";
+import HeroMotionFrame from "@/components/hero/HeroMotionFrame";
 import KineticWordmark from "@/components/hero/KineticWordmark";
 import MagneticButton from "@/components/ui/MagneticButton";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -145,9 +146,13 @@ export default function Hero({
         under the nav, which left the labels unreadable over whatever the image
         happened to be. Both fixes buy the same thing — the image is never
         overlaid, at any width.
+
+        HeroMotionFrame gives the frame its entrance wipe, scroll depth and
+        pointer parallax — all as movement of the frame and the media in it,
+        never as anything painted on top.
       */}
       {hasMedia && (
-        <div
+        <HeroMotionFrame
           className={cn(
             // Narrow: a band in the flow, sized by height.
             "relative h-[46svh] min-h-[280px] w-full",
@@ -170,7 +175,7 @@ export default function Hero({
             animation={animation}
             scrim="none"
           />
-        </div>
+        </HeroMotionFrame>
       )}
 
       {/* Solid accent square, hard into the bottom-right corner. */}
