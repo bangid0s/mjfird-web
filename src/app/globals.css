@@ -621,3 +621,39 @@ html[data-cursor="custom"] [contenteditable="true"] {
     text-wrap: pretty;
   }
 }
+
+/*
+  Print. Pages built to be printed (the resume) come out as a plain sheet:
+  light tokens whatever the screen theme, no window chrome, and any colour
+  block marked .print-plain flattened to ink on paper.
+*/
+@media print {
+  :root,
+  :root[data-theme="dark"] {
+    --color-bg: #ffffff;
+    --color-bg-raised: #ffffff;
+    --color-bg-raised-2: #ffffff;
+    --color-ink: #141416;
+    --color-ink-muted: #3a3a40;
+    --color-ink-faint: #5a5a60;
+    --color-line: #d6d6d2;
+    --color-line-strong: #b9b9b4;
+    color-scheme: light;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  .print-plain,
+  .print-plain * {
+    background: transparent !important;
+    color: #141416 !important;
+    border-color: #d6d6d2 !important;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+}

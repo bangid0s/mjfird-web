@@ -40,7 +40,7 @@ export default function StudioStatusBar({
   return (
     <section
       aria-label="Studio hours"
-      className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 rounded-2xl border border-line bg-bg px-5 py-4"
+      className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-2xl border border-line bg-bg px-4 py-3.5 sm:px-5 sm:py-4"
     >
       <div className="flex min-w-0 items-center gap-3">
         <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
@@ -62,12 +62,12 @@ export default function StudioStatusBar({
         >
           {status.open ? "Open" : "Closed"}
         </span>
-        <p className="min-w-0 truncate font-body text-body-sm text-ink-muted">{summary}</p>
+        <p className="min-w-0 font-body text-body-sm text-ink-muted sm:truncate">{summary}</p>
       </div>
 
       <dl className="ml-auto grid grid-cols-[auto_auto] items-baseline gap-x-4 gap-y-1 text-right">
-        <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">Your time</dt>
-        <dd className="font-mono text-body-sm tabular-nums text-ink">{viewerTime ?? "--:--"}</dd>
+        <dt className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint sm:block">Your time</dt>
+        <dd className="hidden font-mono text-body-sm tabular-nums text-ink sm:block">{viewerTime ?? "--:--"}</dd>
         <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
           Studio ({hours.timezone})
         </dt>

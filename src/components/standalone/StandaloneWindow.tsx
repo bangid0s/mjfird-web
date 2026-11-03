@@ -25,15 +25,15 @@ export default function StandaloneWindow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-svh bg-bg px-3 py-6 text-ink sm:px-6 sm:py-10">
+    <div className="relative min-h-svh bg-bg px-3 py-6 text-ink sm:px-6 sm:py-10 print:min-h-0 print:p-0">
       <EscapeToHome />
 
       <main
-        className={`relative z-10 mx-auto w-full overflow-hidden border border-line bg-bg-raised/60 backdrop-blur-sm ${
+        className={`relative z-10 mx-auto w-full overflow-hidden border border-line bg-bg-raised/60 backdrop-blur-sm print:max-w-none print:border-0 print:bg-transparent print:backdrop-blur-none ${
           width === "wide" ? "max-w-2xl lg:max-w-6xl" : "max-w-2xl lg:max-w-4xl"
         }`}
       >
-        <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6 lg:px-8 print:hidden">
           <span className="truncate font-mono text-label text-ink-muted">{title}</span>
           <div className="flex items-center gap-3">
             <ThemeToggle />
@@ -55,7 +55,7 @@ export default function StandaloneWindow({
           {children}
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t border-line px-5 py-3.5 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-4 border-t border-line px-5 py-3.5 sm:px-6 lg:px-8 print:hidden">
           <span className="flex items-center gap-2">
             <kbd className="rounded bg-bg-raised px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">
               ESC

@@ -50,8 +50,17 @@ const TILES: Record<LinkTileSize, { span: string; sizes: string }> = {
   large: { span: "col-span-2 row-span-2", sizes: BIG_SIZES },
 };
 
-function Tile({ link }: { link: LinkItem }) {
-  const hasImage = Boolean(link.imageUrl);
+type Tone = "photo" | "accent" | "ink";
+
+// Secondary text on each tone: the section line and the description.
+const SUBTLE: Record<Tone, { section: string; description: string; pane: string }> = {
+  photo: { section: "text-white/60", description: "text-white/75", pane: GLASS_PANEL },
+  accent: { section: "text-accent-ink/60", description: "text-accent-ink/75", pane: "bg-white/12" },
+  ink: { section: "text-bg/55", description: "text-bg/70", pane: "bg-white/[0.07]" },
+};
+
+function Tile({ link, tone }: { link: LinkItem; tone: Tone }) {
+  const hasImage = tone === "photo";
   const tile = TILES[link.size];
 
   const inner = (
@@ -85,7 +94,7 @@ function Tile({ link }: { link: LinkItem }) {
         className={cn(
           "relative mt-auto flex items-end justify-between gap-2 rounded-xl px-2.5 py-2 sm:gap-3 sm:px-3 sm:py-2.5",
           RIM,
-          hasImage ? GLASS_PANEL : "bg-white/12",
+          SUBTLE[tone].pane,
         )}
       >
         <span className="flex min-w-0 flex-col">
@@ -95,7 +104,7 @@ function Tile({ link }: { link: LinkItem }) {
             <span
               className={cn(
                 "mb-1 line-clamp-1 font-mono text-[10px] uppercase tracking-[0.15em]",
-                hasImage ? "text-white/55" : "text-accent-ink/55",
+                SUBTLE[tone].section,
               )}
             >
               {link.section}
@@ -108,7 +117,7 @@ function Tile({ link }: { link: LinkItem }) {
             <span
               className={cn(
                 "mt-0.5 line-clamp-1 font-body text-label",
-                hasImage ? "text-white/70" : "text-accent-ink/70",
+                SUBTLE[tone].description,
               )}
             >
               {link.description}
@@ -134,8 +143,9 @@ function Tile({ link }: { link: LinkItem }) {
     "transition-[transform,box-shadow] duration-[var(--duration-base)] ease-[var(--ease-freeze)] hover:-translate-y-0.5",
     // Photo tiles keep a black plate under the image in both themes, so a URL
     // that fails to load still reads as a dark tile with white type on it.
-    hasImage ? "bg-black text-white" : "bg-accent text-accent-ink",
+    tone === "photo" ? "bg-black text-white" : tone === "accent" ? "bg-accent text-accent-ink" : "bg-ink text-bg",
     link.highlight && "ring-2 ring-accent/60 ring-offset-2 ring-offset-bg-raised",
+    "focus-visible:outline-offset-4",
   );
 
   return isExternal(link.url) ? (
@@ -152,13 +162,21 @@ function Tile({ link }: { link: LinkItem }) {
 export default function LinkBento({ items }: { items: LinkItem[] }) {
   if (items.length === 0) return null;
 
+  // A wall of identical orange tiles has no first thing to tap. Once any tile
+  // is marked as highlighted, it alone keeps the accent and the rest step
+  // back onto the ink sheet; with nothing highlighted, every tile stays accent
+  // as before.
+  const anyHighlight = items.some((link) => link.highlight);
+  const toneFor = (link: LinkItem): Tone =>
+    link.imageUrl ? "photo" : !anyHighlight || link.highlight ? "accent" : "ink";
+
   // One grid for every link rather than one per section: dense flow can then
   // pull any later tile into a hole a tall or wide one left behind, so the
   // whole block packs solid instead of fraying at each section boundary.
   return (
     <div className={GRID}>
       {items.map((link, i) => (
-        <Tile key={`${link.url}-${i}`} link={link} />
+        <Tile key={`${link.url}-${i}`} link={link} tone={toneFor(link)} />
       ))}
     </div>
   );

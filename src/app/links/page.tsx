@@ -15,6 +15,7 @@ import LinksTabs, { type LinksTab } from "@/components/links/LinksTabs";
 import LinkBento from "@/components/links/LinkBento";
 import BrandStrip from "@/components/links/BrandStrip";
 import FooterClock from "@/components/links/FooterClock";
+import ShareButton from "@/components/links/ShareButton";
 
 // Scoped to this route only — the rest of the site keeps its own type stack.
 const pixel = Silkscreen({
@@ -84,6 +85,7 @@ export default async function LinksPage() {
             {settings.linksWindowTitle}
           </span>
           <div className="flex items-center gap-3">
+            <ShareButton title={headline} />
             <ThemeToggle />
             <span aria-hidden="true" className="flex items-center gap-1.5">
               <span className="h-3 w-3 rounded-full bg-error/60" />
@@ -95,25 +97,25 @@ export default async function LinksPage() {
 
         <div className="flex flex-col gap-4 px-3 pb-3 sm:px-5 sm:pb-5 lg:gap-5 lg:px-6 lg:pb-6">
           {/* Identity */}
-          <section className="flex flex-col gap-5 rounded-2xl bg-bg-raised p-5 sm:flex-row sm:gap-6 lg:gap-8 lg:p-6">
+          <section className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-4 rounded-2xl bg-bg-raised p-4 sm:flex sm:items-start sm:gap-6 sm:p-5 lg:gap-8 lg:p-6">
             {profile.avatarUrl ? (
               <Avatar
                 src={profile.avatarUrl}
                 alt={profile.name}
                 sizes="176px"
-                className="h-28 w-28 shrink-0 rounded-xl border border-line sm:h-36 sm:w-36 lg:h-44 lg:w-44"
+                className="h-20 w-20 shrink-0 rounded-xl border border-line sm:h-36 sm:w-36 lg:h-44 lg:w-44"
               />
             ) : (
-              <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl border border-line bg-bg font-[family-name:var(--font-silkscreen)] text-2xl text-accent sm:h-36 sm:w-36 lg:h-44 lg:w-44">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-line bg-bg font-[family-name:var(--font-silkscreen)] text-2xl text-accent sm:h-36 sm:w-36 lg:h-44 lg:w-44">
                 {headline.slice(0, 1)}
               </div>
             )}
 
             {/* Stacked up to tablet; on desktop the name and the button split to
                 opposite ends so the wider card doesn't strand its right half. */}
-            <div className="flex min-w-0 flex-1 flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
-              <div className="flex min-w-0 flex-col gap-2">
-                <h1 className="font-[family-name:var(--font-silkscreen)] text-2xl leading-tight text-ink sm:text-3xl">
+            <div className="contents sm:flex sm:min-w-0 sm:flex-1 sm:flex-col sm:gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+              <div className="flex min-w-0 flex-col gap-1.5 sm:gap-2">
+                <h1 className="font-[family-name:var(--font-silkscreen)] text-xl leading-tight text-ink sm:text-3xl">
                   {headline}
                 </h1>
                 {settings.linksRunBy && (
@@ -133,22 +135,25 @@ export default async function LinksPage() {
               </div>
               <Link
                 href={settings.linksCtaUrl || "/contact"}
-                className="mt-2 shrink-0 rounded-xl bg-accent px-6 py-3.5 text-center font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85 lg:mt-0 lg:px-12"
+                className="group col-span-2 inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3.5 text-center font-body text-body-sm font-medium text-accent-ink transition-[filter,transform] duration-[var(--duration-fast)] hover:brightness-110 active:scale-[0.99] sm:mt-2 lg:mt-0 lg:px-12"
               >
                 {settings.linksCtaLabel}
+                <span aria-hidden="true" className="transition-transform duration-[var(--duration-base)] group-hover:translate-x-0.5">→</span>
               </Link>
             </div>
           </section>
 
           {settings.linksShowStatus && <StudioStatusBar hours={hours} initial={status} />}
 
+          <LinksTabs tabs={tabs} panels={panels} />
+
+          {/* Partners after your own links: sponsor slots shouldn't push the
+              thing a visitor came for below the fold. */}
           <BrandStrip
             brands={settings.linksBrands}
             slots={settings.linksBrandSlots}
             ctaUrl={settings.linksBrandCtaUrl}
           />
-
-          <LinksTabs tabs={tabs} panels={panels} />
 
           {settings.linksTags.length > 0 && (
             <ul className="flex flex-wrap gap-2">
@@ -166,7 +171,7 @@ export default async function LinksPage() {
           {profile.socials.length > 0 && (
             <nav
               aria-label="Social profiles"
-              className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line pt-4"
+              className="flex flex-wrap items-center gap-2 border-t border-line pt-4"
             >
               {profile.socials.map((social) => (
                 <a
@@ -174,7 +179,7 @@ export default async function LinksPage() {
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-accent"
+                  className="inline-flex min-h-10 items-center rounded-lg border border-line px-3.5 font-mono text-label uppercase tracking-[0.12em] text-ink-muted transition-colors duration-[var(--duration-fast)] hover:border-accent hover:text-accent-strong"
                 >
                   {social.label} ↗
                 </a>
