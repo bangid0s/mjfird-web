@@ -87,7 +87,7 @@ export default function HeroSlidesEditor({
 
   return (
     <div className="flex flex-col gap-4">
-      <span className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted">
+      <span className="text-body-sm font-medium text-ink-muted">
         Hero slides — add 2 or more and they rotate as a slider
       </span>
       <p className="font-mono text-label text-ink-faint">
@@ -105,7 +105,7 @@ export default function HeroSlidesEditor({
               className="h-20 w-32 shrink-0 border border-line bg-bg-raised object-cover"
             />
             <div className="flex flex-1 items-start justify-between gap-2">
-              <span className="font-mono text-label uppercase tracking-[0.15em] text-accent">
+              <span className="text-body-sm font-medium text-accent">
                 Slide {i + 1}
               </span>
               <div className="flex gap-1">
@@ -235,7 +235,7 @@ export default function HeroSlidesEditor({
           type="button"
           onClick={addByUrl}
           disabled={!urlDraft.trim()}
-          className="shrink-0 border border-line px-4 py-3 font-mono text-label uppercase tracking-[0.1em] text-ink-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+          className="shrink-0 border border-line px-4 py-3 text-body-sm font-medium text-ink-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
         >
           Add
         </button>

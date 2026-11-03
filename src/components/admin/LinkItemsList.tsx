@@ -85,7 +85,7 @@ export default function LinkItemsList({ items }: { items: LinkItemRow[] }) {
                 aria-label="Section"
                 className={fieldInputClasses}
               />
-              <label className="flex items-center gap-2 font-mono text-label uppercase tracking-[0.1em] text-ink-muted">
+              <label className="flex items-center gap-2 text-body-sm font-medium text-ink-muted">
                 <input
                   type="checkbox"
                   name="highlight"
@@ -105,7 +105,7 @@ export default function LinkItemsList({ items }: { items: LinkItemRow[] }) {
               </select>
               <button
                 type="submit"
-                className="font-mono text-label uppercase tracking-[0.1em] text-ink-muted hover:text-ink"
+                className="text-body-sm font-medium text-ink-muted hover:text-ink"
               >
                 Save
               </button>

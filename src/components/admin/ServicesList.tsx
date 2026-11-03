@@ -21,7 +21,7 @@ export default function ServicesList({ services }: { services: ServiceRow[] }) {
           <div className="flex items-center gap-4">
             <Link
               href={`/admin/services/${service.id}`}
-              className="font-mono text-label uppercase tracking-[0.1em] text-ink-muted hover:text-ink"
+              className="text-body-sm font-medium text-ink-muted hover:text-ink"
             >
               Edit
             </Link>

@@ -33,7 +33,7 @@ export default async function AdminResumePage() {
             href="/resume"
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-line px-5 py-2.5 font-mono text-label uppercase tracking-[0.15em] text-ink-muted transition-colors hover:border-accent hover:text-accent"
+            className="border border-line px-5 py-2.5 text-body-sm font-medium text-ink-muted transition-colors hover:border-accent hover:text-accent"
           >
             Preview /resume →
           </a>
@@ -80,7 +80,7 @@ export default async function AdminResumePage() {
       )}
 
       <section className="mt-16">
-        <h2 className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-ink">
+        <h2 className="mb-2 text-body font-semibold text-ink">
           Tools &amp; software
         </h2>
         <p className="mb-6 font-body text-label text-ink-muted">

@@ -4,7 +4,7 @@ import { Field, fieldInputClasses } from "@/components/admin/Field";
 import ImageUploader from "@/components/admin/ImageUploader";
 import PageHeader from "@/components/admin/PageHeader";
 import type { ProfileRow } from "@/lib/supabase/types";
-import SubmitButton from "@/components/admin/SubmitButton";
+import SubmitButton, { FormActions } from "@/components/admin/SubmitButton";
 
 export default async function AdminProfilePage() {
   const supabase = await createClient();
@@ -73,7 +73,9 @@ export default async function AdminProfilePage() {
           />
         </Field>
 
-        <SubmitButton className="self-start">Save profile</SubmitButton>
+        <FormActions>
+          <SubmitButton>Save profile</SubmitButton>
+        </FormActions>
       </form>
     </div>
   );

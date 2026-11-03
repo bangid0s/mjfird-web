@@ -8,7 +8,7 @@ export default function ResumePanel({ settings }: { settings: SiteSettings }) {
   return (
     <form action={updateResumePanel} className="mb-12 flex flex-col gap-8 border border-line p-6">
       <div>
-        <h2 className="font-mono text-label uppercase tracking-[0.2em] text-ink">Header</h2>
+        <h2 className="text-body font-semibold text-ink">Header</h2>
         <p className="mt-1 font-body text-label text-ink-muted">
           The block at the top of /resume. Social links come from Profile.
         </p>
@@ -104,7 +104,7 @@ export default function ResumePanel({ settings }: { settings: SiteSettings }) {
 
       <div className="flex flex-col gap-6 border-t border-line pt-8">
         <div>
-          <h3 className="font-mono text-label uppercase tracking-[0.2em] text-ink">
+          <h3 className="text-body font-semibold text-ink">
             Portfolio downloads
           </h3>
           <p className="mt-1 font-body text-label text-ink-muted">

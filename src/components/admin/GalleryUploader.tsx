@@ -69,7 +69,7 @@ export default function GalleryUploader({
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted">{label}</span>
+      <span className="text-body-sm font-medium text-ink-muted">{label}</span>
 
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -175,7 +175,7 @@ export default function GalleryUploader({
           type="button"
           onClick={addByUrl}
           disabled={!urlDraft.trim()}
-          className="shrink-0 border border-line px-4 py-3 font-mono text-label uppercase tracking-[0.1em] text-ink-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+          className="shrink-0 border border-line px-4 py-3 text-body-sm font-medium text-ink-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
         >
           Add
         </button>

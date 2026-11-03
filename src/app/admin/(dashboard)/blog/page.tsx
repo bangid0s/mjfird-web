@@ -61,7 +61,7 @@ export default async function AdminBlogPage() {
                   </Link>
                   <StatusBadge status={post.status} />
                 </div>
-                <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
+                <p className="mt-0.5 text-[12px] text-ink-faint">
                   {new Date(post.published_at ?? post.created_at).toLocaleDateString()}
                   {post.read_time ? ` · ${post.read_time}` : ""}
                 </p>
@@ -71,13 +71,13 @@ export default async function AdminBlogPage() {
                   href={`/blog/${post.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hidden font-mono text-label uppercase tracking-[0.1em] text-ink-faint hover:text-ink sm:inline"
+                  className="hidden text-body-sm font-medium text-ink-faint hover:text-ink sm:inline"
                 >
                   View
                 </a>
                 <Link
                   href={`/admin/blog/${post.id}`}
-                  className="font-mono text-label uppercase tracking-[0.1em] text-ink-muted hover:text-ink"
+                  className="text-body-sm font-medium text-ink-muted hover:text-ink"
                 >
                   Edit
                 </Link>

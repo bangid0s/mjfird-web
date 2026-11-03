@@ -40,7 +40,7 @@ export default function ImageUploader({
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted">{label}</span>
+      <span className="text-body-sm font-medium text-ink-muted">{label}</span>
 
       <label
         onDragOver={(e) => {
@@ -67,7 +67,7 @@ export default function ImageUploader({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={mediaThumbnail(url)} alt="" className="h-32 w-full max-w-xs object-contain" />
               {isYouTubeUrl(url) && (
-                <span className="absolute left-1 top-1 bg-bg/85 px-1.5 py-0.5 font-mono text-[10px] uppercase text-accent">
+                <span className="absolute left-1 top-1 bg-bg/85 px-1.5 py-0.5 text-[11px] font-medium text-accent">
                   YouTube
                 </span>
               )}
@@ -107,7 +107,7 @@ export default function ImageUploader({
             setUrl("");
             onUploaded?.("");
           }}
-          className="self-start font-mono text-label uppercase tracking-[0.1em] text-ink-faint hover:text-error"
+          className="self-start text-body-sm font-medium text-ink-faint hover:text-error"
         >
           Remove
         </button>

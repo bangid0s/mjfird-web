@@ -12,7 +12,7 @@ export default function DeleteButton({ action }: { action: () => Promise<void> }
       <button
         type="button"
         onClick={() => setArmed(true)}
-        className="font-mono text-label uppercase tracking-[0.1em] text-ink-faint hover:text-error"
+        className="text-body-sm font-medium text-ink-faint hover:text-error"
       >
         Delete
       </button>
@@ -26,7 +26,7 @@ export default function DeleteButton({ action }: { action: () => Promise<void> }
         disabled={pending}
         onClick={() => startTransition(action)}
         className={cn(
-          "font-mono text-label uppercase tracking-[0.1em] text-error",
+          "text-body-sm font-medium text-error",
           pending && "opacity-50",
         )}
       >
@@ -35,7 +35,7 @@ export default function DeleteButton({ action }: { action: () => Promise<void> }
       <button
         type="button"
         onClick={() => setArmed(false)}
-        className="font-mono text-label uppercase tracking-[0.1em] text-ink-faint"
+        className="text-body-sm font-medium text-ink-faint"
       >
         Cancel
       </button>

@@ -39,7 +39,7 @@ export default function ProjectsList({ projects }: { projects: ProjectRow[] }) {
               </Link>
               <StatusBadge status={project.status} />
             </div>
-            <p className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
+            <p className="mt-0.5 truncate text-[12px] text-ink-faint">
               {[project.client, project.year, project.template].filter(Boolean).join(" · ")}
             </p>
           </div>
@@ -50,7 +50,7 @@ export default function ProjectsList({ projects }: { projects: ProjectRow[] }) {
                 type="submit"
                 title={project.featured ? "Remove from homepage" : "Feature on homepage"}
                 className={cn(
-                  "font-mono text-label uppercase tracking-[0.1em]",
+                  "text-body-sm font-medium",
                   project.featured ? "text-accent" : "text-ink-faint hover:text-ink",
                 )}
               >
@@ -61,13 +61,13 @@ export default function ProjectsList({ projects }: { projects: ProjectRow[] }) {
               href={`/work/${project.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden font-mono text-label uppercase tracking-[0.1em] text-ink-faint hover:text-ink sm:inline"
+              className="hidden text-body-sm font-medium text-ink-faint hover:text-ink sm:inline"
             >
               View
             </a>
             <Link
               href={`/admin/projects/${project.id}`}
-              className="font-mono text-label uppercase tracking-[0.1em] text-ink-muted hover:text-ink"
+              className="text-body-sm font-medium text-ink-muted hover:text-ink"
             >
               Edit
             </Link>

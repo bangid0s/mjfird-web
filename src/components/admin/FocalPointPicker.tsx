@@ -29,7 +29,7 @@ export default function FocalPointPicker({
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted">
+      <span className="text-body-sm font-medium text-ink-muted">
         Focal point — click the image to set it
       </span>
       <div
