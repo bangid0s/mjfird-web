@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { formatDuration, getStudioStatus, type StudioHours, type StudioStatus } from "@/lib/studio-hours";
 
-// Live open/closed bar with a dual clock: the visitor's own time next to the
+// Live open/closed strip with a dual clock: the visitor's own time next to the
 // studio's. The server-computed status seeds the first render so hydration
 // matches; the visitor's clock starts blank because only the browser knows it.
+//
+// Laid out as three spec cells on one hairline row — status, studio clock,
+// visitor clock — so it reads at a glance instead of as a sentence.
 export default function StudioStatusBar({
   hours,
   initial,
@@ -29,23 +32,23 @@ export default function StudioStatusBar({
     return () => clearInterval(id);
   }, [hours]);
 
-  const summary = status.open
-    ? status.minutesUntilChange === null
-      ? "Studio open"
-      : `Studio Open — Closes in ${formatDuration(status.minutesUntilChange)}`
-    : status.minutesUntilChange === null
-      ? "Studio closed"
-      : `Studio Closed — Opens in ${formatDuration(status.minutesUntilChange)}`;
+  const change =
+    status.minutesUntilChange === null
+      ? null
+      : `${status.open ? "Closes" : "Opens"} in ${formatDuration(status.minutesUntilChange)}`;
+
+  // "Asia/Jakarta" → "Jakarta" for the cell label; the full zone stays in the title.
+  const city = hours.timezone.split("/").pop()?.replace(/_/g, " ") || hours.timezone;
 
   return (
     <section
       aria-label="Studio hours"
-      className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 rounded-2xl border border-line bg-bg px-5 py-4"
+      className="grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-[1fr_auto_auto]"
     >
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="col-span-2 flex min-w-0 items-center gap-3 bg-bg-raised px-4 py-3 sm:col-span-1">
         <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
           {status.open && (
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-70" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60 motion-reduce:hidden" />
           )}
           <span
             className={cn(
@@ -54,27 +57,29 @@ export default function StudioStatusBar({
             )}
           />
         </span>
-        <span
-          className={cn(
-            "shrink-0 rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em]",
-            status.open ? "border-success text-success" : "border-line text-ink-faint",
-          )}
-        >
-          {status.open ? "Open" : "Closed"}
-        </span>
-        <p className="min-w-0 truncate font-body text-body-sm text-ink-muted">{summary}</p>
+        <p className="min-w-0 truncate font-body text-body-sm text-ink">
+          <span className={cn("font-medium", status.open ? "text-success" : "text-ink")}>
+            {status.open ? "Studio open" : "Studio closed"}
+          </span>
+          {change && <span className="text-ink-muted"> · {change}</span>}
+        </p>
       </div>
 
-      <dl className="ml-auto grid grid-cols-[auto_auto] items-baseline gap-x-4 gap-y-1 text-right">
-        <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">Your time</dt>
-        <dd className="font-mono text-body-sm tabular-nums text-ink">{viewerTime ?? "--:--"}</dd>
-        <dt className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
-          Studio ({hours.timezone})
-        </dt>
-        <dd className="font-mono text-body-sm tabular-nums text-success">
-          {status.time} {status.day}
-        </dd>
-      </dl>
+      <div className="flex flex-col justify-center bg-bg-raised px-4 py-2.5" title={hours.timezone}>
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+          {city}
+        </span>
+        <span className="font-mono text-body-sm tabular-nums text-ink">
+          {status.time} <span className="text-ink-faint">{status.day}</span>
+        </span>
+      </div>
+
+      <div className="flex flex-col justify-center bg-bg-raised px-4 py-2.5">
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+          Your time
+        </span>
+        <span className="font-mono text-body-sm tabular-nums text-ink">{viewerTime ?? "--:--"}</span>
+      </div>
     </section>
   );
 }

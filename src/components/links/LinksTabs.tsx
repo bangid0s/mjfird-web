@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-export type LinksTab = { id: string; label: string };
+export type LinksTab = { id: string; label: string; count?: number };
 
 // Tabbed panels following the ARIA tabs pattern: arrow keys move between tabs
 // (Tab itself keeps its normal meaning so keyboard users can still leave the
-// list), and Escape backs out to the main site.
+// list). Escape-to-home lives on the window frame, not here.
 export default function LinksTabs({
   tabs,
   panels,
@@ -18,15 +17,6 @@ export default function LinksTabs({
 }) {
   const [active, setActive] = useState(tabs[0]?.id ?? "");
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const router = useRouter();
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") router.push("/");
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [router]);
 
   if (tabs.length === 0) return null;
 
@@ -51,8 +41,12 @@ export default function LinksTabs({
   if (tabs.length === 1) return <>{panels[tabs[0].id]}</>;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div role="tablist" aria-label="Links sections" className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-4">
+      <div
+        role="tablist"
+        aria-label="Links sections"
+        className="flex w-full border-b border-line"
+      >
         {tabs.map((tab, i) => {
           const selected = tab.id === active;
           return (
@@ -70,13 +64,25 @@ export default function LinksTabs({
               onClick={() => setActive(tab.id)}
               onKeyDown={(e) => onTabKeyDown(e, i)}
               className={cn(
-                "rounded-xl px-5 py-2.5 font-mono text-label uppercase tracking-[0.15em] transition-colors duration-[var(--duration-fast)]",
+                // The underline sits on the tablist's own rule, so the active
+                // tab reads as a cut-out of the line rather than a pill.
+                "relative -mb-px flex items-center gap-2 border-b-2 px-4 py-3 font-mono text-label uppercase tracking-[0.15em] transition-colors duration-[var(--duration-fast)]",
                 selected
-                  ? "bg-accent/15 text-accent ring-1 ring-accent/50"
-                  : "bg-bg-raised text-ink-muted hover:text-ink",
+                  ? "border-accent text-ink"
+                  : "border-transparent text-ink-faint hover:text-ink",
               )}
             >
               {tab.label}
+              {typeof tab.count === "number" && (
+                <span
+                  className={cn(
+                    "min-w-5 px-1 py-px text-center text-[10px] tabular-nums tracking-normal",
+                    selected ? "bg-accent text-accent-ink" : "bg-bg-raised-2 text-ink-muted",
+                  )}
+                >
+                  {tab.count}
+                </span>
+              )}
             </button>
           );
         })}
