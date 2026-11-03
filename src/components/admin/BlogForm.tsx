@@ -7,7 +7,7 @@ import GalleryUploader from "@/components/admin/GalleryUploader";
 import FocalPointPicker from "@/components/admin/FocalPointPicker";
 import { isVideoFile, isYouTubeUrl } from "@/lib/media";
 import type { BlogPostRow, CoverFit } from "@/lib/supabase/types";
-import SubmitButton from "@/components/admin/SubmitButton";
+import SubmitButton, { FormActions } from "@/components/admin/SubmitButton";
 
 /**
  * The cover's natural width ÷ height, so the site can reserve the right box
@@ -141,7 +141,7 @@ export default function BlogForm({
       </div>
 
       <fieldset className="flex flex-col gap-6 border-t border-line pt-6">
-        <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
+        <legend className="mb-2 text-body font-semibold text-ink">
           Link preview — X, WhatsApp, LinkedIn
         </legend>
         <ImageUploader
@@ -186,19 +186,19 @@ export default function BlogForm({
         </Field>
       )}
 
-      <div className="flex gap-4">
-        <SubmitButton className="self-start">Save post</SubmitButton>
+      <FormActions>
+        <SubmitButton>Save post</SubmitButton>
         {post && (
           <a
             href={`/blog/${post.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-ink px-6 py-3 font-mono text-label uppercase tracking-[0.15em] text-ink"
+            className="inline-flex items-center gap-2 border border-line px-5 py-2.5 text-body-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-bg-raised"
           >
-            Preview →
+            Preview ↗
           </a>
         )}
-      </div>
+      </FormActions>
     </form>
   );
 }

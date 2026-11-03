@@ -34,7 +34,7 @@ export default function LinksStudioPanel({ settings }: { settings: SiteSettings 
   return (
     <form action={updateLinksStudio} className="mb-12 flex flex-col gap-8 border border-line p-6">
       <div>
-        <h2 className="font-mono text-label uppercase tracking-[0.2em] text-ink">Studio panel</h2>
+        <h2 className="text-body font-semibold text-ink">Studio panel</h2>
         <p className="mt-1 font-body text-label text-ink-muted">
           The window header, identity card, opening hours and partner strip on /links.
         </p>
@@ -93,7 +93,7 @@ export default function LinksStudioPanel({ settings }: { settings: SiteSettings 
       </div>
 
       <fieldset className="flex flex-col gap-6 border-t border-line pt-6">
-        <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
+        <legend className="mb-2 text-body font-semibold text-ink">
           Opening hours — drives the live open/closed bar
         </legend>
 
@@ -104,7 +104,7 @@ export default function LinksStudioPanel({ settings }: { settings: SiteSettings 
             defaultChecked={settings.linksShowStatus}
             className="h-4 w-4 accent-accent"
           />
-          <span className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted">
+          <span className="text-body-sm font-medium text-ink-muted">
             Show the status bar
           </span>
         </label>
@@ -143,7 +143,7 @@ export default function LinksStudioPanel({ settings }: { settings: SiteSettings 
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted">
+          <span className="text-body-sm font-medium text-ink-muted">
             Open days
           </span>
           <div className="flex flex-wrap gap-3">
@@ -164,7 +164,7 @@ export default function LinksStudioPanel({ settings }: { settings: SiteSettings 
       </fieldset>
 
       <fieldset className="flex flex-col gap-6 border-t border-line pt-6">
-        <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
+        <legend className="mb-2 text-body font-semibold text-ink">
           Partner strip &amp; tags
         </legend>
 

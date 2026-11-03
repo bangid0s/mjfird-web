@@ -11,7 +11,7 @@ import { isValidGaId } from "@/lib/analytics";
 import { SITE_HOST } from "@/lib/site-url";
 import PageHeader from "@/components/admin/PageHeader";
 import type { SiteSettingsRow } from "@/lib/supabase/types";
-import SubmitButton from "@/components/admin/SubmitButton";
+import SubmitButton, { FormActions } from "@/components/admin/SubmitButton";
 
 export default async function AdminSettingsPage({
   searchParams,
@@ -47,7 +47,7 @@ export default async function AdminSettingsPage({
       />
 
       {saved && (
-        <p className="mb-8 border border-success px-4 py-3 font-mono text-label uppercase tracking-[0.1em] text-success">
+        <p className="mb-8 border border-success px-4 py-3 text-body-sm font-medium text-success">
           Settings saved — the site is updated.
         </p>
       )}
@@ -60,7 +60,7 @@ export default async function AdminSettingsPage({
 
       <form action={saveSiteSettings} className="flex flex-col gap-14">
         <fieldset className="flex flex-col gap-6">
-          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">Brand — whole site</legend>
+          <legend className="mb-2 text-body font-semibold text-ink">Brand — whole site</legend>
 
           <Field label="Accent color">
             <div className="flex items-center gap-4">
@@ -105,7 +105,7 @@ export default async function AdminSettingsPage({
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">
+          <legend className="mb-2 text-body font-semibold text-ink">
             Link preview — X, WhatsApp, LinkedIn, Slack
           </legend>
           <p className="font-mono text-label text-ink-faint">
@@ -133,7 +133,7 @@ export default async function AdminSettingsPage({
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">
+          <legend className="mb-2 text-body font-semibold text-ink">
             Analytics
           </legend>
 
@@ -159,7 +159,7 @@ export default async function AdminSettingsPage({
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">
+          <legend className="mb-2 text-body font-semibold text-ink">
             Navigation
           </legend>
 
@@ -177,7 +177,7 @@ export default async function AdminSettingsPage({
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">Homepage — /</legend>
+          <legend className="mb-2 text-body font-semibold text-ink">Homepage — /</legend>
 
           <Field label="Eyebrow (above the wordmark) — used by any slide that doesn’t set its own">
             <input name="hero_eyebrow" defaultValue={settings?.hero_eyebrow ?? ""} className={fieldInputClasses} />
@@ -220,7 +220,7 @@ export default async function AdminSettingsPage({
             />
           </Field>
 
-          <p className="font-mono text-label uppercase tracking-[0.1em] text-ink-faint">
+          <p className="text-body-sm font-medium text-ink-faint">
             Section headings
           </p>
 
@@ -276,7 +276,7 @@ export default async function AdminSettingsPage({
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">About page — /about</legend>
+          <legend className="mb-2 text-body font-semibold text-ink">About page — /about</legend>
 
           <Field label="Headline">
             <textarea
@@ -336,7 +336,7 @@ export default async function AdminSettingsPage({
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">Footer — all pages</legend>
+          <legend className="mb-2 text-body font-semibold text-ink">Footer — all pages</legend>
 
           <Field label="Heading (line break = new line)">
             <textarea
@@ -360,7 +360,7 @@ export default async function AdminSettingsPage({
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">
+          <legend className="mb-2 text-body font-semibold text-ink">
             Links page — /links
           </legend>
 
@@ -375,7 +375,7 @@ export default async function AdminSettingsPage({
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">Dance page — /dance</legend>
+          <legend className="mb-2 text-body font-semibold text-ink">Dance page — /dance</legend>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <Field label="Eyebrow">
@@ -405,7 +405,7 @@ export default async function AdminSettingsPage({
         </fieldset>
 
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-accent">Services page — /services</legend>
+          <legend className="mb-2 text-body font-semibold text-ink">Services page — /services</legend>
 
           <Field label="Availability heading (line break = new line)">
             <textarea
@@ -451,7 +451,9 @@ export default async function AdminSettingsPage({
           </Field>
         </fieldset>
 
-        <SubmitButton className="self-start">Save settings</SubmitButton>
+        <FormActions>
+          <SubmitButton>Save settings</SubmitButton>
+        </FormActions>
       </form>
     </div>
   );

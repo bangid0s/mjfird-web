@@ -51,6 +51,8 @@ export default function SiteChrome({
           logoType={logoType}
           logoText={logoText}
           links={navLinks}
+          contactEmail={contactEmail}
+          socials={socials}
         />
         <main id="main-content" className="flex-1 pt-[var(--nav-h)]">
           <PageTransition>{children}</PageTransition>

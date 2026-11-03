@@ -7,7 +7,7 @@ export default function GalleryPanel({ settings }: { settings: SiteSettings }) {
   return (
     <form action={updateGalleryPanel} className="mb-12 flex flex-col gap-6 border border-line p-6">
       <div>
-        <h2 className="font-mono text-label uppercase tracking-[0.2em] text-ink">Header</h2>
+        <h2 className="text-body font-semibold text-ink">Header</h2>
         <p className="mt-1 font-body text-label text-ink-muted">
           The title and blurb above the masonry grid on /gallery.
         </p>

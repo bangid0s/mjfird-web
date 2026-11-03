@@ -1,7 +1,7 @@
 import { Field, fieldInputClasses } from "@/components/admin/Field";
 import ImageUploader from "@/components/admin/ImageUploader";
 import type { ServiceRow } from "@/lib/supabase/types";
-import SubmitButton from "@/components/admin/SubmitButton";
+import SubmitButton, { FormActions } from "@/components/admin/SubmitButton";
 
 export default function ServiceForm({
   service,
@@ -47,7 +47,9 @@ export default function ServiceForm({
         </select>
       </Field>
 
-      <SubmitButton className="self-start">Save service</SubmitButton>
+      <FormActions>
+          <SubmitButton>Save service</SubmitButton>
+        </FormActions>
     </form>
   );
 }

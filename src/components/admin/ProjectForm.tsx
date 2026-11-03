@@ -6,7 +6,7 @@ import ImageUploader from "@/components/admin/ImageUploader";
 import GalleryUploader from "@/components/admin/GalleryUploader";
 import FocalPointPicker from "@/components/admin/FocalPointPicker";
 import type { ProjectRow } from "@/lib/supabase/types";
-import SubmitButton from "@/components/admin/SubmitButton";
+import SubmitButton, { FormActions } from "@/components/admin/SubmitButton";
 
 export default function ProjectForm({
   project,
@@ -79,7 +79,7 @@ export default function ProjectForm({
       />
 
       <fieldset className="flex flex-col gap-6 border-t border-line pt-6">
-        <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
+        <legend className="mb-2 text-body font-semibold text-ink">
           Story — leave any blank to hide it · paste a YouTube link in any section to embed the video
         </legend>
         <Field label="The brief — what the client asked for">
@@ -117,7 +117,7 @@ export default function ProjectForm({
       </fieldset>
 
       <fieldset className="flex flex-col gap-6 border-t border-line pt-6">
-        <legend className="mb-2 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">
+        <legend className="mb-2 text-body font-semibold text-ink">
           Link preview — X, WhatsApp, LinkedIn
         </legend>
         <ImageUploader
@@ -129,7 +129,7 @@ export default function ProjectForm({
 
       <label className="flex items-center gap-3">
         <input type="checkbox" name="featured" defaultChecked={project?.featured} className="h-4 w-4 accent-accent" />
-        <span className="font-mono text-label uppercase tracking-[0.15em] text-ink-muted">
+        <span className="text-body-sm font-medium text-ink-muted">
           Feature on homepage
         </span>
       </label>
@@ -158,19 +158,19 @@ export default function ProjectForm({
         </Field>
       )}
 
-      <div className="flex gap-4">
-        <SubmitButton className="self-start">Save project</SubmitButton>
+      <FormActions>
+        <SubmitButton>Save project</SubmitButton>
         {project && (
           <a
             href={`/work/${project.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-ink px-6 py-3 font-mono text-label uppercase tracking-[0.15em] text-ink"
+            className="inline-flex items-center gap-2 border border-line px-5 py-2.5 text-body-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-bg-raised"
           >
-            Preview →
+            Preview ↗
           </a>
         )}
-      </div>
+      </FormActions>
     </form>
   );
 }

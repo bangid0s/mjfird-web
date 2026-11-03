@@ -41,7 +41,7 @@ function CopyUrlButton({ url }: { url: string }) {
           setCopied(false);
         }
       }}
-      className="font-mono text-label uppercase tracking-[0.1em] text-ink-faint transition-colors hover:text-ink"
+      className="text-body-sm font-medium text-ink-faint transition-colors hover:text-ink"
     >
       {copied ? "Copied" : "Copy URL"}
     </button>
@@ -68,7 +68,7 @@ export default function MediaGrid({ files }: { files: MediaFile[] }) {
                 className="h-full w-full object-contain"
               />
             ) : (
-              <span className="font-mono text-label uppercase tracking-[0.15em] text-ink-faint">
+              <span className="text-body-sm font-medium text-ink-faint">
                 {isVideoFile(file.name) ? "Video" : "File"}
               </span>
             )}
@@ -83,7 +83,7 @@ export default function MediaGrid({ files }: { files: MediaFile[] }) {
             />
             <button
               type="submit"
-              className="shrink-0 font-mono text-label uppercase tracking-[0.1em] text-ink-muted hover:text-ink"
+              className="shrink-0 text-body-sm font-medium text-ink-muted hover:text-ink"
             >
               Rename
             </button>
@@ -96,7 +96,7 @@ export default function MediaGrid({ files }: { files: MediaFile[] }) {
             </span>
             <span
               className={cn(
-                "font-mono text-label uppercase tracking-[0.1em]",
+                "text-body-sm font-medium",
                 file.uses > 0 ? "text-success" : "text-ink-faint",
               )}
             >

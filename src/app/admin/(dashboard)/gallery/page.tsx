@@ -32,7 +32,7 @@ export default async function AdminGalleryPage() {
             href="/gallery"
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-line px-5 py-2.5 font-mono text-label uppercase tracking-[0.15em] text-ink-muted transition-colors hover:border-accent hover:text-accent"
+            className="border border-line px-5 py-2.5 text-body-sm font-medium text-ink-muted transition-colors hover:border-accent hover:text-accent"
           >
             Preview /gallery →
           </a>

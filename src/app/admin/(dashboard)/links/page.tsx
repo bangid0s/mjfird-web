@@ -33,7 +33,7 @@ export default async function AdminLinksPage() {
             href="/links"
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-line px-5 py-2.5 font-mono text-label uppercase tracking-[0.15em] text-ink-muted transition-colors hover:border-accent hover:text-accent"
+            className="border border-line px-5 py-2.5 text-body-sm font-medium text-ink-muted transition-colors hover:border-accent hover:text-accent"
           >
             Preview /links →
           </a>
@@ -76,7 +76,7 @@ export default async function AdminLinksPage() {
             aria-label="Section"
             className={fieldInputClasses}
           />
-          <label className="flex items-center gap-2 pb-3 font-mono text-label uppercase tracking-[0.1em] text-ink-muted">
+          <label className="flex items-center gap-2 pb-3 text-body-sm font-medium text-ink-muted">
             <input type="checkbox" name="highlight" className="h-4 w-4 accent-accent" />
             Ring
           </label>

@@ -79,7 +79,7 @@ export default function GalleryItemsList({ items }: { items: GalleryItemRow[] })
               </select>
               <button
                 type="submit"
-                className="font-mono text-label uppercase tracking-[0.1em] text-ink-muted hover:text-ink"
+                className="text-body-sm font-medium text-ink-muted hover:text-ink"
               >
                 Save
               </button>

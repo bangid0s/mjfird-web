@@ -21,7 +21,7 @@ export default function TestimonialsList({ testimonials }: { testimonials: Testi
           <div className="flex items-center gap-4">
             <Link
               href={`/admin/testimonials/${t.id}`}
-              className="font-mono text-label uppercase tracking-[0.1em] text-ink-muted hover:text-ink"
+              className="text-body-sm font-medium text-ink-muted hover:text-ink"
             >
               Edit
             </Link>

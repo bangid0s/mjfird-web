@@ -8,6 +8,14 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// The live instance, for controls that need to scroll the page themselves
+// (a native smooth scrollTo fights Lenis for the position).
+let active: Lenis | null = null;
+export function scrollToTop() {
+  if (active) active.scrollTo(0);
+  else window.scrollTo({ top: 0 });
+}
+
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
   const reducedMotion = usePrefersReducedMotion();
 
@@ -20,6 +28,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       smoothWheel: true,
     });
 
+    active = lenis;
     lenis.on("scroll", ScrollTrigger.update);
 
     gsap.ticker.add((time) => {
@@ -29,6 +38,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
     return () => {
       lenis.destroy();
+      if (active === lenis) active = null;
       gsap.ticker.remove(lenis.raf as unknown as gsap.TickerCallback);
     };
   }, [reducedMotion]);

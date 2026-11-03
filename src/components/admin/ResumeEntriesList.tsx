@@ -90,7 +90,7 @@ export default function ResumeEntriesList({ entries }: { entries: ResumeEntryRow
               </select>
               <button
                 type="submit"
-                className="self-end pb-3 font-mono text-label uppercase tracking-[0.1em] text-ink-muted hover:text-ink"
+                className="self-end pb-3 text-body-sm font-medium text-ink-muted hover:text-ink"
               >
                 Save
               </button>

@@ -21,7 +21,7 @@ export default async function AdminDancePage() {
           title="Dance"
           description="The reel, stills, and battle record shown on /dance. Add rows below, edit inline, drag to reorder."
         />
-        <h2 className="mb-6 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">Media</h2>
+        <h2 className="mb-6 text-body font-semibold text-ink">Media</h2>
 
         <form action={createMedia} className="mb-8 grid grid-cols-[100px_1fr_1fr_100px_auto] items-end gap-3">
           <select name="kind" defaultValue="photo" className={fieldInputClasses}>
@@ -40,7 +40,7 @@ export default async function AdminDancePage() {
           </select>
           <button
             type="submit"
-            className="bg-accent px-4 py-3 font-mono text-label uppercase tracking-[0.1em] text-accent-ink"
+            className="bg-accent px-4 py-3 text-body-sm font-medium text-accent-ink"
           >
             Add
           </button>
@@ -50,7 +50,7 @@ export default async function AdminDancePage() {
       </section>
 
       <section>
-        <h2 className="mb-6 font-mono text-label uppercase tracking-[0.2em] text-ink-faint">Battle record</h2>
+        <h2 className="mb-6 text-body font-semibold text-ink">Battle record</h2>
 
         <form action={createBattle} className="mb-8 grid grid-cols-[100px_1fr_1fr_auto] items-end gap-3">
           <input name="year" placeholder="2026" className={fieldInputClasses} />
@@ -58,7 +58,7 @@ export default async function AdminDancePage() {
           <input name="result" placeholder="1st — 2v2" className={fieldInputClasses} />
           <button
             type="submit"
-            className="bg-accent px-4 py-3 font-mono text-label uppercase tracking-[0.1em] text-accent-ink"
+            className="bg-accent px-4 py-3 text-body-sm font-medium text-accent-ink"
           >
             Add
           </button>

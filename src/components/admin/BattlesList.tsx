@@ -22,7 +22,7 @@ export default function BattlesList({ battles }: { battles: BattleRow[] }) {
             <input name="result" defaultValue={item.result ?? ""} className={fieldInputClasses} />
             <button
               type="submit"
-              className="font-mono text-label uppercase tracking-[0.1em] text-ink-muted hover:text-ink"
+              className="text-body-sm font-medium text-ink-muted hover:text-ink"
             >
               Save
             </button>

@@ -247,19 +247,19 @@ export default function SharePicker({
       </Field>
 
       <div className="flex flex-col gap-4 border border-line bg-bg-raised p-4">
-        <p className="font-mono text-label uppercase tracking-[0.15em] text-accent">
+        <p className="text-body-sm font-medium text-accent">
           Preview — how the link looks when pasted
         </p>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <span className="font-mono text-label uppercase tracking-[0.1em] text-ink-faint">
+            <span className="text-body-sm font-medium text-ink-faint">
               X · LinkedIn · Facebook · Slack
             </span>
             <div className="max-w-sm overflow-hidden border border-line">
               {thumbnail}
               <div className="flex flex-col gap-1 border-t border-line bg-bg px-4 py-3">
-                <span className="font-mono text-label uppercase tracking-[0.1em] text-ink-faint">
+                <span className="text-body-sm font-medium text-ink-faint">
                   {host}
                 </span>
                 <span className="truncate text-body-sm text-ink">{title || fallbackTitle}</span>
@@ -271,7 +271,7 @@ export default function SharePicker({
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="font-mono text-label uppercase tracking-[0.1em] text-ink-faint">
+            <span className="text-body-sm font-medium text-ink-faint">
               WhatsApp · iMessage · Telegram
             </span>
             <div className="max-w-xs rounded-md border border-line bg-bg p-1.5">

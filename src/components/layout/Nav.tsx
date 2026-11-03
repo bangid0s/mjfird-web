@@ -25,6 +25,8 @@ export default function Nav({
   logoType = "text",
   logoText = "MJFIRD",
   links,
+  contactEmail,
+  socials = [],
 }: {
   availabilityStatus?: string;
   logoUrl?: string | null;
@@ -32,11 +34,14 @@ export default function Nav({
   logoType?: "text" | "image";
   logoText?: string;
   links: NavLink[];
+  contactEmail?: string;
+  socials?: { label: string; url: string }[];
 }) {
   const [open, setOpen] = useState(false);
   const [lifted, setLifted] = useState(false);
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
+  const progressRef = useRef<HTMLSpanElement>(null);
   const pathname = usePathname();
 
   // Lenis drives the real scroll position, so a plain scroll listener is still
@@ -48,6 +53,12 @@ export default function Nav({
       setLifted(y > 8);
       setHidden(y > 240 && y > lastY.current);
       lastY.current = y;
+      // Reading progress, written straight to the style so scrolling never
+      // re-renders the bar.
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      if (progressRef.current) {
+        progressRef.current.style.transform = `scaleX(${max > 0 ? Math.min(1, y / max) : 0})`;
+      }
     };
 
     onScroll();
@@ -84,9 +95,18 @@ export default function Nav({
       <div
         className={cn(
           "border-b transition-colors duration-[var(--duration-base)] ease-[var(--ease-swing)]",
+          "relative",
           lifted || open ? "border-line bg-bg/90 backdrop-blur-md" : "border-transparent",
         )}
       >
+        <span
+          ref={progressRef}
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute inset-x-0 -bottom-px h-px origin-left scale-x-0 bg-accent transition-opacity duration-[var(--duration-base)]",
+            lifted && !open ? "opacity-100" : "opacity-0",
+          )}
+        />
         <div className="container-page flex h-[var(--nav-h)] items-center justify-between gap-6">
           <Link
             href="/"
@@ -105,7 +125,7 @@ export default function Nav({
             )}
           </Link>
 
-          <nav className="hidden items-center gap-9 md:flex">
+          <nav aria-label="Primary" className="hidden items-center gap-6 md:flex lg:gap-9">
             {links.map((link) => {
               const active = pathname === link.href;
               return (
@@ -174,39 +194,79 @@ export default function Nav({
       <AnimatePresence>
         {open && (
           <motion.nav
+            aria-label="Mobile"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.24, ease: easeFreeze }}
-            className="border-b border-line bg-bg md:hidden"
+            className="flex h-[calc(100svh-var(--nav-h))] flex-col overflow-y-auto border-b border-line bg-bg md:hidden"
           >
-            <div className="container-page py-2">
+            <div className="container-page flex flex-1 flex-col py-2">
               {links.map((link, i) => (
-                <Link
+                <motion.div
                   key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    "flex items-baseline gap-4 border-b border-line py-4 last:border-b-0",
-                    pathname === link.href ? "text-ink" : "text-ink-muted",
-                  )}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.42, ease: easeFreeze, delay: 0.04 + i * 0.035 }}
                 >
-                  <span className="mono-meta w-6 shrink-0">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="display-sm flex-1">{link.label}</span>
-                  <span aria-hidden="true" className="text-ink-faint">
-                    ↗
-                  </span>
-                </Link>
+                  <Link
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={pathname === link.href ? "page" : undefined}
+                    className={cn(
+                      "group flex items-baseline gap-4 border-b border-line py-4",
+                      pathname === link.href ? "text-ink" : "text-ink-muted",
+                    )}
+                  >
+                    <span className="mono-meta w-6 shrink-0">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="display-md flex-1 transition-colors group-active:text-accent">
+                      {link.label}
+                    </span>
+                    {pathname === link.href ? (
+                      <span aria-hidden="true" className="h-2 w-2 shrink-0 self-center bg-accent" />
+                    ) : (
+                      <span aria-hidden="true" className="text-ink-faint">
+                        ↗
+                      </span>
+                    )}
+                  </Link>
+                </motion.div>
               ))}
 
-              {availabilityStatus && (
-                <p className="spec flex items-center gap-2 py-4">
-                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                  {availabilityStatus}
-                </p>
-              )}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.1 + links.length * 0.035 }}
+                className="mt-auto flex flex-col gap-6 pb-8 pt-10"
+              >
+                {availabilityStatus && (
+                  <p className="spec flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    {availabilityStatus}
+                  </p>
+                )}
+                {contactEmail && (
+                  <a
+                    href={`mailto:${contactEmail}`}
+                    className="display-sm underline decoration-line-strong decoration-1 underline-offset-4"
+                  >
+                    {contactEmail}
+                  </a>
+                )}
+                {socials.length > 0 && (
+                  <ul className="flex flex-wrap gap-x-6 gap-y-2">
+                    {socials.map((social) => (
+                      <li key={social.url}>
+                        <a href={social.url} target="_blank" rel="noopener noreferrer" className="spec hover:text-ink">
+                          {social.label} ↗
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </motion.div>
             </div>
           </motion.nav>
         )}

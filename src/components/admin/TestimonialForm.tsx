@@ -1,7 +1,7 @@
 import { Field, fieldInputClasses } from "@/components/admin/Field";
 import ImageUploader from "@/components/admin/ImageUploader";
 import type { TestimonialRow } from "@/lib/supabase/types";
-import SubmitButton from "@/components/admin/SubmitButton";
+import SubmitButton, { FormActions } from "@/components/admin/SubmitButton";
 
 export default function TestimonialForm({
   testimonial,
@@ -40,7 +40,9 @@ export default function TestimonialForm({
         </select>
       </Field>
 
-      <SubmitButton className="self-start">Save testimonial</SubmitButton>
+      <FormActions>
+          <SubmitButton>Save testimonial</SubmitButton>
+        </FormActions>
     </form>
   );
 }
