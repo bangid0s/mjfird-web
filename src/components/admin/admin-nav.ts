@@ -13,6 +13,7 @@ import {
   ResumeIcon,
   GalleryIcon,
   PlusIcon,
+  RequestsIcon,
 } from "@/components/admin/AdminIcons";
 
 export type AdminNavItem = {
@@ -36,6 +37,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: "Overview",
     items: [
       { href: "/admin", label: "Dashboard", icon: DashboardIcon, keywords: "home overview stats" },
+      { href: "/admin/requests", label: "Requests", icon: RequestsIcon, keywords: "commissions orders clients quotes" },
       { href: "/admin/inquiries", label: "Inquiries", icon: InquiriesIcon, keywords: "leads inbox clients contact" },
     ],
   },
