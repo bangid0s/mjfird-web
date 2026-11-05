@@ -289,3 +289,57 @@ export type SiteSettingsRow = {
   gallery_intro: string;
   updated_at: string;
 };
+
+// ---------- Commission requests (0029_commission_requests.sql) ----------
+export type CommissionStatus =
+  | "pending"
+  | "awaiting_payment"
+  | "in_progress"
+  | "delivered"
+  | "completed"
+  | "declined"
+  | "cancelled";
+
+export type CommissionAnswer = { id: string; label: string; value: string | string[] };
+
+export type CommissionRequestRow = {
+  id: string;
+  ref: number;
+  client_id: string;
+  service_id: string | null;
+  service_title: string;
+  service_slug: string;
+  package_id: string;
+  package_name: string;
+  package_price: number | string;
+  delivery_days: number | null;
+  revisions: number | null;
+  addons: { id: string; name: string; price: number | string }[];
+  estimated_total: number | string;
+  final_price: number | string | null;
+  currency: string;
+  status: CommissionStatus;
+  waitlisted: boolean;
+  contact_name: string;
+  contact_email: string;
+  brief: string;
+  answers: CommissionAnswer[];
+  reference_paths: string[];
+  delivery_paths: string[];
+  artist_note: string;
+  created_at: string;
+  updated_at: string;
+  accepted_at: string | null;
+  paid_at: string | null;
+  delivered_at: string | null;
+  completed_at: string | null;
+};
+
+export type CommissionMessageRow = {
+  id: string;
+  request_id: string;
+  author_id: string | null;
+  from_admin: boolean;
+  body: string;
+  created_at: string;
+};

@@ -38,7 +38,17 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
+  const path = request.nextUrl.pathname;
+  const isAdminRoute = path.startsWith("/admin");
+
+  // Client-only pages: send signed-out visitors to the client login.
+  const isClientRoute = path.startsWith("/account") || /^\/services\/[^/]+\/request$/.test(path);
+  if (isClientRoute && !user) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", path + request.nextUrl.search);
+    return NextResponse.redirect(loginUrl);
+  }
+
   const isLoginRoute = request.nextUrl.pathname === "/admin/login";
 
   if (isAdminRoute && !isLoginRoute && !user) {
@@ -50,7 +60,7 @@ export async function proxy(request: NextRequest) {
   // Signed in is no longer enough: client accounts exist alongside the
   // owner's, so the admin needs an entry in the `admins` table
   // (0027_admin_role.sql). RLS enforces the same rule on every write.
-  const admin = user ? await isAdmin(supabase) : false;
+  const admin = user && isAdminRoute ? await isAdmin(supabase) : false;
 
   if (isAdminRoute && !isLoginRoute && user && !admin) {
     return NextResponse.redirect(new URL("/", request.url));
@@ -64,5 +74,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  // Also runs on client pages so their session cookie is refreshed.
+  matcher: ["/admin/:path*", "/account/:path*", "/services/:slug/request", "/login", "/signup", "/auth/:path*"],
 };

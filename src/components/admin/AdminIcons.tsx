@@ -214,3 +214,12 @@ export function SparkIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function RequestsIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 3h6l1 2h3v16H5V5h3z" />
+      <path d="M9 11h6M9 15h4" />
+    </Icon>
+  );
+}

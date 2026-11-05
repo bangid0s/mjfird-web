@@ -23,10 +23,13 @@ export default function ServiceOrderPanel({ service }: { service: StorefrontServ
   const toggleAddon = (id: string) =>
     setAddonIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
-  const params = new URLSearchParams({ service: service.slug });
+  const params = new URLSearchParams();
   if (packageId) params.set("package", packageId);
   if (addonIds.length) params.set("addons", addonIds.join(","));
-  const requestHref = `/contact?${params.toString()}`;
+  // No packages yet → nothing to price, so fall back to a plain inquiry.
+  const requestHref = service.packages.length
+    ? `/services/${service.slug}/request${params.size ? `?${params.toString()}` : ""}`
+    : `/contact?service=${encodeURIComponent(service.slug)}`;
 
   return (
     <div className="flex flex-col gap-6 border border-line bg-bg-raised/60 p-5 sm:p-6">
@@ -142,7 +145,7 @@ export default function ServiceOrderPanel({ service }: { service: StorefrontServ
       )}
 
       <p className="text-[13px] leading-snug text-ink-faint">
-        No payment now. I review every request first — once accepted, you&apos;ll get a payment link in USD.
+        No payment now. Sign in with Google or email to send a request — once I accept it, you&apos;ll pay in USD from your account.
       </p>
     </div>
   );

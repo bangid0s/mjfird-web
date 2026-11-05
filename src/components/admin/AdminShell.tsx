@@ -51,10 +51,12 @@ function SearchTrigger({ onOpen, className }: { onOpen: () => void; className?: 
 function NavLinks({
   pathname,
   newInquiries,
+  newRequests,
   onNavigate,
 }: {
   pathname: string;
   newInquiries: number;
+  newRequests: number;
   onNavigate?: () => void;
 }) {
   return (
@@ -67,7 +69,8 @@ function NavLinks({
           {group.items.map((item) => {
             const active = isActive(pathname, item.href);
             const Icon = item.icon;
-            const badge = item.href === "/admin/inquiries" && newInquiries > 0 ? newInquiries : 0;
+            const badge =
+              item.href === "/admin/inquiries" ? newInquiries : item.href === "/admin/requests" ? newRequests : 0;
             return (
               <Link
                 key={item.href}
@@ -151,10 +154,12 @@ function SidebarFooter({ userEmail }: { userEmail?: string | null }) {
 export default function AdminShell({
   children,
   newInquiries = 0,
+  newRequests = 0,
   userEmail,
 }: {
   children: React.ReactNode;
   newInquiries?: number;
+  newRequests?: number;
   userEmail?: string | null;
 }) {
   const pathname = usePathname();
@@ -192,7 +197,7 @@ export default function AdminShell({
         </div>
         {/* Only the list scrolls, so the account row never falls off a short screen. */}
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
-          <NavLinks pathname={pathname} newInquiries={newInquiries} />
+          <NavLinks pathname={pathname} newInquiries={newInquiries} newRequests={newRequests} />
         </div>
         <div className="shrink-0 px-3 pb-4">
           <SidebarFooter userEmail={userEmail} />
@@ -232,7 +237,7 @@ export default function AdminShell({
                 )}
               />
             </span>
-            {newInquiries > 0 && !open && (
+            {newInquiries + newRequests > 0 && !open && (
               <span className="absolute right-1.5 top-2 h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
             )}
           </button>
@@ -261,7 +266,7 @@ export default function AdminShell({
             open ? "translate-x-0" : "-translate-x-full",
           )}
         >
-          <NavLinks pathname={pathname} newInquiries={newInquiries} onNavigate={() => setOpen(false)} />
+          <NavLinks pathname={pathname} newInquiries={newInquiries} newRequests={newRequests} onNavigate={() => setOpen(false)} />
           <SidebarFooter userEmail={userEmail} />
         </div>
       </div>

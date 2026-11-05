@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { easeFreeze } from "@/lib/motion";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import ThemedLogo from "@/components/ui/ThemedLogo";
+import AccountLink from "@/components/layout/AccountLink";
 
 type NavLink = { label: string; href: string };
 
@@ -163,6 +164,8 @@ export default function Nav({
               </span>
             )}
 
+            <AccountLink className="hidden md:inline" />
+
             <ThemeToggle />
 
             <button
@@ -241,6 +244,7 @@ export default function Nav({
                 transition={{ duration: 0.4, delay: 0.1 + links.length * 0.035 }}
                 className="mt-auto flex flex-col gap-6 pb-8 pt-10"
               >
+                <AccountLink className="text-ink" onNavigate={() => setOpen(false)} />
                 {availabilityStatus && (
                   <p className="spec flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-accent" />
