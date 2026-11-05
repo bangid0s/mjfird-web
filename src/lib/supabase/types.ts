@@ -39,6 +39,21 @@ export type ServiceRow = {
   status: ContentStatus;
   created_at: string;
   updated_at: string;
+  // Commission storefront (0028_service_storefront.sql)
+  slug: string;
+  category: string;
+  details: string;
+  availability: "open" | "waitlist" | "closed";
+  slots_total: number | null;
+  slots_taken: number;
+  packages: unknown;
+  addons: unknown;
+  samples: unknown;
+  will_draw: string[];
+  wont_draw: string[];
+  faq: unknown;
+  terms: string;
+  questions: unknown;
 };
 
 export type TestimonialRow = {
