@@ -1,59 +1,37 @@
 import type { Metadata } from "next";
 import SectionHeader from "@/components/ui/SectionHeader";
 import MagneticButton from "@/components/ui/MagneticButton";
-import SmartImage from "@/components/media/SmartImage";
+import ServicesBrowser from "@/components/services/ServicesBrowser";
 import Reveal from "@/components/motion/Reveal";
-import { getServices } from "@/lib/data/services";
+import { getStorefrontServices } from "@/lib/data/services";
 import { getSiteSettings } from "@/lib/data/site-settings";
 
 export const metadata: Metadata = {
   title: "Services",
-  description: "Brand, motion, and web services from MJFIRD.",
+  description: "Commission illustration and design from MJFIRD — packages, samples, and pricing in USD.",
 };
 
 export default async function ServicesPage() {
-  const [services, settings] = await Promise.all([getServices(), getSiteSettings()]);
+  const [services, settings] = await Promise.all([getStorefrontServices(), getSiteSettings()]);
   const availabilityLines = settings.servicesAvailabilityHeading.split("\n");
 
   return (
     <div>
       <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
-        <SectionHeader index={1} eyebrow="Services" title="What I build" />
+        <SectionHeader index={1} eyebrow="Services" title="Commissions & services" />
 
-        <div className="grid border-t border-line md:grid-cols-3">
-          {services.map((service, i) => (
-            <Reveal
-              key={service.title}
-              delay={i * 70}
-              className="group flex flex-col border-b border-line md:border-r md:px-8 md:last:border-r-0 md:[&:first-child]:pl-0 md:[&:last-child]:pr-0"
-            >
-              {service.imageUrl && (
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-bg-raised-2">
-                  <SmartImage
-                    src={service.imageUrl}
-                    alt={service.title}
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                    className="object-cover transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.04]"
-                  />
-                </div>
-              )}
-
-              <div className="flex flex-1 flex-col gap-5 py-9 md:py-10">
-                <span className="mono-meta">{String(i + 1).padStart(2, "0")}</span>
-                <h2 className="display-sm">{service.title}</h2>
-                <p className="text-body-sm text-pretty text-ink-muted">{service.description}</p>
-                <ul className="mt-auto flex flex-col gap-2 pt-5">
-                  {service.deliverables.map((d) => (
-                    <li key={d} className="spec flex items-start gap-2.5">
-                      <span aria-hidden="true" className="mt-[0.5em] h-1 w-1 shrink-0 bg-accent" />
-                      {d}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+        {services.length > 0 ? (
+          <ServicesBrowser services={services} />
+        ) : (
+          <div className="flex flex-col items-start gap-5 border-t border-line pt-10">
+            <p className="max-w-lg text-body-lg text-pretty text-ink-muted">
+              New commission slots are being prepared. In the meantime, tell me what you have in mind.
+            </p>
+            <MagneticButton href="/contact" arrow>
+              Start an inquiry
+            </MagneticButton>
+          </div>
+        )}
       </div>
 
       <div className="border-y border-line bg-bg-raised/60">

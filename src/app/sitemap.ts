@@ -1,12 +1,13 @@
 import type { MetadataRoute } from "next";
 import { getProjects } from "@/lib/data/projects";
 import { getPosts } from "@/lib/data/blog";
+import { getStorefrontServices } from "@/lib/data/services";
 import { SITE_URL } from "@/lib/site-url";
 
 const BASE_URL = SITE_URL;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [projects, posts] = await Promise.all([getProjects(), getPosts()]);
+  const [projects, posts, services] = await Promise.all([getProjects(), getPosts(), getStorefrontServices()]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     "",
@@ -39,5 +40,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...staticRoutes, ...projectRoutes, ...postRoutes];
+  const serviceRoutes: MetadataRoute.Sitemap = services.map((s) => ({
+    url: `${BASE_URL}/services/${s.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly",
+    priority: 0.8,
+  }));
+
+  return [...staticRoutes, ...projectRoutes, ...postRoutes, ...serviceRoutes];
 }

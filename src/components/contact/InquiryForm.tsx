@@ -29,7 +29,7 @@ const selectClasses = cn(
 const CHEVRON =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237e7e89' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")";
 
-export default function InquiryForm() {
+export default function InquiryForm({ initialMessage = "" }: { initialMessage?: string }) {
   const [state, setState] = useState<FormState>("idle");
   const [errors, setErrors] = useState<Errors>({});
 
@@ -163,6 +163,7 @@ export default function InquiryForm() {
         <textarea
           name="message"
           rows={6}
+          defaultValue={initialMessage}
           placeholder="What are you building, and what's the timeline?"
           className={cn(inputClasses, "resize-none")}
           disabled={state === "loading"}
