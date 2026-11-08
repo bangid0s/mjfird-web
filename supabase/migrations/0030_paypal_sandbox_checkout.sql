@@ -12,7 +12,7 @@ create table if not exists public.commission_paypal_checkouts (
   capture_id text unique,
   capture_pending boolean not null default false,
   -- open: no provider result yet. held: a charge or ambiguous result is stored and must not be paid or cleared. matched: amount and currency agreed.
-  capture_disposition text not null default 'open' check (capture_disposition in ('open', 'held', 'matched')),
+  capture_disposition text not null default 'open' check (capture_disposition in ('open', 'uncertain', 'held', 'matched')),
   provider_evidence text,
   amount numeric(10, 2) not null check (amount > 0),
   currency text not null check (currency = 'USD'),
@@ -167,10 +167,10 @@ begin
     raise exception 'order_not_found';
   end if;
 
-  if checkout.capture_disposition = 'matched' or (checkout.capture_id is not null and checkout.capture_disposition <> 'held') then
+  if checkout.capture_disposition = 'matched' then
     return 'done';
   end if;
-  if checkout.capture_disposition = 'held' or checkout.capture_pending then
+  if checkout.capture_disposition in ('held', 'uncertain') or checkout.capture_pending then
     return 'pending';
   end if;
   if req.status <> 'awaiting_payment' then
@@ -202,6 +202,7 @@ begin
   set capture_pending = false
   where order_id = trim(p_order_id)
     and capture_id is null
+    and provider_evidence is null
     and capture_disposition = 'open';
 end;
 $$;
@@ -209,7 +210,8 @@ $$;
 create or replace function public.hold_commission_paypal_capture(
   p_order_id text,
   p_capture_id text,
-  p_evidence text
+  p_evidence text,
+  p_kind text
 )
 returns text
 language plpgsql
@@ -219,7 +221,16 @@ as $$
 declare
   req commission_requests;
   checkout commission_paypal_checkouts;
+  kind text;
+  note text;
 begin
+  if p_kind = 'held' then
+    kind := 'held';
+  else
+    kind := 'uncertain';
+  end if;
+  note := coalesce(nullif(trim(p_evidence), ''), 'uncertain');
+
   select request_id into req.id from commission_paypal_checkouts where order_id = trim(p_order_id);
   if not found then
     raise exception 'order_not_found';
@@ -238,15 +249,19 @@ begin
 
   update commission_paypal_checkouts
   set capture_pending = true,
-      capture_disposition = 'held',
-      provider_evidence = left(coalesce(provider_evidence || ' | ', '') || coalesce(p_evidence, ''), 2000),
+      capture_disposition = case
+        when capture_disposition = 'held' then 'held'
+        when kind = 'held' then 'held'
+        else 'uncertain'
+      end,
+      provider_evidence = left(coalesce(provider_evidence || ' | ', '') || note, 2000),
       capture_id = case
         when capture_id is not null then capture_id
-        when p_capture_id is null or length(trim(p_capture_id)) = 0 then null
+        when p_capture_id is null or length(trim(p_capture_id)) = 0 then capture_id
         else trim(p_capture_id)
       end
   where request_id = checkout.request_id;
-  return 'held';
+  return case when checkout.capture_disposition = 'held' or kind = 'held' then 'held' else 'uncertain' end;
 end;
 $$;
 
@@ -293,6 +308,10 @@ begin
       return 'duplicate';
     end if;
     raise exception 'capture_mismatch';
+  end if;
+  -- A safety hold is not cleared by a later amount match.
+  if checkout.capture_disposition = 'held' then
+    return 'held';
   end if;
 
   if p_currency is distinct from 'USD'
@@ -459,7 +478,7 @@ begin
   if not found then
     return new;
   end if;
-  if checkout.capture_pending or checkout.capture_disposition = 'held' then
+  if checkout.capture_pending or checkout.capture_disposition in ('held', 'uncertain') then
     raise exception 'capture_in_progress';
   end if;
   if checkout.capture_disposition = 'matched' and new.status in ('cancelled', 'declined', 'pending', 'awaiting_payment') then
@@ -475,7 +494,7 @@ create trigger commission_requests_paypal_guard
   for each row execute function public.guard_commission_request_paypal();
 
 revoke all on function public.reserve_commission_paypal_order(uuid, text, text) from public;
-revoke all on function public.hold_commission_paypal_capture(text, text, text) from public;
+revoke all on function public.hold_commission_paypal_capture(text, text, text, text) from public;
 revoke all on function public.guard_commission_request_paypal() from public;
 revoke all on function public.attach_commission_paypal_order(uuid, text, text, text) from public;
 revoke all on function public.begin_commission_paypal_capture(text) from public;
@@ -491,7 +510,7 @@ do $$ begin
     revoke all on function public.begin_commission_paypal_capture(text) from anon;
     revoke all on function public.release_commission_paypal_capture(text) from anon;
     revoke all on function public.complete_commission_paypal_capture(text, text, text, text) from anon;
-    revoke all on function public.hold_commission_paypal_capture(text, text, text) from anon;
+    revoke all on function public.hold_commission_paypal_capture(text, text, text, text) from anon;
     revoke all on function public.mark_commission_paid_manual(uuid) from anon;
     revoke all on function public.admin_cancel_commission_request(uuid) from anon;
   end if;
@@ -501,7 +520,7 @@ do $$ begin
     revoke all on function public.begin_commission_paypal_capture(text) from authenticated;
     revoke all on function public.release_commission_paypal_capture(text) from authenticated;
     revoke all on function public.complete_commission_paypal_capture(text, text, text, text) from authenticated;
-    revoke all on function public.hold_commission_paypal_capture(text, text, text) from authenticated;
+    revoke all on function public.hold_commission_paypal_capture(text, text, text, text) from authenticated;
     grant execute on function public.mark_commission_paid_manual(uuid) to authenticated;
     grant execute on function public.admin_cancel_commission_request(uuid) to authenticated;
   end if;
@@ -511,6 +530,6 @@ do $$ begin
     grant execute on function public.begin_commission_paypal_capture(text) to service_role;
     grant execute on function public.release_commission_paypal_capture(text) to service_role;
     grant execute on function public.complete_commission_paypal_capture(text, text, text, text) to service_role;
-    grant execute on function public.hold_commission_paypal_capture(text, text, text) to service_role;
+    grant execute on function public.hold_commission_paypal_capture(text, text, text, text) to service_role;
   end if;
 end $$;

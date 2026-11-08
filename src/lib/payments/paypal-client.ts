@@ -24,7 +24,7 @@ export type CaptureInterpretation =
       merchantId: string | null;
     }
   | { outcome: "not_charged" }
-  | { outcome: "uncertain"; evidence: string | null }
+  | { outcome: "uncertain"; evidence: string; captureId: string | null }
   | { outcome: "hold"; captureId: string | null; evidence: string };
 
 export type PaypalClient = {
@@ -43,32 +43,8 @@ const createdOrderSchema = z.object({
   status: z.string(),
 });
 
-const captureSchema = z.object({
-  id: z.string().min(1),
-  status: z.string(),
-  amount: z
-    .object({
-      currency_code: z.string(),
-      value: z.string(),
-    })
-    .optional(),
-  payee: z.object({ merchant_id: z.string().optional() }).optional(),
-});
-
-const capturedOrderSchema = z.object({
-  id: z.string().min(1).optional(),
-  status: z.string().optional(),
-  purchase_units: z
-    .array(
-      z.object({
-        payee: z.object({ merchant_id: z.string().optional() }).optional(),
-        payments: z.object({ captures: z.array(captureSchema).optional() }).optional(),
-      }),
-    )
-    .optional(),
-});
-
 const NOT_CHARGED = new Set(["DECLINED", "DENIED", "FAILED", "VOIDED"]);
+const KNOWN_STATUS = new Set(["COMPLETED", "PENDING", "DECLINED", "DENIED", "FAILED", "VOIDED"]);
 
 const verificationSchema = z.object({
   verification_status: z.string(),
@@ -94,42 +70,92 @@ async function readJson(res: Response): Promise<unknown> {
   return res.json().catch(() => null);
 }
 
-function merchantOf(capture: { payee?: { merchant_id?: string } }, unit: { payee?: { merchant_id?: string } }): string | null {
-  return capture.payee?.merchant_id ?? unit.payee?.merchant_id ?? null;
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  return Object.fromEntries(Object.entries(value));
 }
 
-/** Classify a capture HTTP 200. Anything that is not a proven non-charge stays uncertain or held. */
+type SeenCapture = {
+  id: string | null;
+  status: string | null;
+  currency: string | null;
+  value: string | null;
+  merchant: string | null;
+  merchantBad: boolean;
+};
+
+function readCaptures(root: Record<string, unknown>): SeenCapture[] {
+  const units = Array.isArray(root.purchase_units) ? root.purchase_units : [];
+  const seen: SeenCapture[] = [];
+  for (const unitValue of units) {
+    const unit = asRecord(unitValue);
+    if (!unit) continue;
+    const payments = asRecord(unit.payments);
+    const caps = payments && Array.isArray(payments.captures) ? payments.captures : [];
+    for (const capValue of caps) {
+      const cap = asRecord(capValue);
+      if (!cap) continue;
+      const payee = asRecord(cap.payee) ?? asRecord(unit.payee);
+      let merchant: string | null = null;
+      let merchantBad = false;
+      if (payee && "merchant_id" in payee && payee.merchant_id != null && payee.merchant_id !== "") {
+        if (typeof payee.merchant_id === "string") merchant = payee.merchant_id;
+        else merchantBad = true;
+      }
+      const amount = asRecord(cap.amount);
+      seen.push({
+        id: typeof cap.id === "string" && cap.id ? cap.id : null,
+        status: typeof cap.status === "string" && cap.status ? cap.status : null,
+        currency: amount && typeof amount.currency_code === "string" ? amount.currency_code : null,
+        value: amount && typeof amount.value === "string" ? amount.value : null,
+        merchant,
+        merchantBad,
+      });
+    }
+  }
+  return seen;
+}
+
+/** Classify a capture HTTP 200. A charge is paid only when every status agrees. */
 export function interpretCapture(requestedOrderId: string, expectedMerchant: string | null, body: unknown): CaptureInterpretation {
-  const parsed = capturedOrderSchema.safeParse(body);
-  if (!parsed.success) return { outcome: "uncertain", evidence: null };
-  const responseOrderId = parsed.data.id ?? null;
+  const root = asRecord(body);
+  if (!root) return { outcome: "uncertain", captureId: null, evidence: "unparsed" };
+  const responseOrderId = typeof root.id === "string" && root.id ? root.id : null;
+  const orderStatus = typeof root.status === "string" && root.status ? root.status : null;
+  const seen = readCaptures(root);
+  const ids = seen.map((item) => item.id).filter((id): id is string => id !== null);
+  const listed = seen.map((item) => `${item.id ?? "unknown"}:${item.status ?? "unknown"}${item.merchantBad ? ":merchant" : ""}`).join(" ");
+  const uncertain = (evidence: string, captureId: string | null): CaptureInterpretation => ({ outcome: "uncertain", captureId, evidence });
+
   if (responseOrderId && responseOrderId !== requestedOrderId) {
-    return { outcome: "hold", captureId: null, evidence: `order ${responseOrderId}` };
+    return { outcome: "hold", captureId: ids[0] ?? null, evidence: `order ${responseOrderId}${ids.length ? ` ${ids.join(" ")}` : ""}` };
   }
-  const units = parsed.data.purchase_units ?? [];
-  const captures = units.flatMap((unit) => (unit.payments?.captures ?? []).map((capture) => ({ capture, unit })));
-  if (captures.length === 0) {
-    if (parsed.data.status && NOT_CHARGED.has(parsed.data.status)) return { outcome: "not_charged" };
-    return { outcome: "uncertain", evidence: null };
+  if (seen.length === 0) {
+    if (orderStatus && NOT_CHARGED.has(orderStatus)) return { outcome: "not_charged" };
+    return uncertain(orderStatus ? `no-captures ${orderStatus}` : "no-captures", null);
   }
-  const completed = captures.filter((item) => item.capture.status === "COMPLETED");
-  if (completed.length > 1) {
-    return { outcome: "uncertain", evidence: completed.map((item) => item.capture.id).join(" ") };
+
+  const statuses = [orderStatus, ...seen.map((item) => item.status)].filter((status): status is string => Boolean(status));
+  const completed = seen.filter((item) => item.status === "COMPLETED");
+  const contradicts = statuses.includes("COMPLETED") && statuses.some((status) => NOT_CHARGED.has(status));
+  const pending = seen.some((item) => item.status === "PENDING");
+  const unknown = statuses.some((status) => !KNOWN_STATUS.has(status)) || seen.some((item) => !item.status);
+  const parent = orderStatus ? ` parent:${orderStatus}` : "";
+  if (contradicts || completed.length > 1 || (pending && completed.length > 0)) {
+    return { outcome: "hold", captureId: ids.length === 1 ? ids[0] ?? null : null, evidence: `${listed}${parent}`.trim() };
   }
-  if (completed.length === 0) {
-    if (captures.every((item) => NOT_CHARGED.has(item.capture.status))) return { outcome: "not_charged" };
-    return { outcome: "uncertain", evidence: captures.map((item) => `${item.capture.id}:${item.capture.status}`).join(" ") };
-  }
+  if (pending || unknown) return uncertain(`${listed}${parent}`.trim(), null);
+  if (completed.length === 0 && statuses.every((status) => NOT_CHARGED.has(status))) return { outcome: "not_charged" };
+
   const one = completed[0];
-  if (!one) return { outcome: "uncertain", evidence: null };
-  const amount = one.capture.amount ? normalizeUsd(one.capture.amount.value) : null;
-  const currency = one.capture.amount?.currency_code ?? "";
-  const merchantId = merchantOf(one.capture, one.unit);
-  if (!amount || !responseOrderId) return { outcome: "uncertain", evidence: one.capture.id };
-  if (expectedMerchant && merchantId !== expectedMerchant) {
-    return { outcome: "hold", captureId: one.capture.id, evidence: `merchant ${merchantId ?? "missing"}` };
+  if (!one?.id) return uncertain(listed || "incomplete-capture", null);
+  if (one.merchantBad) return { outcome: "hold", captureId: one.id, evidence: `${one.id} merchant malformed` };
+  const amount = one.value ? normalizeUsd(one.value) : null;
+  if (!amount || !one.currency || !responseOrderId) return uncertain(one.id, one.id);
+  if (expectedMerchant && one.merchant !== expectedMerchant) {
+    return { outcome: "hold", captureId: one.id, evidence: `merchant ${one.merchant ?? "missing"}` };
   }
-  return { outcome: "completed", orderId: responseOrderId, captureId: one.capture.id, amount, currency, merchantId };
+  return { outcome: "completed", orderId: responseOrderId, captureId: one.id, amount, currency: one.currency, merchantId: one.merchant };
 }
 
 export function createPaypalSandboxClient(

@@ -174,7 +174,7 @@ export async function createPaypalTestDb() {
       await query("select release_commission_paypal_capture($1)", [orderId]);
     },
     async holdCapture(input) {
-      await query("select hold_commission_paypal_capture($1, $2, $3)", [input.orderId, input.captureId ?? "", input.evidence]);
+      await query("select hold_commission_paypal_capture($1, $2, $3, $4)", [input.orderId, input.captureId ?? "", input.evidence, input.kind]);
     },
     async completeCapture(input) {
       if (failCompletes > 0) {
@@ -255,6 +255,11 @@ export async function createPaypalTestDb() {
   };
 }
 
+function dispositionOf(value: unknown): "open" | "uncertain" | "held" | "matched" {
+  if (value === "uncertain" || value === "held" || value === "matched") return value;
+  return "open";
+}
+
 async function readCheckout(result: { rows: Record<string, unknown>[] }) {
   const row = result.rows[0];
   if (!row) return null;
@@ -266,6 +271,7 @@ async function readCheckout(result: { rows: Record<string, unknown>[] }) {
     orderId: typeof row.order_id === "string" ? row.order_id : null,
     captureId: typeof row.capture_id === "string" ? row.capture_id : null,
     capturePending: row.capture_pending === true,
+    disposition: dispositionOf(row.capture_disposition),
     amount: cents,
     currency: "USD" as const,
     capturedAt: typeof row.captured_at === "string" ? row.captured_at : null,

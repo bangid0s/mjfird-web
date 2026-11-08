@@ -34,10 +34,12 @@ test("a mismatched capture does not change the request, and a second capture id 
   assert.equal((await db.read()).status, "awaiting_payment");
   assert.equal((await db.read()).captureId, "CAP-WRONG");
   assert.equal((await db.read()).paidAt, null);
-  await assert.rejects(
-    () => db.pg.query("select complete_commission_paypal_capture('ORDER-1', 'CAP-1', '80.00', 'USD')"),
-    (err: unknown) => err instanceof Error && err.message.includes("capture_mismatch"),
+  const stillHeld = await db.pg.query<{ complete_commission_paypal_capture: string }>(
+    "select complete_commission_paypal_capture('ORDER-1', 'CAP-1', '80.00', 'USD')",
   );
+  assert.equal(stillHeld.rows[0]?.complete_commission_paypal_capture, "held");
+  assert.equal((await db.read()).status, "awaiting_payment");
+  assert.equal((await db.read()).captureId, "CAP-WRONG");
 
   await db.pg.query("update commission_paypal_checkouts set capture_id = null, capture_pending = false, capture_disposition = 'open', provider_evidence = null where order_id = 'ORDER-1'");
   await db.pg.query("select begin_commission_paypal_capture('ORDER-1')");

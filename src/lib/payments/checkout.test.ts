@@ -256,7 +256,7 @@ test("concurrent captures share one provider charge", async () => {
 
 test("an uncertain provider result keeps the claim, and a declined capture is the release", async () => {
   const pendingDb = await seeded();
-  const pending = scriptedPaypal({ capture: { outcome: "uncertain", evidence: null } });
+  const pending = scriptedPaypal({ capture: { outcome: "uncertain", evidence: "uncertain", captureId: null } });
   await createSandboxOrder({ db: pendingDb.checkout, paypal: pending.client, userId: CLIENT_ID }, { requestId: REQUEST_ID });
   const pendingResult = await captureSandboxOrder({ db: pendingDb.checkout, paypal: pending.client, userId: CLIENT_ID }, { orderId: "ORDER-1" });
   assert.equal(pendingResult.status, 502);
@@ -346,7 +346,11 @@ test("sandbox client calls only the sandbox host and hides provider bodies", asy
   assert.ok(config);
   const client = createPaypalSandboxClient(config, fetchImpl);
   assert.deepEqual(await client.createOrder("80.00", REQUEST_ID, 1001, orderIdempotencyKey(REQUEST_ID)), { id: "ORDER-1" });
-  assert.deepEqual(await client.captureOrder("ORDER-1", captureIdempotencyKey("ORDER-1")), { outcome: "uncertain", evidence: null });
+  assert.deepEqual(await client.captureOrder("ORDER-1", captureIdempotencyKey("ORDER-1")), {
+    outcome: "uncertain",
+    evidence: "no-captures APPROVED",
+    captureId: null,
+  });
   const badCert = new Headers({
     "paypal-transmission-id": "t",
     "paypal-transmission-time": "t",

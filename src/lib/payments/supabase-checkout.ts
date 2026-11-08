@@ -27,6 +27,7 @@ const checkoutRow = z.object({
   order_id: z.string().min(1).nullable(),
   capture_id: z.string().nullable(),
   capture_pending: z.boolean(),
+  capture_disposition: z.enum(["open", "uncertain", "held", "matched"]),
   amount: z.union([z.string(), z.number()]),
   currency: z.string(),
   captured_at: z.string().nullable(),
@@ -146,6 +147,7 @@ export function createSupabaseCheckoutDb(clients: { user: SupabaseClient; admin:
         p_order_id: input.orderId,
         p_capture_id: input.captureId ?? "",
         p_evidence: input.evidence,
+        p_kind: input.kind,
       });
     },
 
@@ -180,6 +182,7 @@ function readCheckout(value: unknown): CheckoutRecord | null {
     orderId: parsed.data.order_id,
     captureId: parsed.data.capture_id,
     capturePending: parsed.data.capture_pending,
+    disposition: parsed.data.capture_disposition,
     amount,
     currency: "USD",
     capturedAt: parsed.data.captured_at,

@@ -123,22 +123,25 @@ export async function captureSandboxOrder(
   }
 
   if (captured.outcome === "not_charged") {
-    await deps.db.releaseCapture(checkout.orderId);
+    const current = await deps.db.getCheckoutByOrder(checkout.orderId);
+    if (current && current.disposition === "open" && !current.captureId) await deps.db.releaseCapture(checkout.orderId);
     return { status: 409, body: { error: "Payment could not be confirmed." } };
   }
-  if (captured.outcome === "uncertain") {
-    if (captured.evidence) await deps.db.holdCapture({ orderId: checkout.orderId, captureId: null, evidence: captured.evidence });
-    return { status: 502, body: { error: retry } };
-  }
-  if (captured.outcome === "hold") {
-    await deps.db.holdCapture({ orderId: checkout.orderId, captureId: captured.captureId, evidence: captured.evidence });
-    return { status: 409, body: { error: "Payment could not be confirmed." } };
+  if (captured.outcome === "uncertain" || captured.outcome === "hold") {
+    await deps.db.holdCapture({
+      orderId: checkout.orderId,
+      captureId: captured.captureId,
+      evidence: captured.evidence || "uncertain",
+      kind: captured.outcome === "hold" ? "held" : "uncertain",
+    });
+    return { status: captured.outcome === "hold" ? 409 : 502, body: captured.outcome === "hold" ? { error: "Payment could not be confirmed." } : { error: retry } };
   }
   if (captured.currency !== "USD" || captured.amount !== checkout.amount) {
     await deps.db.holdCapture({
       orderId: checkout.orderId,
       captureId: captured.captureId,
       evidence: `${captured.currency} ${captured.amount}`,
+      kind: "held",
     });
     return { status: 409, body: { error: "Payment could not be confirmed." } };
   }
@@ -189,7 +192,7 @@ export async function handleSandboxWebhook(
   const amount = normalizeUsd(resource.data.amount.value);
   const currency = resource.data.amount.currency_code;
   if (!amount || currency !== "USD") {
-    await deps.db.holdCapture({ orderId, captureId: resource.data.id, evidence: `${currency} ${resource.data.amount.value}` });
+    await deps.db.holdCapture({ orderId, captureId: resource.data.id, evidence: `${currency} ${resource.data.amount.value}`, kind: "held" });
     return { status: 200, body: { held: true } };
   }
 
@@ -201,7 +204,7 @@ export async function handleSandboxWebhook(
   });
   if (!settled.ok) {
     if (settled.reason === "order_not_found") return { status: 200, body: { ignored: true } };
-    await deps.db.holdCapture({ orderId, captureId: resource.data.id, evidence: settled.reason });
+    await deps.db.holdCapture({ orderId, captureId: resource.data.id, evidence: settled.reason, kind: "held" });
     return { status: 200, body: { held: true } };
   }
   if (settled.result === "held") return { status: 200, body: { held: true } };

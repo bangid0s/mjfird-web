@@ -41,7 +41,7 @@ async function capture(responseBody: unknown, status = 200) {
           return { id: "ORDER-1" };
         },
         async captureOrder() {
-          return { outcome: "uncertain" as const, evidence: null };
+          return { outcome: "uncertain" as const, evidence: "uncertain", captureId: null };
         },
         async verifyWebhook() {
           return false;
@@ -96,7 +96,7 @@ test("pending, ambiguous, and multiple captures stay claimed", async () => {
   assert.equal((await pending.db.read()).capturePending, true);
   assert.equal(await pending.db.cancelClient(), "blocked");
   const completed = await handleSandboxWebhook(
-    { db: pending.db.checkout, paypal: { async createOrder() { return { id: "ORDER-1" }; }, async captureOrder() { return { outcome: "uncertain" as const, evidence: null }; }, async verifyWebhook() { return true; } } },
+    { db: pending.db.checkout, paypal: { async createOrder() { return { id: "ORDER-1" }; }, async captureOrder() { return { outcome: "uncertain" as const, evidence: "uncertain", captureId: null }; }, async verifyWebhook() { return true; } } },
     {
       headers: new Headers(),
       rawBody: JSON.stringify({
@@ -136,6 +136,71 @@ test("pending, ambiguous, and multiple captures stay claimed", async () => {
   await many.db.pg.close();
 });
 
+test("uncertain results stay recorded, and a merchant hold is not paid by a later webhook", async () => {
+  const ambiguous = await capture({ id: "ORDER-1", status: "COMPLETED" });
+  assert.equal(ambiguous.releases.length, 0);
+  const declined = await captureSandboxOrder(
+    {
+      db: ambiguous.db.checkout,
+      paypal: createPaypalSandboxClient(config!, async (input) => {
+        const url = String(input);
+        if (url.endsWith("/v1/oauth2/token")) return Response.json({ access_token: "tok", token_type: "Bearer" });
+        return Response.json({
+          id: "ORDER-1",
+          status: "DECLINED",
+          purchase_units: [{ payments: { captures: [{ id: "CAP-NO", status: "DECLINED", amount: { currency_code: "USD", value: "80.00" } }] } }],
+        });
+      }),
+      userId: CLIENT_ID,
+    },
+    { orderId: "ORDER-1" },
+  );
+  assert.equal(declined.status, 409);
+  const kept = await ambiguous.db.pg.query<{ capture_pending: boolean; capture_disposition: string; provider_evidence: string | null }>(
+    "select capture_pending, capture_disposition, provider_evidence from commission_paypal_checkouts where order_id = 'ORDER-1'",
+  );
+  assert.equal(kept.rows[0]?.capture_pending, true);
+  assert.notEqual(kept.rows[0]?.capture_disposition, "open");
+  assert.ok(kept.rows[0]?.provider_evidence);
+  await ambiguous.db.pg.close();
+
+  const merchant = await capture(body({ payee: "NOT-OURS", captureId: "CAP-PAY" }));
+  const webhook = await handleSandboxWebhook(
+    {
+      db: merchant.db.checkout,
+      paypal: {
+        async createOrder() {
+          return { id: "ORDER-1" };
+        },
+        async captureOrder() {
+          return { outcome: "uncertain", evidence: "uncertain", captureId: null };
+        },
+        async verifyWebhook() {
+          return true;
+        },
+      },
+    },
+    {
+      headers: new Headers(),
+      rawBody: JSON.stringify({
+        event_type: "PAYMENT.CAPTURE.COMPLETED",
+        resource: {
+          id: "CAP-PAY",
+          status: "COMPLETED",
+          amount: { currency_code: "USD", value: "80.00" },
+          payee: { merchant_id: "NOT-OURS" },
+          supplementary_data: { related_ids: { order_id: "ORDER-1" } },
+        },
+      }),
+    },
+  );
+  assert.equal("held" in webhook.body && webhook.body.held, true);
+  assert.equal((await merchant.db.read()).status, "awaiting_payment");
+  assert.equal((await merchant.db.read()).paidAt, null);
+  assert.equal((await merchant.db.read()).captureId, "CAP-PAY");
+  await merchant.db.pg.close();
+});
+
 test("a foreign merchant or a different response order id is not paid", async () => {
   const foreign = await capture(body({ payee: "NOT-OUR-MERCHANT", captureId: "CAP-PAYEE" }));
   assert.equal(foreign.result.status, 409);
@@ -145,7 +210,8 @@ test("a foreign merchant or a different response order id is not paid", async ()
 
   const other = await capture(body({ orderId: "ORDER-OTHER", captureId: "CAP-OTHER" }));
   assert.equal(other.result.status, 409);
-  assert.equal((await other.db.read()).captureId, null);
+  assert.equal((await other.db.read()).captureId, "CAP-OTHER");
+  assert.equal((await other.db.read()).status, "awaiting_payment");
   assert.equal((await other.db.read()).capturePending, true);
   await other.db.pg.close();
 });

@@ -13,6 +13,7 @@ export type CheckoutRecord = {
   orderId: string | null;
   captureId: string | null;
   capturePending: boolean;
+  disposition: "open" | "uncertain" | "held" | "matched";
   amount: string;
   currency: "USD";
   capturedAt: string | null;
@@ -48,7 +49,7 @@ export type CheckoutDb = {
   attachOrder(input: { requestId: string; orderId: string; amount: string; currency: "USD" }): Promise<AttachResult>;
   beginCapture(orderId: string): Promise<BeginCaptureResult>;
   releaseCapture(orderId: string): Promise<void>;
-  holdCapture(input: { orderId: string; captureId: string | null; evidence: string }): Promise<void>;
+  holdCapture(input: { orderId: string; captureId: string | null; evidence: string; kind: "uncertain" | "held" }): Promise<void>;
   completeCapture(input: { orderId: string; captureId: string; amount: string; currency: string }): Promise<CaptureSettlement>;
 };
 
