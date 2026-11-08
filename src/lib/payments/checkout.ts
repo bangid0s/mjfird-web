@@ -5,7 +5,7 @@ import { PaypalRequestError, type PaypalClient } from "@/lib/payments/paypal-cli
 
 export type HttpResult = {
   status: number;
-  body: { orderId: string } | { ok: true; duplicate: boolean } | { ignored: true } | { error: string };
+  body: { orderId: string } | { ok: true; duplicate: boolean } | { ignored: true } | { held: true } | { error: string };
 };
 
 type Payable = { ok: true; amount: string } | { ok: false };
@@ -122,12 +122,29 @@ export async function captureSandboxOrder(
     throw err;
   }
 
-  if (captured.status !== "COMPLETED" || captured.amount !== checkout.amount || captured.currency !== "USD") {
+  if (captured.outcome === "not_charged") {
     await deps.db.releaseCapture(checkout.orderId);
+    return { status: 409, body: { error: "Payment could not be confirmed." } };
+  }
+  if (captured.outcome === "uncertain") {
+    if (captured.evidence) await deps.db.holdCapture({ orderId: checkout.orderId, captureId: null, evidence: captured.evidence });
+    return { status: 502, body: { error: retry } };
+  }
+  if (captured.outcome === "hold") {
+    await deps.db.holdCapture({ orderId: checkout.orderId, captureId: captured.captureId, evidence: captured.evidence });
+    return { status: 409, body: { error: "Payment could not be confirmed." } };
+  }
+  if (captured.currency !== "USD" || captured.amount !== checkout.amount) {
+    await deps.db.holdCapture({
+      orderId: checkout.orderId,
+      captureId: captured.captureId,
+      evidence: `${captured.currency} ${captured.amount}`,
+    });
     return { status: 409, body: { error: "Payment could not be confirmed." } };
   }
 
   const settled = await finishCapture(deps.db, checkout.orderId, captured.captureId, captured.amount);
+  if (settled === "held") return { status: 409, body: { error: "Payment could not be confirmed." } };
   if (!settled) return { status: 502, body: { error: retry } };
   return { status: 200, body: { ok: true, duplicate: settled === "duplicate" } };
 }
@@ -168,9 +185,12 @@ export async function handleSandboxWebhook(
     return { status: 400, body: { error: "Invalid webhook." } };
   }
   const orderId = resource.data.supplementary_data?.related_ids?.order_id;
+  if (!orderId) return { status: 200, body: { ignored: true } };
   const amount = normalizeUsd(resource.data.amount.value);
-  if (!orderId || !amount || resource.data.amount.currency_code !== "USD") {
-    return { status: 200, body: { ignored: true } };
+  const currency = resource.data.amount.currency_code;
+  if (!amount || currency !== "USD") {
+    await deps.db.holdCapture({ orderId, captureId: resource.data.id, evidence: `${currency} ${resource.data.amount.value}` });
+    return { status: 200, body: { held: true } };
   }
 
   const settled = await deps.db.completeCapture({
@@ -179,6 +199,11 @@ export async function handleSandboxWebhook(
     amount,
     currency: "USD",
   });
-  if (!settled.ok) return { status: 200, body: { ignored: true } };
+  if (!settled.ok) {
+    if (settled.reason === "order_not_found") return { status: 200, body: { ignored: true } };
+    await deps.db.holdCapture({ orderId, captureId: resource.data.id, evidence: settled.reason });
+    return { status: 200, body: { held: true } };
+  }
+  if (settled.result === "held") return { status: 200, body: { held: true } };
   return { status: 200, body: { ok: true, duplicate: settled.result === "duplicate" } };
 }

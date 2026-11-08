@@ -27,13 +27,19 @@ test("a mismatched capture does not change the request, and a second capture id 
   await db.seed();
   await db.pg.query("select reserve_commission_paypal_order($1, '80.00', 'USD')", [REQUEST_ID]);
   await db.pg.query("select attach_commission_paypal_order($1, 'ORDER-1', '80.00', 'USD')", [REQUEST_ID]);
-  await assert.rejects(
-    () => db.pg.query("select complete_commission_paypal_capture('ORDER-1', 'CAP-1', '1.00', 'USD')"),
-    (err: unknown) => err instanceof Error && err.message.includes("amount_mismatch"),
+  const held = await db.pg.query<{ complete_commission_paypal_capture: string }>(
+    "select complete_commission_paypal_capture('ORDER-1', 'CAP-WRONG', '1.00', 'USD')",
   );
+  assert.equal(held.rows[0]?.complete_commission_paypal_capture, "held");
   assert.equal((await db.read()).status, "awaiting_payment");
-  assert.equal((await db.read()).captureId, null);
+  assert.equal((await db.read()).captureId, "CAP-WRONG");
+  assert.equal((await db.read()).paidAt, null);
+  await assert.rejects(
+    () => db.pg.query("select complete_commission_paypal_capture('ORDER-1', 'CAP-1', '80.00', 'USD')"),
+    (err: unknown) => err instanceof Error && err.message.includes("capture_mismatch"),
+  );
 
+  await db.pg.query("update commission_paypal_checkouts set capture_id = null, capture_pending = false, capture_disposition = 'open', provider_evidence = null where order_id = 'ORDER-1'");
   await db.pg.query("select begin_commission_paypal_capture('ORDER-1')");
   const completed = await db.pg.query<{ complete_commission_paypal_capture: string }>(
     "select complete_commission_paypal_capture('ORDER-1', 'CAP-1', '80.00', 'USD')",
@@ -51,13 +57,48 @@ test("a mismatched capture does not change the request, and a second capture id 
   );
 });
 
+test("direct updates cannot clear a pending capture, and locks take the request first", async () => {
+  const db = await createPaypalTestDb();
+  await db.seed();
+  await db.pg.query("select reserve_commission_paypal_order($1, '80.00', 'USD')", [REQUEST_ID]);
+  await db.pg.query("select attach_commission_paypal_order($1, 'ORDER-1', '80.00', 'USD')", [REQUEST_ID]);
+  await db.pg.query("select begin_commission_paypal_capture('ORDER-1')");
+  await assert.rejects(
+    () => db.pg.query("update commission_requests set status = 'cancelled' where id = $1", [REQUEST_ID]),
+    (err: unknown) => err instanceof Error && err.message.includes("capture_in_progress"),
+  );
+  assert.equal((await db.read()).status, "awaiting_payment");
+  assert.equal((await db.read()).capturePending, true);
+
+  const defs = await db.pg.query<{ proname: string; def: string }>(
+    `select p.proname, pg_get_functiondef(p.oid) as def
+     from pg_proc p
+     where p.pronamespace = 'public'::regnamespace
+       and p.proname in (
+         'reserve_commission_paypal_order',
+         'attach_commission_paypal_order',
+         'begin_commission_paypal_capture',
+         'complete_commission_paypal_capture',
+         'hold_commission_paypal_capture',
+         'mark_commission_paid_manual',
+         'admin_cancel_commission_request',
+         'cancel_commission_request'
+       )`,
+  );
+  for (const row of defs.rows) {
+    const locks = [...row.def.matchAll(/from\s+(commission_requests|commission_paypal_checkouts)[^;]{0,120}?for update/gi)];
+    assert.ok(locks.length > 0, row.proname);
+    assert.equal(locks[0]?.[1], "commission_requests", row.proname);
+  }
+});
+
 test("manual payment after a stored capture keeps the capture id", async () => {
   const db = await createPaypalTestDb();
   await db.seed();
   await db.pg.query("select reserve_commission_paypal_order($1, '80.00', 'USD')", [REQUEST_ID]);
   await db.pg.query("select attach_commission_paypal_order($1, 'ORDER-9', '80.00', 'USD')", [REQUEST_ID]);
   await db.pg.query("select complete_commission_paypal_capture('ORDER-9', 'CAP-9', '80.00', 'USD')");
-  assert.equal(await db.manualMark(), "conflict");
+  assert.equal(await db.manualMark(), "blocked");
   const state = await db.read();
   assert.equal(state.status, "in_progress");
   assert.equal(state.captureId, "CAP-9");

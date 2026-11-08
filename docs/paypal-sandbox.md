@@ -2,7 +2,11 @@
 
 Accepted commission requests (`awaiting_payment`, positive USD `final_price`) can show PayPal's sandbox buttons. The server creates the order from the stored final price. The browser cannot set the amount. Capture marks the request `in_progress` only after PayPal reports a completed capture whose currency is USD and whose amount matches that stored price. An approval event does not mark the request paid.
 
-If sandbox configuration is incomplete, the request page keeps the existing manual-payment message. Admins can still use "Mark paid & start work" until a capture is claimed. The database sets `capture_pending` before PayPal is asked to capture. Manual mark-paid and cancel fail while that flag or a stored capture id is set, so a completed charge is recorded instead of dropped. Create and capture send a stable `PayPal-Request-Id` (`order-<request id>`, `capture-<order id>`). A timeout after PayPal succeeds leaves the flag set; the retry uses the same id and stores the capture. A provider response that is not a completed capture clears the flag.
+If sandbox configuration is incomplete, the request page keeps the existing manual-payment message. Admins can still mark a request paid until a capture is claimed. The database sets `capture_pending` before PayPal is asked to capture and clears it only for a definite non-charge (`DECLINED`, `DENIED`, `FAILED`, or `VOIDED`). A completed capture with the wrong amount, currency, order id, or merchant id is stored and the request stays unpaid. Pending responses, an HTTP 200 without capture rows, and more than one completed capture also keep the claim. Manual mark-paid, cancel, and a direct table update cannot change the request while that claim or a held capture is set. Claims are not released by time. Retrying capture or a verified webhook reconciles them. If the provider never returns a definite result, those actions stay blocked.
+
+When PayPal sandbox env is off and `commission_paypal_checkouts` does not exist, admin mark-paid and admin cancel keep the previous conditional update. Once that table exists, they use the migration functions and do not fall back.
+
+Create and capture send a stable `PayPal-Request-Id` (`order-<request id>`, `capture-<order id>`). Optional server-only `PAYPAL_MERCHANT_ID`, when set, must match the capture payee or the request is not marked paid.
 
 There is no live PayPal host in the code. `PAYPAL_ENV` must be exactly `sandbox`. `live` or any other value disables checkout.
 

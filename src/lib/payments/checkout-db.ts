@@ -37,7 +37,7 @@ export type BeginCaptureResult =
   | { ok: false; reason: "not_payable" | "order_not_found" };
 
 export type CaptureSettlement =
-  | { ok: true; result: "completed" | "duplicate" }
+  | { ok: true; result: "completed" | "duplicate" | "held" }
   | { ok: false; reason: CheckoutFailure };
 
 export type CheckoutDb = {
@@ -48,6 +48,7 @@ export type CheckoutDb = {
   attachOrder(input: { requestId: string; orderId: string; amount: string; currency: "USD" }): Promise<AttachResult>;
   beginCapture(orderId: string): Promise<BeginCaptureResult>;
   releaseCapture(orderId: string): Promise<void>;
+  holdCapture(input: { orderId: string; captureId: string | null; evidence: string }): Promise<void>;
   completeCapture(input: { orderId: string; captureId: string; amount: string; currency: string }): Promise<CaptureSettlement>;
 };
 

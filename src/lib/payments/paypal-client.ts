@@ -14,16 +14,22 @@ export class PaypalRequestError extends Error {
   }
 }
 
-export type CapturedPayment = {
-  captureId: string;
-  status: "COMPLETED";
-  amount: string;
-  currency: "USD";
-};
+export type CaptureInterpretation =
+  | {
+      outcome: "completed";
+      orderId: string;
+      captureId: string;
+      amount: string;
+      currency: string;
+      merchantId: string | null;
+    }
+  | { outcome: "not_charged" }
+  | { outcome: "uncertain"; evidence: string | null }
+  | { outcome: "hold"; captureId: string | null; evidence: string };
 
 export type PaypalClient = {
   createOrder(amount: string, requestId: string, ref: number, idempotencyKey: string): Promise<{ id: string }>;
-  captureOrder(orderId: string, idempotencyKey: string): Promise<CapturedPayment | { status: "not_completed" }>;
+  captureOrder(orderId: string, idempotencyKey: string): Promise<CaptureInterpretation>;
   verifyWebhook(headers: Headers, event: unknown): Promise<boolean>;
 };
 
@@ -40,25 +46,29 @@ const createdOrderSchema = z.object({
 const captureSchema = z.object({
   id: z.string().min(1),
   status: z.string(),
-  amount: z.object({
-    currency_code: z.string(),
-    value: z.string(),
-  }),
+  amount: z
+    .object({
+      currency_code: z.string(),
+      value: z.string(),
+    })
+    .optional(),
+  payee: z.object({ merchant_id: z.string().optional() }).optional(),
 });
 
 const capturedOrderSchema = z.object({
-  id: z.string().min(1),
-  status: z.string(),
-  purchase_units: z.array(
-    z.object({
-      payments: z
-        .object({
-          captures: z.array(captureSchema),
-        })
-        .optional(),
-    }),
-  ),
+  id: z.string().min(1).optional(),
+  status: z.string().optional(),
+  purchase_units: z
+    .array(
+      z.object({
+        payee: z.object({ merchant_id: z.string().optional() }).optional(),
+        payments: z.object({ captures: z.array(captureSchema).optional() }).optional(),
+      }),
+    )
+    .optional(),
 });
+
+const NOT_CHARGED = new Set(["DECLINED", "DENIED", "FAILED", "VOIDED"]);
 
 const verificationSchema = z.object({
   verification_status: z.string(),
@@ -82,6 +92,44 @@ function sandboxCertUrl(value: string): boolean {
 
 async function readJson(res: Response): Promise<unknown> {
   return res.json().catch(() => null);
+}
+
+function merchantOf(capture: { payee?: { merchant_id?: string } }, unit: { payee?: { merchant_id?: string } }): string | null {
+  return capture.payee?.merchant_id ?? unit.payee?.merchant_id ?? null;
+}
+
+/** Classify a capture HTTP 200. Anything that is not a proven non-charge stays uncertain or held. */
+export function interpretCapture(requestedOrderId: string, expectedMerchant: string | null, body: unknown): CaptureInterpretation {
+  const parsed = capturedOrderSchema.safeParse(body);
+  if (!parsed.success) return { outcome: "uncertain", evidence: null };
+  const responseOrderId = parsed.data.id ?? null;
+  if (responseOrderId && responseOrderId !== requestedOrderId) {
+    return { outcome: "hold", captureId: null, evidence: `order ${responseOrderId}` };
+  }
+  const units = parsed.data.purchase_units ?? [];
+  const captures = units.flatMap((unit) => (unit.payments?.captures ?? []).map((capture) => ({ capture, unit })));
+  if (captures.length === 0) {
+    if (parsed.data.status && NOT_CHARGED.has(parsed.data.status)) return { outcome: "not_charged" };
+    return { outcome: "uncertain", evidence: null };
+  }
+  const completed = captures.filter((item) => item.capture.status === "COMPLETED");
+  if (completed.length > 1) {
+    return { outcome: "uncertain", evidence: completed.map((item) => item.capture.id).join(" ") };
+  }
+  if (completed.length === 0) {
+    if (captures.every((item) => NOT_CHARGED.has(item.capture.status))) return { outcome: "not_charged" };
+    return { outcome: "uncertain", evidence: captures.map((item) => `${item.capture.id}:${item.capture.status}`).join(" ") };
+  }
+  const one = completed[0];
+  if (!one) return { outcome: "uncertain", evidence: null };
+  const amount = one.capture.amount ? normalizeUsd(one.capture.amount.value) : null;
+  const currency = one.capture.amount?.currency_code ?? "";
+  const merchantId = merchantOf(one.capture, one.unit);
+  if (!amount || !responseOrderId) return { outcome: "uncertain", evidence: one.capture.id };
+  if (expectedMerchant && merchantId !== expectedMerchant) {
+    return { outcome: "hold", captureId: one.capture.id, evidence: `merchant ${merchantId ?? "missing"}` };
+  }
+  return { outcome: "completed", orderId: responseOrderId, captureId: one.capture.id, amount, currency, merchantId };
 }
 
 export function createPaypalSandboxClient(
@@ -146,16 +194,7 @@ export function createPaypalSandboxClient(
         },
       });
       if (!res.ok) throw new PaypalRequestError("capture", res.status);
-      const parsed = capturedOrderSchema.safeParse(await readJson(res));
-      if (!parsed.success || parsed.data.status !== "COMPLETED") return { status: "not_completed" };
-      const captures = parsed.data.purchase_units.flatMap((unit) => unit.payments?.captures ?? []);
-      const completed = captures.filter((capture) => capture.status === "COMPLETED");
-      if (completed.length !== 1) return { status: "not_completed" };
-      const capture = completed[0];
-      if (!capture) return { status: "not_completed" };
-      const amount = normalizeUsd(capture.amount.value);
-      if (!amount || capture.amount.currency_code !== "USD") return { status: "not_completed" };
-      return { captureId: capture.id, status: "COMPLETED", amount, currency: "USD" };
+      return interpretCapture(orderId, config.merchantId, await readJson(res));
     },
 
     async verifyWebhook(headers, event) {

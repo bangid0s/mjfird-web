@@ -141,6 +141,14 @@ export function createSupabaseCheckoutDb(clients: { user: SupabaseClient; admin:
       await rpc(clients.admin, "release_commission_paypal_capture", { p_order_id: orderId });
     },
 
+    async holdCapture(input) {
+      await rpc(clients.admin, "hold_commission_paypal_capture", {
+        p_order_id: input.orderId,
+        p_capture_id: input.captureId ?? "",
+        p_evidence: input.evidence,
+      });
+    },
+
     async completeCapture(input) {
       try {
         const data = await rpc(clients.admin, "complete_commission_paypal_capture", {
@@ -149,7 +157,7 @@ export function createSupabaseCheckoutDb(clients: { user: SupabaseClient; admin:
           p_amount: input.amount,
           p_currency: input.currency,
         });
-        const result = z.enum(["completed", "duplicate"]).safeParse(data);
+        const result = z.enum(["completed", "duplicate", "held"]).safeParse(data);
         if (!result.success) throw new CheckoutDbError();
         return { ok: true, result: result.data };
       } catch (err) {

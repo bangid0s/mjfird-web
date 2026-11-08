@@ -11,6 +11,8 @@ export type PaypalSandboxConfig = {
   serviceRoleKey: string;
   supabaseUrl: string;
   supabaseAnonKey: string;
+  /** When set, a capture payee must report this merchant id or the request is not marked paid. */
+  merchantId: string | null;
 };
 
 function required(env: Record<string, string | undefined>, name: string): string | null {
@@ -34,7 +36,16 @@ export function readPaypalSandboxConfig(env: Record<string, string | undefined> 
   if (!clientId || !clientSecret || !webhookId || !publicClientId || !serviceRoleKey || !supabaseUrl || !supabaseAnonKey) {
     return null;
   }
-  return { clientId, clientSecret, webhookId, publicClientId, serviceRoleKey, supabaseUrl, supabaseAnonKey };
+  return {
+    clientId,
+    clientSecret,
+    webhookId,
+    publicClientId,
+    serviceRoleKey,
+    supabaseUrl,
+    supabaseAnonKey,
+    merchantId: required(env, "PAYPAL_MERCHANT_ID"),
+  };
 }
 
 export function paypalButtonAvailable(

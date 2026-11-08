@@ -20,6 +20,7 @@ const REASONS = [
   "missing_price",
   "request_not_found",
   "invalid_order",
+  "capture_recorded",
   "capture_in_progress",
   "not_admin",
   "cannot_cancel",
@@ -90,7 +91,7 @@ export async function createPaypalTestDb() {
 
   function failure(err: unknown): CheckoutFailure | null {
     if (!(err instanceof SqlReason)) return null;
-    if (err.reason === "capture_in_progress" || err.reason === "not_admin" || err.reason === "cannot_cancel") return "not_payable";
+    if (err.reason === "capture_recorded" || err.reason === "capture_in_progress" || err.reason === "not_admin" || err.reason === "cannot_cancel") return "not_payable";
     return err.reason;
   }
 
@@ -172,6 +173,9 @@ export async function createPaypalTestDb() {
     async releaseCapture(orderId) {
       await query("select release_commission_paypal_capture($1)", [orderId]);
     },
+    async holdCapture(input) {
+      await query("select hold_commission_paypal_capture($1, $2, $3)", [input.orderId, input.captureId ?? "", input.evidence]);
+    },
     async completeCapture(input) {
       if (failCompletes > 0) {
         failCompletes -= 1;
@@ -183,7 +187,7 @@ export async function createPaypalTestDb() {
           [input.orderId, input.captureId, input.amount, input.currency],
         );
         const value = result.rows[0]?.complete_commission_paypal_capture;
-        if (value === "completed" || value === "duplicate") return { ok: true, result: value };
+        if (value === "completed" || value === "duplicate" || value === "held") return { ok: true, result: value };
         throw new CheckoutDbError();
       } catch (err) {
         const reason = failure(err);
@@ -210,7 +214,7 @@ export async function createPaypalTestDb() {
         await query("select mark_commission_paid_manual($1)", [requestId]);
         return "advanced" as const;
       } catch (err) {
-        if (err instanceof SqlReason && err.reason === "capture_in_progress") return "blocked" as const;
+        if (err instanceof SqlReason && (err.reason === "capture_in_progress" || err.reason === "capture_recorded")) return "blocked" as const;
         if (err instanceof SqlReason && err.reason === "not_payable") return "conflict" as const;
         throw err;
       }

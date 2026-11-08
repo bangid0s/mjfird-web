@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { friendlyRpcError, manualAdvanceConflict } from "@/lib/commissions/status";
+import { friendlyRpcError, manualAdvanceConflict, manualWritePlan } from "@/lib/commissions/status";
 import { captureSandboxOrder, createSandboxOrder, handleSandboxWebhook, orderIdempotencyKey, captureIdempotencyKey } from "@/lib/payments/checkout";
 import { PAYPAL_SANDBOX_API, paypalButtonAvailable, readPaypalSandboxConfig } from "@/lib/payments/config";
 import { normalizeUsd } from "@/lib/payments/money";
-import { createPaypalSandboxClient, PaypalRequestError, type CapturedPayment, type PaypalClient } from "@/lib/payments/paypal-client";
+import { createPaypalSandboxClient, PaypalRequestError, type CaptureInterpretation, type PaypalClient } from "@/lib/payments/paypal-client";
 import { CLIENT_ID, REQUEST_ID, createPaypalTestDb } from "@/lib/payments/paypal-test-db";
 
 const fullEnv: Record<string, string> = {
@@ -27,9 +27,9 @@ function hold() {
   return { promise, release };
 }
 
-function scriptedPaypal(options?: { capture?: CapturedPayment | { status: "not_completed" } }) {
+function scriptedPaypal(options?: { capture?: CaptureInterpretation }) {
   const orders = new Map<string, { id: string; amount: string }>();
-  const captures = new Map<string, CapturedPayment>();
+  const captures = new Map<string, CaptureInterpretation>();
   let orderCalls = 0;
   let captureCharges = 0;
   let captureCalls = 0;
@@ -53,12 +53,14 @@ function scriptedPaypal(options?: { capture?: CapturedPayment | { status: "not_c
       const existing = captures.get(key);
       if (existing) return existing;
       const captured = options?.capture ?? {
+        outcome: "completed" as const,
+        orderId: "ORDER-1",
         captureId: "CAP-1",
-        status: "COMPLETED" as const,
         amount: "80.00",
-        currency: "USD" as const,
+        currency: "USD",
+        merchantId: null,
       };
-      if (captured.status !== "COMPLETED") return captured;
+      if (captured.outcome !== "completed") return captured;
       captures.set(key, captured);
       captureCharges += 1;
       if (noteCapture && captureCharges === 1) noteCapture();
@@ -203,7 +205,7 @@ test("manual payment during the provider call is blocked and the charge is store
   assert.equal(state.captureId, "CAP-1");
   assert.equal(state.capturePending, false);
   assert.equal(paypal.stats().captureCharges, 1);
-  assert.equal(await db.manualMark(), "conflict");
+  assert.equal(await db.manualMark(), "blocked");
   assert.equal((await db.read()).captureId, "CAP-1");
 });
 
@@ -252,17 +254,24 @@ test("concurrent captures share one provider charge", async () => {
   assert.equal((await db.read()).paidAt, paidAt);
 });
 
-test("an unconfirmed provider result releases the claim and does not mark paid", async () => {
-  const db = await seeded();
-  const paypal = scriptedPaypal({ capture: { status: "not_completed" } });
-  await createSandboxOrder({ db: db.checkout, paypal: paypal.client, userId: CLIENT_ID }, { requestId: REQUEST_ID });
-  const result = await captureSandboxOrder({ db: db.checkout, paypal: paypal.client, userId: CLIENT_ID }, { orderId: "ORDER-1" });
-  assert.equal(result.status, 409);
-  const state = await db.read();
-  assert.equal(state.status, "awaiting_payment");
-  assert.equal(state.capturePending, false);
-  assert.equal(state.captureId, null);
-  assert.equal(await db.manualMark(), "advanced");
+test("an uncertain provider result keeps the claim, and a declined capture is the release", async () => {
+  const pendingDb = await seeded();
+  const pending = scriptedPaypal({ capture: { outcome: "uncertain", evidence: null } });
+  await createSandboxOrder({ db: pendingDb.checkout, paypal: pending.client, userId: CLIENT_ID }, { requestId: REQUEST_ID });
+  const pendingResult = await captureSandboxOrder({ db: pendingDb.checkout, paypal: pending.client, userId: CLIENT_ID }, { orderId: "ORDER-1" });
+  assert.equal(pendingResult.status, 502);
+  assert.equal((await pendingDb.read()).capturePending, true);
+  assert.equal(await pendingDb.cancelClient(), "blocked");
+  assert.equal((await pendingDb.read()).status, "awaiting_payment");
+
+  const declinedDb = await seeded();
+  const declined = scriptedPaypal({ capture: { outcome: "not_charged" } });
+  await createSandboxOrder({ db: declinedDb.checkout, paypal: declined.client, userId: CLIENT_ID }, { requestId: REQUEST_ID });
+  const declinedResult = await captureSandboxOrder({ db: declinedDb.checkout, paypal: declined.client, userId: CLIENT_ID }, { orderId: "ORDER-1" });
+  assert.equal(declinedResult.status, 409);
+  assert.equal((await declinedDb.read()).capturePending, false);
+  assert.equal((await declinedDb.read()).captureId, null);
+  assert.equal(await declinedDb.manualMark(), "advanced");
 });
 
 test("webhook ignores approval and a mismatched amount, then stores one replayed capture", async () => {
@@ -288,6 +297,13 @@ test("webhook ignores approval and a mismatched amount, then stores one replayed
     { headers, rawBody: JSON.stringify({ event_type: "CHECKOUT.ORDER.APPROVED", resource: { status: "APPROVED" } }) },
   );
   assert.deepEqual(approved, { status: 200, body: { ignored: true } });
+  const first = await handleSandboxWebhook({ db: db.checkout, paypal: guarded }, { headers, rawBody: completed });
+  assert.deepEqual(first.body, { ok: true, duplicate: false });
+  const paidAt = (await db.read()).paidAt;
+  const replay = await handleSandboxWebhook({ db: db.checkout, paypal: guarded }, { headers, rawBody: completed });
+  assert.deepEqual(replay.body, { ok: true, duplicate: true });
+  assert.equal((await db.read()).paidAt, paidAt);
+  assert.equal((await db.read()).captureId, "CAP-1");
   const mismatch = await handleSandboxWebhook(
     { db: db.checkout, paypal: guarded },
     {
@@ -303,15 +319,9 @@ test("webhook ignores approval and a mismatched amount, then stores one replayed
       }),
     },
   );
-  assert.deepEqual(mismatch, { status: 200, body: { ignored: true } });
-  assert.equal((await db.read()).status, "awaiting_payment");
-  const first = await handleSandboxWebhook({ db: db.checkout, paypal: guarded }, { headers, rawBody: completed });
-  assert.deepEqual(first.body, { ok: true, duplicate: false });
-  const paidAt = (await db.read()).paidAt;
-  const replay = await handleSandboxWebhook({ db: db.checkout, paypal: guarded }, { headers, rawBody: completed });
-  assert.deepEqual(replay.body, { ok: true, duplicate: true });
-  assert.equal((await db.read()).paidAt, paidAt);
+  assert.equal("held" in mismatch.body && mismatch.body.held, true);
   assert.equal((await db.read()).captureId, "CAP-1");
+  assert.equal((await db.read()).paidAt, paidAt);
 });
 
 test("sandbox client calls only the sandbox host and hides provider bodies", async () => {
@@ -336,7 +346,7 @@ test("sandbox client calls only the sandbox host and hides provider bodies", asy
   assert.ok(config);
   const client = createPaypalSandboxClient(config, fetchImpl);
   assert.deepEqual(await client.createOrder("80.00", REQUEST_ID, 1001, orderIdempotencyKey(REQUEST_ID)), { id: "ORDER-1" });
-  assert.deepEqual(await client.captureOrder("ORDER-1", captureIdempotencyKey("ORDER-1")), { status: "not_completed" });
+  assert.deepEqual(await client.captureOrder("ORDER-1", captureIdempotencyKey("ORDER-1")), { outcome: "uncertain", evidence: null });
   const badCert = new Headers({
     "paypal-transmission-id": "t",
     "paypal-transmission-time": "t",
@@ -361,10 +371,18 @@ test("sandbox client calls only the sandbox host and hides provider bodies", asy
   );
 });
 
+test("manual writes stay on the old path only before the PayPal table exists", () => {
+  assert.equal(manualWritePlan({ rpcMissing: true, checkoutTable: "absent", paypalEnabled: false }), "legacy");
+  assert.equal(manualWritePlan({ rpcMissing: true, checkoutTable: "present", paypalEnabled: false }), "fail_closed");
+  assert.equal(manualWritePlan({ rpcMissing: true, checkoutTable: "absent", paypalEnabled: true }), "fail_closed");
+  assert.equal(manualWritePlan({ rpcMissing: false, checkoutTable: "absent", paypalEnabled: false }), "rpc");
+});
+
 test("conflict copy names an in-progress capture without echoing the database error", () => {
-  assert.equal(manualAdvanceConflict("capture_in_progress"), "PayPal checkout is in progress. Refresh and try again.");
+  assert.equal(manualAdvanceConflict("capture_in_progress"), "PayPal checkout is in progress. Refresh to confirm before changing this request.");
+  assert.equal(manualAdvanceConflict("capture_recorded"), "PayPal already captured this payment.");
   assert.equal(manualAdvanceConflict("ERROR: not_payable\nSQL context"), "This request changed. Refresh and try again.");
-  assert.equal(friendlyRpcError("capture_in_progress"), "PayPal checkout is in progress. Refresh and try again.");
+  assert.equal(friendlyRpcError("capture_in_progress"), "PayPal checkout is in progress. Refresh to confirm before changing this request.");
 });
 
 test("order route stays unavailable without a complete sandbox env and does not call fetch", async () => {

@@ -60,12 +60,25 @@ const RPC_ERRORS: Record<string, string> = {
   too_many_pending: "You already have 5 requests waiting for review. Please wait for a reply first.",
   request_not_found: "Request not found.",
   cannot_cancel: "This request can't be cancelled anymore — send a message instead.",
-  capture_in_progress: "PayPal checkout is in progress. Refresh and try again.",
+  capture_in_progress: "PayPal checkout is in progress. Refresh to confirm before changing this request.",
+  capture_recorded: "PayPal already captured this payment.",
 };
 
 export function manualAdvanceConflict(message: string) {
-  if (message.includes("capture_in_progress")) return "PayPal checkout is in progress. Refresh and try again.";
+  if (message.includes("capture_recorded")) return "PayPal already captured this payment.";
+  if (message.includes("capture_in_progress")) return "PayPal checkout is in progress. Refresh to confirm before changing this request.";
   return "This request changed. Refresh and try again.";
+}
+
+/** How an admin write behaves when the PayPal functions are missing. */
+export function manualWritePlan(input: {
+  rpcMissing: boolean;
+  checkoutTable: "absent" | "present" | "unknown";
+  paypalEnabled: boolean;
+}): "legacy" | "rpc" | "fail_closed" {
+  if (!input.rpcMissing) return "rpc";
+  if (input.checkoutTable === "absent" && !input.paypalEnabled) return "legacy";
+  return "fail_closed";
 }
 
 export function friendlyRpcError(message: string) {

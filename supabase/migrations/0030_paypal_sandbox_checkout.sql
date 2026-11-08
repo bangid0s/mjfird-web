@@ -11,6 +11,9 @@ create table if not exists public.commission_paypal_checkouts (
   order_id text unique,
   capture_id text unique,
   capture_pending boolean not null default false,
+  -- open: no provider result yet. held: a charge or ambiguous result is stored and must not be paid or cleared. matched: amount and currency agreed.
+  capture_disposition text not null default 'open' check (capture_disposition in ('open', 'held', 'matched')),
+  provider_evidence text,
   amount numeric(10, 2) not null check (amount > 0),
   currency text not null check (currency = 'USD'),
   created_at timestamptz not null default now(),
@@ -101,6 +104,10 @@ begin
     raise exception 'amount_mismatch';
   end;
 
+  perform 1 from commission_requests where id = p_request_id for update;
+  if not found then
+    raise exception 'request_not_found';
+  end if;
   select * into existing from commission_paypal_checkouts where request_id = p_request_id for update;
   if not found then
     raise exception 'request_not_found';
@@ -147,17 +154,24 @@ begin
     raise exception 'order_not_found';
   end if;
 
-  select * into checkout from commission_paypal_checkouts where order_id = trim(p_order_id) for update;
+  select request_id into req.id from commission_paypal_checkouts where order_id = trim(p_order_id);
   if not found then
     raise exception 'order_not_found';
   end if;
-  select * into req from commission_requests where id = checkout.request_id for update;
+  select * into req from commission_requests where id = req.id for update;
   if not found then
     raise exception 'not_payable';
   end if;
+  select * into checkout from commission_paypal_checkouts where request_id = req.id for update;
+  if not found or checkout.order_id is distinct from trim(p_order_id) then
+    raise exception 'order_not_found';
+  end if;
 
-  if checkout.capture_id is not null then
+  if checkout.capture_disposition = 'matched' or (checkout.capture_id is not null and checkout.capture_disposition <> 'held') then
     return 'done';
+  end if;
+  if checkout.capture_disposition = 'held' or checkout.capture_pending then
+    return 'pending';
   end if;
   if req.status <> 'awaiting_payment' then
     raise exception 'not_payable';
@@ -183,9 +197,56 @@ security definer
 set search_path = public
 as $$
 begin
+  -- A stored capture id or a held result is not a proven non-charge.
   update commission_paypal_checkouts
   set capture_pending = false
-  where order_id = trim(p_order_id) and capture_id is null;
+  where order_id = trim(p_order_id)
+    and capture_id is null
+    and capture_disposition = 'open';
+end;
+$$;
+
+create or replace function public.hold_commission_paypal_capture(
+  p_order_id text,
+  p_capture_id text,
+  p_evidence text
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  req commission_requests;
+  checkout commission_paypal_checkouts;
+begin
+  select request_id into req.id from commission_paypal_checkouts where order_id = trim(p_order_id);
+  if not found then
+    raise exception 'order_not_found';
+  end if;
+  select * into req from commission_requests where id = req.id for update;
+  if not found then
+    raise exception 'not_payable';
+  end if;
+  select * into checkout from commission_paypal_checkouts where request_id = req.id for update;
+  if not found then
+    raise exception 'order_not_found';
+  end if;
+  if checkout.capture_disposition = 'matched' then
+    return 'matched';
+  end if;
+
+  update commission_paypal_checkouts
+  set capture_pending = true,
+      capture_disposition = 'held',
+      provider_evidence = left(coalesce(provider_evidence || ' | ', '') || coalesce(p_evidence, ''), 2000),
+      capture_id = case
+        when capture_id is not null then capture_id
+        when p_capture_id is null or length(trim(p_capture_id)) = 0 then null
+        else trim(p_capture_id)
+      end
+  where request_id = checkout.request_id;
+  return 'held';
 end;
 $$;
 
@@ -208,60 +269,74 @@ begin
   if p_capture_id is null or length(trim(p_capture_id)) = 0 or p_order_id is null or length(trim(p_order_id)) = 0 then
     raise exception 'invalid_capture';
   end if;
-  if p_currency is distinct from 'USD' then
-    raise exception 'amount_mismatch';
-  end if;
   begin
     amount := trim(p_amount)::numeric;
   exception when others then
     raise exception 'amount_mismatch';
   end;
 
-  select * into checkout from commission_paypal_checkouts where order_id = trim(p_order_id) for update;
+  select request_id into req.id from commission_paypal_checkouts where order_id = trim(p_order_id);
   if not found then
     raise exception 'order_not_found';
   end if;
-  select * into req from commission_requests where id = checkout.request_id for update;
+  select * into req from commission_requests where id = req.id for update;
   if not found then
     raise exception 'not_payable';
   end if;
+  select * into checkout from commission_paypal_checkouts where request_id = req.id for update;
+  if not found then
+    raise exception 'order_not_found';
+  end if;
 
-  if amount is null
+  if checkout.capture_disposition = 'matched' then
+    if checkout.capture_id = trim(p_capture_id) then
+      return 'duplicate';
+    end if;
+    raise exception 'capture_mismatch';
+  end if;
+
+  if p_currency is distinct from 'USD'
+     or amount is null
      or amount <= 0
      or checkout.currency is distinct from 'USD'
      or checkout.amount <> amount
      or req.currency is distinct from 'USD'
      or req.final_price is null
-     or req.final_price <> amount then
-    raise exception 'amount_mismatch';
+     or req.final_price <> amount
+     or req.status <> 'awaiting_payment' then
+    update commission_paypal_checkouts
+    set capture_pending = true,
+        capture_disposition = case when capture_disposition = 'matched' then 'matched' else 'held' end,
+        capture_id = case
+          when capture_id is not null then capture_id
+          else trim(p_capture_id)
+        end,
+        provider_evidence = left(coalesce(provider_evidence || ' | ', '') || p_currency || ' ' || coalesce(p_amount, ''), 2000)
+    where request_id = checkout.request_id and capture_disposition is distinct from 'matched';
+    if checkout.capture_disposition = 'matched' and checkout.capture_id = trim(p_capture_id) then
+      return 'duplicate';
+    end if;
+    return 'held';
   end if;
 
-  if checkout.capture_id is not null then
-    if checkout.capture_id <> trim(p_capture_id) then
-      raise exception 'capture_mismatch';
-    end if;
-    if req.status = 'awaiting_payment' then
-      update commission_requests
-      set status = 'in_progress', paid_at = coalesce(paid_at, now())
-      where id = req.id and status = 'awaiting_payment';
-    end if;
-    update commission_paypal_checkouts set capture_pending = false where order_id = checkout.order_id;
-    return 'duplicate';
+  if checkout.capture_id is not null and checkout.capture_id <> trim(p_capture_id) then
+    raise exception 'capture_mismatch';
   end if;
 
   update commission_paypal_checkouts
-  set capture_id = trim(p_capture_id), captured_at = now(), capture_pending = false
-  where order_id = checkout.order_id and capture_id is null;
-  if not found then
-    raise exception 'not_payable';
-  end if;
+  set capture_id = trim(p_capture_id),
+      captured_at = coalesce(captured_at, now()),
+      capture_pending = false,
+      capture_disposition = 'matched'
+  where request_id = checkout.request_id;
 
-  if req.status = 'awaiting_payment' then
-    update commission_requests
-    set status = 'in_progress', paid_at = coalesce(paid_at, now())
-    where id = req.id and status = 'awaiting_payment';
-  end if;
+  update commission_requests
+  set status = 'in_progress', paid_at = coalesce(paid_at, now())
+  where id = req.id and status = 'awaiting_payment';
 
+  if checkout.capture_disposition = 'matched' then
+    return 'duplicate';
+  end if;
   return 'completed';
 end;
 $$;
@@ -281,13 +356,19 @@ begin
   end if;
 
   select * into req from commission_requests where id = p_request_id for update;
-  if not found or req.status <> 'awaiting_payment' then
+  if not found then
     raise exception 'not_payable';
   end if;
 
   select * into checkout from commission_paypal_checkouts where request_id = p_request_id for update;
-  if found and (checkout.capture_pending or checkout.capture_id is not null) then
+  if found and checkout.capture_disposition = 'matched' then
+    raise exception 'capture_recorded';
+  end if;
+  if found and (checkout.capture_pending or checkout.capture_disposition = 'held' or checkout.capture_id is not null) then
     raise exception 'capture_in_progress';
+  end if;
+  if req.status <> 'awaiting_payment' then
+    raise exception 'not_payable';
   end if;
 
   update commission_requests
@@ -320,7 +401,7 @@ begin
   end if;
 
   select * into checkout from commission_paypal_checkouts where request_id = p_request_id for update;
-  if found and (checkout.capture_pending or checkout.capture_id is not null) then
+  if found and (checkout.capture_pending or checkout.capture_disposition <> 'open' or checkout.capture_id is not null) then
     raise exception 'capture_in_progress';
   end if;
 
@@ -350,7 +431,7 @@ begin
   end if;
 
   select * into checkout from commission_paypal_checkouts where request_id = r.id for update;
-  if found and (checkout.capture_pending or checkout.capture_id is not null) then
+  if found and (checkout.capture_pending or checkout.capture_disposition <> 'open' or checkout.capture_id is not null) then
     raise exception 'capture_in_progress';
   end if;
 
@@ -361,7 +442,41 @@ begin
 end;
 $$;
 
+create or replace function public.guard_commission_request_paypal()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  checkout commission_paypal_checkouts;
+begin
+  if new.status is not distinct from old.status then
+    return new;
+  end if;
+  -- The request row is already locked by this update. Lock the checkout next.
+  select * into checkout from commission_paypal_checkouts where request_id = old.id for update;
+  if not found then
+    return new;
+  end if;
+  if checkout.capture_pending or checkout.capture_disposition = 'held' then
+    raise exception 'capture_in_progress';
+  end if;
+  if checkout.capture_disposition = 'matched' and new.status in ('cancelled', 'declined', 'pending', 'awaiting_payment') then
+    raise exception 'capture_recorded';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists commission_requests_paypal_guard on commission_requests;
+create trigger commission_requests_paypal_guard
+  before update on commission_requests
+  for each row execute function public.guard_commission_request_paypal();
+
 revoke all on function public.reserve_commission_paypal_order(uuid, text, text) from public;
+revoke all on function public.hold_commission_paypal_capture(text, text, text) from public;
+revoke all on function public.guard_commission_request_paypal() from public;
 revoke all on function public.attach_commission_paypal_order(uuid, text, text, text) from public;
 revoke all on function public.begin_commission_paypal_capture(text) from public;
 revoke all on function public.release_commission_paypal_capture(text) from public;
@@ -376,6 +491,7 @@ do $$ begin
     revoke all on function public.begin_commission_paypal_capture(text) from anon;
     revoke all on function public.release_commission_paypal_capture(text) from anon;
     revoke all on function public.complete_commission_paypal_capture(text, text, text, text) from anon;
+    revoke all on function public.hold_commission_paypal_capture(text, text, text) from anon;
     revoke all on function public.mark_commission_paid_manual(uuid) from anon;
     revoke all on function public.admin_cancel_commission_request(uuid) from anon;
   end if;
@@ -385,6 +501,7 @@ do $$ begin
     revoke all on function public.begin_commission_paypal_capture(text) from authenticated;
     revoke all on function public.release_commission_paypal_capture(text) from authenticated;
     revoke all on function public.complete_commission_paypal_capture(text, text, text, text) from authenticated;
+    revoke all on function public.hold_commission_paypal_capture(text, text, text) from authenticated;
     grant execute on function public.mark_commission_paid_manual(uuid) to authenticated;
     grant execute on function public.admin_cancel_commission_request(uuid) to authenticated;
   end if;
@@ -394,5 +511,6 @@ do $$ begin
     grant execute on function public.begin_commission_paypal_capture(text) to service_role;
     grant execute on function public.release_commission_paypal_capture(text) to service_role;
     grant execute on function public.complete_commission_paypal_capture(text, text, text, text) to service_role;
+    grant execute on function public.hold_commission_paypal_capture(text, text, text) to service_role;
   end if;
 end $$;
