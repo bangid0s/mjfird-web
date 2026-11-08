@@ -60,7 +60,13 @@ const RPC_ERRORS: Record<string, string> = {
   too_many_pending: "You already have 5 requests waiting for review. Please wait for a reply first.",
   request_not_found: "Request not found.",
   cannot_cancel: "This request can't be cancelled anymore — send a message instead.",
+  capture_in_progress: "PayPal checkout is in progress. Refresh and try again.",
 };
+
+export function manualAdvanceConflict(message: string) {
+  if (message.includes("capture_in_progress")) return "PayPal checkout is in progress. Refresh and try again.";
+  return "This request changed. Refresh and try again.";
+}
 
 export function friendlyRpcError(message: string) {
   for (const [code, text] of Object.entries(RPC_ERRORS)) {

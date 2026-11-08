@@ -22,8 +22,8 @@ export type CapturedPayment = {
 };
 
 export type PaypalClient = {
-  createOrder(amount: string, requestId: string, ref: number): Promise<{ id: string }>;
-  captureOrder(orderId: string): Promise<CapturedPayment | { status: "not_completed" }>;
+  createOrder(amount: string, requestId: string, ref: number, idempotencyKey: string): Promise<{ id: string }>;
+  captureOrder(orderId: string, idempotencyKey: string): Promise<CapturedPayment | { status: "not_completed" }>;
   verifyWebhook(headers: Headers, event: unknown): Promise<boolean>;
 };
 
@@ -106,13 +106,14 @@ export function createPaypalSandboxClient(
   }
 
   return {
-    async createOrder(amount, requestId, ref) {
+    async createOrder(amount, requestId, ref, idempotencyKey) {
       const token = await accessToken();
       const res = await fetchImpl(`${PAYPAL_SANDBOX_API}/v2/checkout/orders`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          "PayPal-Request-Id": idempotencyKey,
         },
         body: JSON.stringify({
           intent: "CAPTURE",
@@ -133,7 +134,7 @@ export function createPaypalSandboxClient(
       return { id: parsed.data.id };
     },
 
-    async captureOrder(orderId) {
+    async captureOrder(orderId, idempotencyKey) {
       if (!/^[A-Za-z0-9-]+$/.test(orderId)) throw new PaypalRequestError("order_id", 400);
       const token = await accessToken();
       const res = await fetchImpl(`${PAYPAL_SANDBOX_API}/v2/checkout/orders/${orderId}/capture`, {
@@ -141,6 +142,7 @@ export function createPaypalSandboxClient(
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          "PayPal-Request-Id": idempotencyKey,
         },
       });
       if (!res.ok) throw new PaypalRequestError("capture", res.status);

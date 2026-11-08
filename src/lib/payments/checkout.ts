@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { CheckoutDb } from "@/lib/payments/checkout-db";
+import { CheckoutDbError, type CheckoutDb } from "@/lib/payments/checkout-db";
 import { normalizeUsd } from "@/lib/payments/money";
 import { PaypalRequestError, type PaypalClient } from "@/lib/payments/paypal-client";
 
@@ -44,6 +44,15 @@ const captureResource = z.object({
 });
 
 const unavailable = "This quote can't be paid right now.";
+const retry = "Payment couldn't finish. Refresh to confirm.";
+
+export function orderIdempotencyKey(requestId: string) {
+  return `order-${requestId}`;
+}
+
+export function captureIdempotencyKey(orderId: string) {
+  return `capture-${orderId}`;
+}
 
 export async function createSandboxOrder(
   deps: { db: CheckoutDb; paypal: PaypalClient; userId: string },
@@ -59,23 +68,19 @@ export async function createSandboxOrder(
   const price = assessPayable(request);
   if (!price.ok) return { status: 409, body: { error: unavailable } };
 
-  const existing = await deps.db.getCheckoutByRequest(request.id);
-  if (existing) {
-    if (existing.captureId || existing.amount !== price.amount) {
-      return { status: 409, body: { error: unavailable } };
-    }
-    return { status: 200, body: { orderId: existing.orderId } };
-  }
+  const reserved = await deps.db.reserveOrder({ requestId: request.id, amount: price.amount, currency: "USD" });
+  if (!reserved.ok) return { status: 409, body: { error: unavailable } };
+  if (reserved.orderId) return { status: 200, body: { orderId: reserved.orderId } };
 
-  const created = await deps.paypal.createOrder(price.amount, request.id, request.ref);
-  const bound = await deps.db.bindOrder({
+  const created = await deps.paypal.createOrder(price.amount, request.id, request.ref, orderIdempotencyKey(request.id));
+  const attached = await deps.db.attachOrder({
     requestId: request.id,
     orderId: created.id,
     amount: price.amount,
     currency: "USD",
   });
-  if (!bound.ok) return { status: 409, body: { error: unavailable } };
-  return { status: 200, body: { orderId: bound.orderId } };
+  if (!attached.ok) return { status: 409, body: { error: unavailable } };
+  return { status: 200, body: { orderId: attached.orderId } };
 }
 
 export async function captureSandboxOrder(
@@ -92,43 +97,50 @@ export async function captureSandboxOrder(
   if (!request) return { status: 404, body: { error: "Request not found." } };
   if (request.clientId !== deps.userId) return { status: 403, body: { error: "You can't pay this request." } };
 
-  if (checkout.captureId && request.status !== "awaiting_payment") {
+  if (!checkout.orderId) return { status: 404, body: { error: "Payment not found." } };
+
+  const payableAmount = request.currency === "USD" ? normalizeUsd(request.finalPrice) : null;
+  if (!checkout.captureId && request.status === "awaiting_payment" && payableAmount !== checkout.amount) {
+    return { status: 409, body: { error: unavailable } };
+  }
+
+  const claim = await deps.db.beginCapture(checkout.orderId);
+  if (!claim.ok) return { status: 409, body: { error: unavailable } };
+  if (claim.state === "done") {
+    const current = await deps.db.getCheckoutByOrder(checkout.orderId);
+    if (!current?.captureId) return { status: 502, body: { error: retry } };
+    const settled = await finishCapture(deps.db, checkout.orderId, current.captureId, current.amount);
+    if (!settled) return { status: 502, body: { error: retry } };
     return { status: 200, body: { ok: true, duplicate: true } };
-  }
-
-  const price = assessPayable(request);
-  if (!price.ok || checkout.amount !== price.amount) {
-    return { status: 409, body: { error: unavailable } };
-  }
-
-  const fresh = await deps.db.getRequest(request.id);
-  const freshPrice = fresh ? assessPayable(fresh) : null;
-  if (!freshPrice?.ok || freshPrice.amount !== checkout.amount) {
-    return { status: 409, body: { error: unavailable } };
   }
 
   let captured;
   try {
-    captured = await deps.paypal.captureOrder(checkout.orderId);
+    captured = await deps.paypal.captureOrder(checkout.orderId, captureIdempotencyKey(checkout.orderId));
   } catch (err) {
-    if (err instanceof PaypalRequestError) {
-      return { status: 502, body: { error: "Payment couldn't finish. Try again." } };
-    }
+    if (err instanceof PaypalRequestError) return { status: 502, body: { error: retry } };
     throw err;
   }
 
   if (captured.status !== "COMPLETED" || captured.amount !== checkout.amount || captured.currency !== "USD") {
+    await deps.db.releaseCapture(checkout.orderId);
     return { status: 409, body: { error: "Payment could not be confirmed." } };
   }
 
-  const settled = await deps.db.completeCapture({
-    orderId: checkout.orderId,
-    captureId: captured.captureId,
-    amount: captured.amount,
-    currency: "USD",
-  });
-  if (!settled.ok) return { status: 409, body: { error: unavailable } };
-  return { status: 200, body: { ok: true, duplicate: settled.result === "duplicate" } };
+  const settled = await finishCapture(deps.db, checkout.orderId, captured.captureId, captured.amount);
+  if (!settled) return { status: 502, body: { error: retry } };
+  return { status: 200, body: { ok: true, duplicate: settled === "duplicate" } };
+}
+
+async function finishCapture(db: CheckoutDb, orderId: string, captureId: string, amount: string) {
+  try {
+    const settled = await db.completeCapture({ orderId, captureId, amount, currency: "USD" });
+    if (!settled.ok) return null;
+    return settled.result;
+  } catch (err) {
+    if (err instanceof CheckoutDbError) return null;
+    throw err;
+  }
 }
 
 export async function handleSandboxWebhook(

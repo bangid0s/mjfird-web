@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email";
-import { priceOf } from "@/lib/commissions/status";
+import { manualAdvanceConflict, priceOf } from "@/lib/commissions/status";
 import { formatUSD } from "@/lib/services/storefront";
 import type { CommissionRequestRow, CommissionStatus } from "@/lib/supabase/types";
 
@@ -98,15 +98,20 @@ export async function advanceRequest(id: string) {
   const step = NEXT_STATUS[req.status];
   if (!step) throw new Error("Nothing to advance.");
 
-  const { data: updated, error } = await supabase
-    .from("commission_requests")
-    .update({ status: step.to, ...(step.stamp && { [step.stamp]: new Date().toISOString() }) })
-    .eq("id", id)
-    .eq("status", req.status)
-    .select("id");
-  if (error) throw new Error(error.message);
-  if (!updated || updated.length === 0) {
-    throw new Error("This request changed. Refresh and try again.");
+  if (req.status === "awaiting_payment") {
+    const { error } = await supabase.rpc("mark_commission_paid_manual", { p_request_id: id });
+    if (error) throw new Error(manualAdvanceConflict(error.message));
+  } else {
+    const { data: updated, error } = await supabase
+      .from("commission_requests")
+      .update({ status: step.to, ...(step.stamp && { [step.stamp]: new Date().toISOString() }) })
+      .eq("id", id)
+      .eq("status", req.status)
+      .select("id");
+    if (error) throw new Error(error.message);
+    if (!updated || updated.length === 0) {
+      throw new Error("This request changed. Refresh and try again.");
+    }
   }
 
   // A finished commission frees its slot.
@@ -132,9 +137,8 @@ export async function advanceRequest(id: string) {
 export async function cancelRequestAsAdmin(id: string) {
   const { supabase, req } = await load(id);
   if (["completed", "declined", "cancelled"].includes(req.status)) throw new Error("Already closed.");
-  const { error } = await supabase.from("commission_requests").update({ status: "cancelled" }).eq("id", id);
-  if (error) throw new Error(error.message);
-  if (req.status !== "pending") await bumpSlots(supabase, req.service_id, -1);
+  const { error } = await supabase.rpc("admin_cancel_commission_request", { p_request_id: id });
+  if (error) throw new Error(manualAdvanceConflict(error.message));
   refresh(id);
 }
 

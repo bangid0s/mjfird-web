@@ -10,29 +10,44 @@ export type RequestRecord = {
 
 export type CheckoutRecord = {
   requestId: string;
-  orderId: string;
+  orderId: string | null;
   captureId: string | null;
+  capturePending: boolean;
   amount: string;
   currency: "USD";
   capturedAt: string | null;
 };
 
-export type BindResult =
-  | { ok: true; orderId: string }
-  | { ok: false; reason: "not_payable" | "amount_mismatch" | "missing_price" | "request_not_found" | "invalid_order" };
+export type CheckoutFailure =
+  | "not_payable"
+  | "amount_mismatch"
+  | "missing_price"
+  | "request_not_found"
+  | "invalid_order"
+  | "order_not_found"
+  | "capture_mismatch"
+  | "invalid_capture";
+
+export type ReserveResult = { ok: true; orderId: string | null } | { ok: false; reason: CheckoutFailure };
+
+export type AttachResult = { ok: true; orderId: string } | { ok: false; reason: CheckoutFailure };
+
+export type BeginCaptureResult =
+  | { ok: true; state: "ready" | "pending" | "done" }
+  | { ok: false; reason: "not_payable" | "order_not_found" };
 
 export type CaptureSettlement =
   | { ok: true; result: "completed" | "duplicate" }
-  | {
-      ok: false;
-      reason: "order_not_found" | "capture_mismatch" | "not_payable" | "amount_mismatch" | "invalid_capture";
-    };
+  | { ok: false; reason: CheckoutFailure };
 
 export type CheckoutDb = {
   getRequest(id: string): Promise<RequestRecord | null>;
   getCheckoutByRequest(requestId: string): Promise<CheckoutRecord | null>;
   getCheckoutByOrder(orderId: string): Promise<CheckoutRecord | null>;
-  bindOrder(input: { requestId: string; orderId: string; amount: string; currency: "USD" }): Promise<BindResult>;
+  reserveOrder(input: { requestId: string; amount: string; currency: "USD" }): Promise<ReserveResult>;
+  attachOrder(input: { requestId: string; orderId: string; amount: string; currency: "USD" }): Promise<AttachResult>;
+  beginCapture(orderId: string): Promise<BeginCaptureResult>;
+  releaseCapture(orderId: string): Promise<void>;
   completeCapture(input: { orderId: string; captureId: string; amount: string; currency: string }): Promise<CaptureSettlement>;
 };
 

@@ -2,7 +2,7 @@
 
 Accepted commission requests (`awaiting_payment`, positive USD `final_price`) can show PayPal's sandbox buttons. The server creates the order from the stored final price. The browser cannot set the amount. Capture marks the request `in_progress` only after PayPal reports a completed capture whose currency is USD and whose amount matches that stored price. An approval event does not mark the request paid.
 
-If sandbox configuration is incomplete, the request page keeps the existing manual-payment message. Admins can still use "Mark paid & start work". That update only applies while the status is still the one that was loaded, so a PayPal capture that already moved the row does not send a second payment email.
+If sandbox configuration is incomplete, the request page keeps the existing manual-payment message. Admins can still use "Mark paid & start work" until a capture is claimed. The database sets `capture_pending` before PayPal is asked to capture. Manual mark-paid and cancel fail while that flag or a stored capture id is set, so a completed charge is recorded instead of dropped. Create and capture send a stable `PayPal-Request-Id` (`order-<request id>`, `capture-<order id>`). A timeout after PayPal succeeds leaves the flag set; the retry uses the same id and stores the capture. A provider response that is not a completed capture clears the flag.
 
 There is no live PayPal host in the code. `PAYPAL_ENV` must be exactly `sandbox`. `live` or any other value disables checkout.
 
@@ -27,7 +27,7 @@ The API host is always `https://api-m.sandbox.paypal.com`.
 
 ## Isolated database
 
-`supabase/migrations/0030_paypal_sandbox_checkout.sql` adds `commission_paypal_checkouts` and two functions, `bind_commission_paypal_order` and `complete_commission_paypal_capture`. Apply that file yourself to an **isolated** database that already has `0029_commission_requests.sql`. Do not apply it to a production database as part of this change. The app does not run migrations.
+`supabase/migrations/0030_paypal_sandbox_checkout.sql` adds `commission_paypal_checkouts` (`order_id` nullable until PayPal returns one, plus `capture_pending`) and the reserve, attach, begin, release, complete, manual-pay, and cancel functions. Apply that file yourself to an **isolated** database that already has `0029_commission_requests.sql`. Do not apply it to a production database as part of this change. The app does not run migrations.
 
 The functions are revoked from `public`, `anon`, and `authenticated`, and granted to `service_role` when that role exists. Clients cannot call them with the anon key.
 

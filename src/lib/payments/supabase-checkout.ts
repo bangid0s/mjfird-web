@@ -2,9 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import {
   CheckoutDbError,
+  type AttachResult,
+  type BeginCaptureResult,
   type CheckoutDb,
+  type CheckoutFailure,
   type CheckoutRecord,
   type RequestRecord,
+  type ReserveResult,
 } from "@/lib/payments/checkout-db";
 import { normalizeUsd } from "@/lib/payments/money";
 
@@ -20,8 +24,9 @@ const requestRow = z.object({
 
 const checkoutRow = z.object({
   request_id: z.uuid(),
-  order_id: z.string().min(1),
+  order_id: z.string().min(1).nullable(),
   capture_id: z.string().nullable(),
+  capture_pending: z.boolean(),
   amount: z.union([z.string(), z.number()]),
   currency: z.string(),
   captured_at: z.string().nullable(),
@@ -85,48 +90,73 @@ export function createSupabaseCheckoutDb(clients: { user: SupabaseClient; admin:
       return readCheckout(await readOne(clients.admin, "commission_paypal_checkouts", "order_id", orderId));
     },
 
-    async bindOrder(input) {
-      const { data, error } = await clients.admin.rpc("bind_commission_paypal_order", {
-        p_request_id: input.requestId,
-        p_order_id: input.orderId,
-        p_amount: input.amount,
-        p_currency: input.currency,
-      });
-      if (error) {
-        const reason = reasonOrThrow(error.message);
-        if (reason === "not_payable" || reason === "amount_mismatch" || reason === "missing_price" || reason === "request_not_found" || reason === "invalid_order") {
-          return { ok: false, reason };
-        }
-        return { ok: false, reason: "not_payable" };
+    async reserveOrder(input): Promise<ReserveResult> {
+      try {
+        const data = await rpc(clients.admin, "reserve_commission_paypal_order", {
+          p_request_id: input.requestId,
+          p_amount: input.amount,
+          p_currency: input.currency,
+        });
+        return parseReserve(data);
+      } catch (err) {
+        const reason = failureReason(err);
+        if (!reason) throw err;
+        return { ok: false, reason };
       }
-      const orderId = z.string().min(1).safeParse(asUnknown(data));
-      if (!orderId.success) throw new CheckoutDbError();
-      return { ok: true, orderId: orderId.data };
+    },
+
+    async attachOrder(input): Promise<AttachResult> {
+      try {
+        const data = await rpc(clients.admin, "attach_commission_paypal_order", {
+          p_request_id: input.requestId,
+          p_order_id: input.orderId,
+          p_amount: input.amount,
+          p_currency: input.currency,
+        });
+        const orderId = z.string().min(1).safeParse(data);
+        if (!orderId.success) throw new CheckoutDbError();
+        return { ok: true, orderId: orderId.data };
+      } catch (err) {
+        const reason = failureReason(err);
+        if (!reason) throw err;
+        return { ok: false, reason };
+      }
+    },
+
+    async beginCapture(orderId): Promise<BeginCaptureResult> {
+      try {
+        const data = await rpc(clients.admin, "begin_commission_paypal_capture", { p_order_id: orderId });
+        const state = z.enum(["ready", "pending", "done"]).safeParse(data);
+        if (!state.success) throw new CheckoutDbError();
+        return { ok: true, state: state.data };
+      } catch (err) {
+        const reason = failureReason(err);
+        if (reason === "order_not_found" || reason === "not_payable") return { ok: false, reason };
+        if (reason) return { ok: false, reason: "not_payable" };
+        throw err;
+      }
+    },
+
+    async releaseCapture(orderId) {
+      await rpc(clients.admin, "release_commission_paypal_capture", { p_order_id: orderId });
     },
 
     async completeCapture(input) {
-      const { data, error } = await clients.admin.rpc("complete_commission_paypal_capture", {
-        p_order_id: input.orderId,
-        p_capture_id: input.captureId,
-        p_amount: input.amount,
-        p_currency: input.currency,
-      });
-      if (error) {
-        const reason = reasonOrThrow(error.message);
-        if (
-          reason === "order_not_found" ||
-          reason === "capture_mismatch" ||
-          reason === "not_payable" ||
-          reason === "amount_mismatch" ||
-          reason === "invalid_capture"
-        ) {
-          return { ok: false, reason };
-        }
-        return { ok: false, reason: "not_payable" };
+      try {
+        const data = await rpc(clients.admin, "complete_commission_paypal_capture", {
+          p_order_id: input.orderId,
+          p_capture_id: input.captureId,
+          p_amount: input.amount,
+          p_currency: input.currency,
+        });
+        const result = z.enum(["completed", "duplicate"]).safeParse(data);
+        if (!result.success) throw new CheckoutDbError();
+        return { ok: true, result: result.data };
+      } catch (err) {
+        const reason = failureReason(err);
+        if (!reason) throw err;
+        return { ok: false, reason };
       }
-      const result = z.enum(["completed", "duplicate"]).safeParse(asUnknown(data));
-      if (!result.success) throw new CheckoutDbError();
-      return { ok: true, result: result.data };
     },
 
   };
@@ -141,14 +171,40 @@ function readCheckout(value: unknown): CheckoutRecord | null {
     requestId: parsed.data.request_id,
     orderId: parsed.data.order_id,
     captureId: parsed.data.capture_id,
+    capturePending: parsed.data.capture_pending,
     amount,
     currency: "USD",
     capturedAt: parsed.data.captured_at,
   };
 }
 
-function reasonOrThrow(message: string): Reason {
-  const reason = knownReason(message);
-  if (!reason) throw new CheckoutDbError();
-  return reason;
+async function rpc(client: SupabaseClient, fn: string, args: Record<string, string>): Promise<unknown> {
+  const { data, error } = await client.rpc(fn, args);
+  if (error) {
+    const reason = knownReason(error.message);
+    if (reason) throw new CheckoutFailureError(reason);
+    throw new CheckoutDbError();
+  }
+  return asUnknown(data);
+}
+
+class CheckoutFailureError extends Error {
+  readonly reason: CheckoutFailure;
+  constructor(reason: CheckoutFailure) {
+    super(reason);
+    this.name = "CheckoutFailureError";
+    this.reason = reason;
+  }
+}
+
+function parseReserve(data: unknown): ReserveResult {
+  const text = z.string().safeParse(data);
+  if (!text.success) throw new CheckoutDbError();
+  if (text.data === "create") return { ok: true, orderId: null };
+  if (text.data.startsWith("reuse:")) return { ok: true, orderId: text.data.slice("reuse:".length) };
+  throw new CheckoutDbError();
+}
+
+function failureReason(err: unknown): CheckoutFailure | null {
+  return err instanceof CheckoutFailureError ? err.reason : null;
 }
