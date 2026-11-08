@@ -7,7 +7,9 @@ import OrderSummary from "@/components/commissions/OrderSummary";
 import StatusChip from "@/components/commissions/StatusChip";
 import Timeline from "@/components/commissions/Timeline";
 import CancelRequestButton from "@/components/commissions/CancelRequestButton";
+import { PayPalCheckout } from "@/components/commissions/PayPalCheckout";
 import { requireUser } from "@/lib/auth/session";
+import { paypalButtonAvailable, readPaypalSandboxConfig } from "@/lib/payments/config";
 import { postClientMessage } from "@/lib/client/request-actions";
 import { STATUS_HINT, STATUS_LABEL } from "@/lib/commissions/status";
 import type { CommissionMessageRow, CommissionRequestRow } from "@/lib/supabase/types";
@@ -28,6 +30,11 @@ export default async function ClientRequestPage({
   const { data } = await supabase.from("commission_requests").select("*").eq("id", id).maybeSingle();
   if (!data) notFound();
   const req = data as CommissionRequestRow;
+  const paypal = readPaypalSandboxConfig();
+  const paypalClientId =
+    paypal && paypalButtonAvailable(paypal, { status: req.status, currency: req.currency, finalPrice: req.final_price })
+      ? paypal.publicClientId
+      : null;
 
   const [{ data: msgs }, refs, deliveries] = await Promise.all([
     supabase.from("commission_messages").select("*").eq("request_id", id).order("created_at"),
@@ -111,11 +118,13 @@ export default async function ClientRequestPage({
           <div className="flex flex-col gap-5 border border-line bg-bg-raised/60 p-5 sm:p-6">
             <p className="eyebrow">Order</p>
             <OrderSummary req={req} />
-            {req.status === "awaiting_payment" && (
+            {paypalClientId ? (
+              <PayPalCheckout requestId={req.id} clientId={paypalClientId} />
+            ) : req.status === "awaiting_payment" ? (
               <p className="border border-accent/40 px-4 py-3 text-body-sm text-ink">
                 Payment via PayPal is coming here shortly — I&apos;ll message you with the payment link.
               </p>
-            )}
+            ) : null}
           </div>
           {(req.status === "pending" || req.status === "awaiting_payment") && <CancelRequestButton requestId={req.id} />}
         </aside>
