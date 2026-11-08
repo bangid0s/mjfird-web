@@ -41,6 +41,10 @@ Optional: set `RESEND_API_KEY` to email yourself on new inquiries, and
 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` to add bot protection to the
 contact form (the form currently ships with a honeypot field only).
 
+Client accounts (Google sign-in + the SMTP sender for confirmation and password-reset
+emails) need a one-time setup in Resend, Google Cloud and Supabase — see
+[`docs/setup-client-auth.md`](docs/setup-client-auth.md).
+
 ## Project structure
 
 - `src/app/(site)` — public pages (home, work, services, about, dance, blog, contact).
