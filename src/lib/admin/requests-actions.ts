@@ -98,11 +98,16 @@ export async function advanceRequest(id: string) {
   const step = NEXT_STATUS[req.status];
   if (!step) throw new Error("Nothing to advance.");
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("commission_requests")
     .update({ status: step.to, ...(step.stamp && { [step.stamp]: new Date().toISOString() }) })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("status", req.status)
+    .select("id");
   if (error) throw new Error(error.message);
+  if (!updated || updated.length === 0) {
+    throw new Error("This request changed. Refresh and try again.");
+  }
 
   // A finished commission frees its slot.
   if (step.to === "completed") await bumpSlots(supabase, req.service_id, -1);
