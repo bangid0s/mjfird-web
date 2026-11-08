@@ -14,6 +14,7 @@ export type CheckoutRecord = {
   captureId: string | null;
   capturePending: boolean;
   disposition: "open" | "uncertain" | "held" | "matched";
+  expectedMerchant: string | null;
   amount: string;
   currency: "USD";
   capturedAt: string | null;
@@ -50,6 +51,8 @@ export type CheckoutDb = {
   beginCapture(orderId: string): Promise<BeginCaptureResult>;
   releaseCapture(orderId: string): Promise<void>;
   holdCapture(input: { orderId: string; captureId: string | null; evidence: string; kind: "uncertain" | "held" }): Promise<void>;
+  noteExpectedMerchant(orderId: string, merchantId: string): Promise<void>;
+  proveMerchant(orderId: string, merchantId: string): Promise<"proven" | "rejected" | "unconfigured">;
   completeCapture(input: { orderId: string; captureId: string; amount: string; currency: string }): Promise<CaptureSettlement>;
 };
 

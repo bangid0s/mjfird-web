@@ -34,6 +34,7 @@ export async function POST(request: Request) {
           admin: createServiceRoleClient(config.supabaseUrl, config.serviceRoleKey),
         }),
         paypal: createPaypalSandboxClient(config),
+        expectedMerchant: config.merchantId,
       },
       { headers: request.headers, rawBody },
     );

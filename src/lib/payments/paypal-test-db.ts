@@ -173,6 +173,15 @@ export async function createPaypalTestDb() {
     async releaseCapture(orderId) {
       await query("select release_commission_paypal_capture($1)", [orderId]);
     },
+    async noteExpectedMerchant(orderId, merchantId) {
+      await query("select note_commission_paypal_merchant($1, $2)", [orderId, merchantId]);
+    },
+    async proveMerchant(orderId, merchantId) {
+      const result = await query<{ prove_commission_paypal_merchant: string }>("select prove_commission_paypal_merchant($1, $2)", [orderId, merchantId]);
+      const proof = result.rows[0]?.prove_commission_paypal_merchant;
+      if (proof === "proven" || proof === "rejected" || proof === "unconfigured") return proof;
+      throw new CheckoutDbError();
+    },
     async holdCapture(input) {
       await query("select hold_commission_paypal_capture($1, $2, $3, $4)", [input.orderId, input.captureId ?? "", input.evidence, input.kind]);
     },
@@ -272,6 +281,7 @@ async function readCheckout(result: { rows: Record<string, unknown>[] }) {
     captureId: typeof row.capture_id === "string" ? row.capture_id : null,
     capturePending: row.capture_pending === true,
     disposition: dispositionOf(row.capture_disposition),
+    expectedMerchant: typeof row.expected_merchant === "string" ? row.expected_merchant : null,
     amount: cents,
     currency: "USD" as const,
     capturedAt: typeof row.captured_at === "string" ? row.captured_at : null,

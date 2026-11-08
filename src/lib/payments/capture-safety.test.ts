@@ -105,6 +105,7 @@ test("pending, ambiguous, and multiple captures stay claimed", async () => {
           id: "CAP-PEND",
           status: "COMPLETED",
           amount: { currency_code: "USD", value: "80.00" },
+          payee: { merchant_id: "OUR-MERCHANT" },
           supplementary_data: { related_ids: { order_id: "ORDER-1" } },
         },
       }),
@@ -148,7 +149,7 @@ test("uncertain results stay recorded, and a merchant hold is not paid by a late
         return Response.json({
           id: "ORDER-1",
           status: "DECLINED",
-          purchase_units: [{ payments: { captures: [{ id: "CAP-NO", status: "DECLINED", amount: { currency_code: "USD", value: "80.00" } }] } }],
+          purchase_units: [{ payments: { captures: [{ id: "CAP-NO", status: "DECLINED", amount: { currency_code: "USD", value: "80.00" }, payee: { merchant_id: "OUR-MERCHANT" } }] } }],
         });
       }),
       userId: CLIENT_ID,

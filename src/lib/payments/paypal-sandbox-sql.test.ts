@@ -82,6 +82,8 @@ test("direct updates cannot clear a pending capture, and locks take the request 
          'begin_commission_paypal_capture',
          'complete_commission_paypal_capture',
          'hold_commission_paypal_capture',
+         'note_commission_paypal_merchant',
+         'prove_commission_paypal_merchant',
          'mark_commission_paid_manual',
          'admin_cancel_commission_request',
          'cancel_commission_request'

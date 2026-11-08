@@ -14,6 +14,8 @@ create table if not exists public.commission_paypal_checkouts (
   -- open: no provider result yet. held: a charge or ambiguous result is stored and must not be paid or cleared. matched: amount and currency agreed.
   capture_disposition text not null default 'open' check (capture_disposition in ('open', 'uncertain', 'held', 'matched')),
   provider_evidence text,
+  expected_merchant text,
+  merchant_proven boolean not null default false,
   amount numeric(10, 2) not null check (amount > 0),
   currency text not null check (currency = 'USD'),
   created_at timestamptz not null default now(),
@@ -313,6 +315,10 @@ begin
   if checkout.capture_disposition = 'held' then
     return 'held';
   end if;
+  -- A configured merchant is not proven by a missing payee or by amount agreement.
+  if checkout.expected_merchant is not null and checkout.merchant_proven is not true then
+    return 'held';
+  end if;
 
   if p_currency is distinct from 'USD'
      or amount is null
@@ -493,7 +499,73 @@ create trigger commission_requests_paypal_guard
   before update on commission_requests
   for each row execute function public.guard_commission_request_paypal();
 
+create or replace function public.note_commission_paypal_merchant(p_order_id text, p_merchant text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  req commission_requests;
+  checkout commission_paypal_checkouts;
+begin
+  if p_merchant is null or length(trim(p_merchant)) = 0 then
+    return;
+  end if;
+  select request_id into req.id from commission_paypal_checkouts where order_id = trim(p_order_id);
+  if not found then
+    raise exception 'order_not_found';
+  end if;
+  select * into req from commission_requests where id = req.id for update;
+  if not found then
+    raise exception 'not_payable';
+  end if;
+  select * into checkout from commission_paypal_checkouts where request_id = req.id for update;
+  if not found then
+    raise exception 'order_not_found';
+  end if;
+  update commission_paypal_checkouts
+  set expected_merchant = trim(p_merchant)
+  where request_id = checkout.request_id and expected_merchant is null;
+end;
+$$;
+
+create or replace function public.prove_commission_paypal_merchant(p_order_id text, p_merchant text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  req commission_requests;
+  checkout commission_paypal_checkouts;
+begin
+  select request_id into req.id from commission_paypal_checkouts where order_id = trim(p_order_id);
+  if not found then
+    raise exception 'order_not_found';
+  end if;
+  select * into req from commission_requests where id = req.id for update;
+  if not found then
+    raise exception 'not_payable';
+  end if;
+  select * into checkout from commission_paypal_checkouts where request_id = req.id for update;
+  if not found then
+    raise exception 'order_not_found';
+  end if;
+  if checkout.expected_merchant is null then
+    return 'unconfigured';
+  end if;
+  if p_merchant is not null and trim(p_merchant) = checkout.expected_merchant then
+    update commission_paypal_checkouts set merchant_proven = true where request_id = checkout.request_id;
+    return 'proven';
+  end if;
+  return 'rejected';
+end;
+$$;
+
 revoke all on function public.reserve_commission_paypal_order(uuid, text, text) from public;
+revoke all on function public.note_commission_paypal_merchant(text, text) from public;
+revoke all on function public.prove_commission_paypal_merchant(text, text) from public;
 revoke all on function public.hold_commission_paypal_capture(text, text, text, text) from public;
 revoke all on function public.guard_commission_request_paypal() from public;
 revoke all on function public.attach_commission_paypal_order(uuid, text, text, text) from public;
@@ -511,6 +583,8 @@ do $$ begin
     revoke all on function public.release_commission_paypal_capture(text) from anon;
     revoke all on function public.complete_commission_paypal_capture(text, text, text, text) from anon;
     revoke all on function public.hold_commission_paypal_capture(text, text, text, text) from anon;
+    revoke all on function public.note_commission_paypal_merchant(text, text) from anon;
+    revoke all on function public.prove_commission_paypal_merchant(text, text) from anon;
     revoke all on function public.mark_commission_paid_manual(uuid) from anon;
     revoke all on function public.admin_cancel_commission_request(uuid) from anon;
   end if;
@@ -521,6 +595,8 @@ do $$ begin
     revoke all on function public.release_commission_paypal_capture(text) from authenticated;
     revoke all on function public.complete_commission_paypal_capture(text, text, text, text) from authenticated;
     revoke all on function public.hold_commission_paypal_capture(text, text, text, text) from authenticated;
+    revoke all on function public.note_commission_paypal_merchant(text, text) from authenticated;
+    revoke all on function public.prove_commission_paypal_merchant(text, text) from authenticated;
     grant execute on function public.mark_commission_paid_manual(uuid) to authenticated;
     grant execute on function public.admin_cancel_commission_request(uuid) to authenticated;
   end if;
@@ -531,5 +607,7 @@ do $$ begin
     grant execute on function public.release_commission_paypal_capture(text) to service_role;
     grant execute on function public.complete_commission_paypal_capture(text, text, text, text) to service_role;
     grant execute on function public.hold_commission_paypal_capture(text, text, text, text) to service_role;
+    grant execute on function public.note_commission_paypal_merchant(text, text) to service_role;
+    grant execute on function public.prove_commission_paypal_merchant(text, text) to service_role;
   end if;
 end $$;

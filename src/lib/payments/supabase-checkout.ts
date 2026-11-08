@@ -28,6 +28,7 @@ const checkoutRow = z.object({
   capture_id: z.string().nullable(),
   capture_pending: z.boolean(),
   capture_disposition: z.enum(["open", "uncertain", "held", "matched"]),
+  expected_merchant: z.string().nullable(),
   amount: z.union([z.string(), z.number()]),
   currency: z.string(),
   captured_at: z.string().nullable(),
@@ -142,6 +143,17 @@ export function createSupabaseCheckoutDb(clients: { user: SupabaseClient; admin:
       await rpc(clients.admin, "release_commission_paypal_capture", { p_order_id: orderId });
     },
 
+    async noteExpectedMerchant(orderId, merchantId) {
+      await rpc(clients.admin, "note_commission_paypal_merchant", { p_order_id: orderId, p_merchant: merchantId });
+    },
+
+    async proveMerchant(orderId, merchantId) {
+      const data = await rpc(clients.admin, "prove_commission_paypal_merchant", { p_order_id: orderId, p_merchant: merchantId });
+      const proof = z.enum(["proven", "rejected", "unconfigured"]).safeParse(data);
+      if (!proof.success) throw new CheckoutDbError();
+      return proof.data;
+    },
+
     async holdCapture(input) {
       await rpc(clients.admin, "hold_commission_paypal_capture", {
         p_order_id: input.orderId,
@@ -183,6 +195,7 @@ function readCheckout(value: unknown): CheckoutRecord | null {
     captureId: parsed.data.capture_id,
     capturePending: parsed.data.capture_pending,
     disposition: parsed.data.capture_disposition,
+    expectedMerchant: parsed.data.expected_merchant,
     amount,
     currency: "USD",
     capturedAt: parsed.data.captured_at,

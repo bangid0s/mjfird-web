@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { CheckoutDbError, type CheckoutDb } from "@/lib/payments/checkout-db";
 import { normalizeUsd } from "@/lib/payments/money";
-import { PaypalRequestError, type PaypalClient } from "@/lib/payments/paypal-client";
+import { merchantAllowsPayment, observeResourceMerchant, PaypalRequestError, type PaypalClient } from "@/lib/payments/paypal-client";
 
 export type HttpResult = {
   status: number;
@@ -114,6 +114,8 @@ export async function captureSandboxOrder(
     return { status: 200, body: { ok: true, duplicate: true } };
   }
 
+  if (deps.paypal.merchantId) await deps.db.noteExpectedMerchant(checkout.orderId, deps.paypal.merchantId);
+
   let captured;
   try {
     captured = await deps.paypal.captureOrder(checkout.orderId, captureIdempotencyKey(checkout.orderId));
@@ -135,6 +137,13 @@ export async function captureSandboxOrder(
       kind: captured.outcome === "hold" ? "held" : "uncertain",
     });
     return { status: captured.outcome === "hold" ? 409 : 502, body: captured.outcome === "hold" ? { error: "Payment could not be confirmed." } : { error: retry } };
+  }
+  if (deps.paypal.merchantId) {
+    const proof = captured.merchantId ? await deps.db.proveMerchant(checkout.orderId, captured.merchantId) : "rejected";
+    if (proof !== "proven") {
+      await deps.db.holdCapture({ orderId: checkout.orderId, captureId: captured.captureId, evidence: "merchant rejected", kind: "held" });
+      return { status: 409, body: { error: "Payment could not be confirmed." } };
+    }
   }
   if (captured.currency !== "USD" || captured.amount !== checkout.amount) {
     await deps.db.holdCapture({
@@ -164,7 +173,7 @@ async function finishCapture(db: CheckoutDb, orderId: string, captureId: string,
 }
 
 export async function handleSandboxWebhook(
-  deps: { db: CheckoutDb; paypal: PaypalClient },
+  deps: { db: CheckoutDb; paypal: PaypalClient; expectedMerchant?: string | null },
   input: { headers: Headers; rawBody: string },
 ): Promise<HttpResult> {
   let parsedJson: unknown;
@@ -189,6 +198,28 @@ export async function handleSandboxWebhook(
   }
   const orderId = resource.data.supplementary_data?.related_ids?.order_id;
   if (!orderId) return { status: 200, body: { ignored: true } };
+  const checkout = await deps.db.getCheckoutByOrder(orderId);
+  if (!checkout) return { status: 200, body: { ignored: true } };
+  const expected = deps.expectedMerchant ?? checkout.expectedMerchant;
+  const observed = observeResourceMerchant(event.data.resource);
+  const merchant = merchantAllowsPayment(expected, observed);
+  if (!merchant.ok) {
+    await deps.db.holdCapture({
+      orderId,
+      captureId: resource.data.id,
+      evidence: `webhook ${merchant.evidence}`,
+      kind: observed.state === "absent" ? "uncertain" : "held",
+    });
+    return { status: 200, body: { held: true } };
+  }
+  if (expected && observed.state === "present") {
+    await deps.db.noteExpectedMerchant(orderId, expected);
+    const proof = await deps.db.proveMerchant(orderId, observed.merchantId);
+    if (proof !== "proven") {
+      await deps.db.holdCapture({ orderId, captureId: resource.data.id, evidence: "webhook merchant rejected", kind: "held" });
+      return { status: 200, body: { held: true } };
+    }
+  }
   const amount = normalizeUsd(resource.data.amount.value);
   const currency = resource.data.amount.currency_code;
   if (!amount || currency !== "USD") {

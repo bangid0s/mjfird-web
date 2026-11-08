@@ -27,11 +27,34 @@ export type CaptureInterpretation =
   | { outcome: "uncertain"; evidence: string; captureId: string | null }
   | { outcome: "hold"; captureId: string | null; evidence: string };
 
+export type MerchantObservation = { state: "absent" } | { state: "malformed" } | { state: "present"; merchantId: string };
+
 export type PaypalClient = {
+  /** Set when PAYPAL_MERCHANT_ID is configured. Stubs may omit it. */
+  merchantId?: string | null;
   createOrder(amount: string, requestId: string, ref: number, idempotencyKey: string): Promise<{ id: string }>;
   captureOrder(orderId: string, idempotencyKey: string): Promise<CaptureInterpretation>;
   verifyWebhook(headers: Headers, event: unknown): Promise<boolean>;
 };
+
+/** A configured merchant matches only a present string id. Absence is not a match. */
+export function merchantAllowsPayment(expected: string | null, observed: MerchantObservation): { ok: true } | { ok: false; evidence: string } {
+  if (!expected) return { ok: true };
+  if (observed.state === "absent") return { ok: false, evidence: "merchant missing" };
+  if (observed.state === "malformed") return { ok: false, evidence: "merchant malformed" };
+  if (observed.merchantId !== expected) return { ok: false, evidence: `merchant ${observed.merchantId}` };
+  return { ok: true };
+}
+
+export function observeResourceMerchant(resource: unknown): MerchantObservation {
+  if (typeof resource !== "object" || resource === null || Array.isArray(resource)) return { state: "absent" };
+  const payee = Object.fromEntries(Object.entries(resource)).payee;
+  if (typeof payee !== "object" || payee === null || Array.isArray(payee) || !("merchant_id" in payee)) return { state: "absent" };
+  const merchantId = Object.fromEntries(Object.entries(payee)).merchant_id;
+  if (typeof merchantId === "string" && merchantId.trim()) return { state: "present", merchantId: merchantId.trim() };
+  if (merchantId == null || merchantId === "") return { state: "absent" };
+  return { state: "malformed" };
+}
 
 const tokenSchema = z.object({
   access_token: z.string().min(1),
@@ -124,15 +147,29 @@ export function interpretCapture(requestedOrderId: string, expectedMerchant: str
   const orderStatus = typeof root.status === "string" && root.status ? root.status : null;
   const seen = readCaptures(root);
   const ids = seen.map((item) => item.id).filter((id): id is string => id !== null);
-  const listed = seen.map((item) => `${item.id ?? "unknown"}:${item.status ?? "unknown"}${item.merchantBad ? ":merchant" : ""}`).join(" ");
+  const listed = seen
+    .map((item) => {
+      const merchant = item.merchantBad ? "merchant malformed" : item.merchant ? `merchant ${item.merchant}` : "merchant missing";
+      return `${item.id ?? "unknown"}:${item.status ?? "unknown"} ${merchant}`;
+    })
+    .join(" ");
   const uncertain = (evidence: string, captureId: string | null): CaptureInterpretation => ({ outcome: "uncertain", captureId, evidence });
+  const soleId = ids.length === 1 ? ids[0] ?? null : null;
 
   if (responseOrderId && responseOrderId !== requestedOrderId) {
-    return { outcome: "hold", captureId: ids[0] ?? null, evidence: `order ${responseOrderId}${ids.length ? ` ${ids.join(" ")}` : ""}` };
+    return { outcome: "hold", captureId: ids[0] ?? null, evidence: `order ${responseOrderId}${ids.length ? ` ${ids.join(" ")}` : ""}${listed ? ` ${listed}` : ""}` };
   }
   if (seen.length === 0) {
     if (orderStatus && NOT_CHARGED.has(orderStatus)) return { outcome: "not_charged" };
     return uncertain(orderStatus ? `no-captures ${orderStatus}` : "no-captures", null);
+  }
+
+  const parent = orderStatus ? ` parent:${orderStatus}` : "";
+  for (const item of seen) {
+    const observed: MerchantObservation = item.merchantBad ? { state: "malformed" } : item.merchant ? { state: "present", merchantId: item.merchant } : { state: "absent" };
+    if (!merchantAllowsPayment(expectedMerchant, observed).ok) {
+      return { outcome: "hold", captureId: soleId, evidence: `${listed}${parent}`.trim() };
+    }
   }
 
   const statuses = [orderStatus, ...seen.map((item) => item.status)].filter((status): status is string => Boolean(status));
@@ -140,11 +177,10 @@ export function interpretCapture(requestedOrderId: string, expectedMerchant: str
   const contradicts = statuses.includes("COMPLETED") && statuses.some((status) => NOT_CHARGED.has(status));
   const pending = seen.some((item) => item.status === "PENDING");
   const unknown = statuses.some((status) => !KNOWN_STATUS.has(status)) || seen.some((item) => !item.status);
-  const parent = orderStatus ? ` parent:${orderStatus}` : "";
   if (contradicts || completed.length > 1 || (pending && completed.length > 0)) {
-    return { outcome: "hold", captureId: ids.length === 1 ? ids[0] ?? null : null, evidence: `${listed}${parent}`.trim() };
+    return { outcome: "hold", captureId: soleId, evidence: `${listed}${parent}`.trim() };
   }
-  if (pending || unknown) return uncertain(`${listed}${parent}`.trim(), null);
+  if (pending || unknown) return uncertain(`${listed}${parent}`.trim(), soleId);
   if (completed.length === 0 && statuses.every((status) => NOT_CHARGED.has(status))) return { outcome: "not_charged" };
 
   const one = completed[0];
@@ -180,6 +216,7 @@ export function createPaypalSandboxClient(
   }
 
   return {
+    merchantId: config.merchantId,
     async createOrder(amount, requestId, ref, idempotencyKey) {
       const token = await accessToken();
       const res = await fetchImpl(`${PAYPAL_SANDBOX_API}/v2/checkout/orders`, {
