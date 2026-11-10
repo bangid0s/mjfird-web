@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/payments/*.test.ts scripts/setup-auth.test.ts"
+    "test": "tsx --test src/lib/payments/*.test.ts src/lib/commissions/*.test.ts scripts/setup-auth.test.ts"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.12",

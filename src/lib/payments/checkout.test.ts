@@ -444,8 +444,10 @@ test("order route stays unavailable without a complete sandbox env and does not 
     assert.equal(readPaypalSandboxConfig(), null);
     assert.equal(paypalButtonAvailable(null, { status: "awaiting_payment", currency: "USD", finalPrice: "80.00" }), false);
     const page = readFileSync(new URL("../../app/(site)/account/requests/[id]/page.tsx", import.meta.url), "utf8");
-    assert.equal(page.includes("Payment via PayPal is coming here shortly"), true);
-    assert.equal(page.includes("paypalClientId ?"), true);
+    const payment = readFileSync(new URL("../../components/commissions/RequestPayment.tsx", import.meta.url), "utf8");
+    assert.equal(payment.includes("Payment via PayPal is coming here shortly"), true);
+    assert.equal(page.includes('paymentView.kind === "checkout" && paypalClientId'), true);
+    assert.equal(page.includes("<PayPalCheckout"), true);
     assert.deepEqual(calls, []);
   } finally {
     globalThis.fetch = original;

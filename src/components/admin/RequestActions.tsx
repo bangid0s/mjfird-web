@@ -11,6 +11,7 @@ import {
   declineRequest,
   removeDeliveryFile,
   saveArtistNote,
+  setPaymentUrl,
 } from "@/lib/admin/requests-actions";
 import type { CommissionStatus } from "@/lib/supabase/types";
 import { cn } from "@/lib/cn";
@@ -46,11 +47,13 @@ export function StatusActions({
   status,
   estimate,
   note,
+  paymentUrl,
 }: {
   id: string;
   status: CommissionStatus;
   estimate: number;
   note: string;
+  paymentUrl: string | null;
 }) {
   const { pending, error, run } = useRun();
   const [mode, setMode] = useState<"accept" | "decline" | null>(null);
@@ -78,6 +81,18 @@ export function StatusActions({
               <span className="text-[13px] font-medium text-ink-muted">Final price (USD) — adjust if the brief needs more</span>
               <input name="final_price" type="number" min={0} step="0.01" defaultValue={estimate} className={fieldInputClasses} />
             </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[13px] font-medium text-ink-muted">PayPal payment link (optional)</span>
+              <input
+                name="payment_url"
+                maxLength={2000}
+                spellCheck={false}
+                autoComplete="off"
+                placeholder="https://www.paypal.com/… or https://paypal.me/…"
+                className={fieldInputClasses}
+              />
+            </label>
+            <p className="text-[13px] text-ink-faint">Leave this blank to accept now and paste the invoice link afterward.</p>
             <label className="flex flex-col gap-1.5">
               <span className="text-[13px] font-medium text-ink-muted">Note to client (optional)</span>
               <textarea name="artist_note" rows={3} defaultValue={note} className={cn(fieldInputClasses, "resize-y")} />
@@ -119,9 +134,29 @@ export function StatusActions({
     <div className="flex flex-col gap-4">
       {error && <p className="text-body-sm text-error">{error}</p>}
       {status === "awaiting_payment" && (
-        <p className="text-[13px] text-ink-faint">
-          PayPal checkout will move this forward automatically. Until then, mark it paid yourself once payment arrives.
-        </p>
+        <form className="flex flex-col gap-3" action={(fd) => run(() => setPaymentUrl(id, fd))}>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[13px] font-medium text-ink-muted">PayPal payment link</span>
+            <input
+              name="payment_url"
+              maxLength={2000}
+              spellCheck={false}
+              autoComplete="off"
+              defaultValue={paymentUrl ?? ""}
+              placeholder="https://www.paypal.com/… or https://paypal.me/…"
+              className={fieldInputClasses}
+            />
+          </label>
+          <p className="text-[13px] text-ink-faint">
+            Invoice, PayPal.me, or payment link. The client pays from their request page. Clear the field and save to remove it.
+          </p>
+          <button type="submit" disabled={pending} className={cn(ghost, "self-start")}>
+            {pending ? "Saving…" : "Save payment link"}
+          </button>
+        </form>
+      )}
+      {status === "awaiting_payment" && (
+        <p className="text-[13px] text-ink-faint">Mark it paid once the payment arrives. That starts the work.</p>
       )}
       <div className="flex flex-wrap gap-2">
         {label && (
