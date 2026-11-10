@@ -10,7 +10,7 @@ import { mapStorefrontRow } from "@/lib/data/services";
 import type { CommissionAnswer, CommissionRequestRow, ServiceRow } from "@/lib/supabase/types";
 import { formatUSD } from "@/lib/services/storefront";
 
-export type RequestState = { error?: string } | undefined;
+export type RequestState = { error?: string; done?: boolean } | undefined;
 
 const answerSchema = z.object({
   id: z.string().max(64),
@@ -140,4 +140,43 @@ export async function postClientMessage(requestId: string, _prev: RequestState, 
   }
   revalidatePath(`/account/requests/${requestId}`);
   return undefined;
+}
+
+export async function submitReview(requestId: string, _prev: RequestState, formData: FormData): Promise<RequestState> {
+  const rating = Number.parseInt(String(formData.get("rating") ?? ""), 10);
+  const visibility = String(formData.get("visibility") ?? "");
+  if (visibility !== "public" && visibility !== "private") {
+    return { error: "Please choose whether your review can be shown on the site." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("submit_commission_review", {
+    p_request_id: requestId,
+    p_rating: Number.isFinite(rating) ? rating : 0,
+    p_quote: String(formData.get("quote") ?? ""),
+    p_name: String(formData.get("name") ?? ""),
+    p_role: String(formData.get("role") ?? ""),
+    p_public: visibility === "public",
+  });
+  if (error) return { error: friendlyRpcError(error.message) };
+
+  const { data } = await supabase.from("commission_requests").select("ref, contact_name, service_title").eq("id", requestId).single();
+  if (data) {
+    await sendEmail({
+      to: ADMIN_EMAIL,
+      subject: `New ${rating}★ review on #${data.ref} — waiting for approval`,
+      lines: [
+        `${data.contact_name} reviewed ${data.service_title} (${visibility === "public" ? "OK to show publicly" : "private feedback only"}).`,
+        String(formData.get("quote") ?? ""),
+      ],
+      cta: { label: "Review it", path: "/admin/testimonials" },
+    });
+  }
+  revalidatePath(`/account/requests/${requestId}`);
+  revalidatePath(`/admin/requests/${requestId}`);
+  revalidatePath("/admin/testimonials");
+  // An edit unpublishes it until approved again.
+  revalidatePath("/");
+  revalidatePath("/services", "layout");
+  return { done: true };
 }

@@ -15,6 +15,19 @@ function parsePayload(formData: FormData) {
   };
 }
 
+function refreshPublic() {
+  revalidatePath("/admin/testimonials");
+  revalidatePath("/");
+  // Verified reviews also show on their service page.
+  revalidatePath("/services", "layout");
+}
+
+function friendly(message: string) {
+  if (message.includes("review_private")) return "The client asked to keep this review private, so it can't be published.";
+  if (message.includes("verified_review_rpc_only")) return "Verified reviews can only be written by the client.";
+  return message;
+}
+
 export async function createTestimonial(formData: FormData) {
   const supabase = await createClient();
   await supabase.from("testimonials").insert(parsePayload(formData));
@@ -25,17 +38,25 @@ export async function createTestimonial(formData: FormData) {
 
 export async function updateTestimonial(id: string, formData: FormData) {
   const supabase = await createClient();
-  await supabase.from("testimonials").update(parsePayload(formData)).eq("id", id);
-  revalidatePath("/admin/testimonials");
-  revalidatePath("/");
+  // For verified reviews the database keeps the client's quote and rating as written.
+  const { error } = await supabase.from("testimonials").update(parsePayload(formData)).eq("id", id);
+  if (error) throw new Error(friendly(error.message));
+  refreshPublic();
   redirect("/admin/testimonials");
+}
+
+/** One-click approve / unpublish from the list. */
+export async function setTestimonialStatus(id: string, status: ContentStatus) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("testimonials").update({ status }).eq("id", id);
+  if (error) throw new Error(friendly(error.message));
+  refreshPublic();
 }
 
 export async function deleteTestimonial(id: string) {
   const supabase = await createClient();
   await supabase.from("testimonials").delete().eq("id", id);
-  revalidatePath("/admin/testimonials");
-  revalidatePath("/");
+  refreshPublic();
 }
 
 export async function reorderTestimonials(orderedIds: string[]) {
