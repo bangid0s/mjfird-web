@@ -74,6 +74,9 @@ export default async function Home() {
         ctaPrimary={settings.heroCtaPrimary}
         ctaSecondary={settings.heroCtaSecondary}
         edgeLabel={settings.siteTitle}
+        headline={settings.heroHeadline}
+        stats={settings.stats}
+        proofNote={settings.heroProofNote}
       />
 
       {/* Featured work — deliberately untinted: the artwork supplies the colour. */}

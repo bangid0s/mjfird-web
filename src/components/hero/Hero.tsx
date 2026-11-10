@@ -5,6 +5,7 @@ import HeroMedia from "@/components/hero/HeroMedia";
 import HeroMotionFrame from "@/components/hero/HeroMotionFrame";
 import KineticWordmark from "@/components/hero/KineticWordmark";
 import MagneticButton from "@/components/ui/MagneticButton";
+import ProofLine from "@/components/ui/ProofLine";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import type { HeroSlide } from "@/lib/data/site-settings";
 import { cn } from "@/lib/cn";
@@ -21,8 +22,13 @@ const DEFAULT_CTA_HREF = "/work";
   no text crosses the artwork, so nothing is painted over it — no tint, no
   gradient — and the image keeps its own colour.
 
-  Everything else is corner work: a spec label above the wordmark, a rotated
-  label up the left gutter, and a solid accent square in the bottom corner.
+  The copy is one stack, top to bottom: label, headline, intro, buttons, then
+  the numbers that back the claim. The headline says what is on offer; with
+  none set, the wordmark stands in for it. Nothing is spread to the corners any
+  more — that left the offer stranded under a screen of empty ground.
+
+  Corner work: a rotated label up the left gutter and a solid accent square in
+  the bottom corner.
 */
 
 export default function Hero({
@@ -36,6 +42,9 @@ export default function Hero({
   ctaPrimary,
   ctaSecondary,
   edgeLabel,
+  headline,
+  stats,
+  proofNote,
 }: {
   mediaType: "none" | "image" | "video" | "youtube";
   mediaUrl: string;
@@ -48,6 +57,10 @@ export default function Hero({
   ctaSecondary: string;
   /** Rotated label up the left gutter, on the widest screens only. */
   edgeLabel?: string;
+  /** The offer, as the page's h1. Blank shows the wordmark instead. */
+  headline: string;
+  stats: { value: number; suffix: string; label: string }[];
+  proofNote: string;
 }) {
   const reducedMotion = usePrefersReducedMotion();
   const [index, setIndex] = useState(0);
@@ -104,35 +117,34 @@ export default function Hero({
 
       <div
         className={cn(
-          "container-page relative z-[var(--z-content)] flex flex-col gap-16 pb-16 pt-[calc(var(--nav-h)+3rem)] lg:justify-between lg:gap-0 lg:pb-24 lg:pt-[calc(var(--nav-h)+3.5rem)]",
-          // With no media there is nothing to stack under, so the copy fills the
-          // frame on its own at every width and spreads to the corners.
-          hasMedia ? "lg:min-h-svh" : "min-h-svh justify-between",
+          "container-page relative z-[var(--z-content)] flex flex-col justify-center pb-14 pt-[calc(var(--nav-h)+2.5rem)] lg:pb-24 lg:pt-[calc(var(--nav-h)+3.5rem)]",
+          // Tall enough to hold the artwork, short enough that the next
+          // section's rule shows above the fold on a laptop.
+          "lg:min-h-[max(76svh,40rem)]",
         )}
       >
-        <div className="flex flex-col gap-8">
+        {/* Beside the media panel the copy keeps to its own half of the sheet. */}
+        <div className={cn("flex flex-col items-start gap-7", hasMedia && "lg:w-[48%]")}>
           <p key={`eyebrow-${index}`} className={cn("spec", copyAnimation)}>
             {slideEyebrow}
           </p>
 
-          {/* Outside the keyed copy: the wordmark keeps its own entrance and
-              shouldn't replay on every slide. */}
-          <KineticWordmark />
-        </div>
+          {/* Outside the keyed copy: the headline shouldn't replay on every slide. */}
+          {headline ? <h1 className="display-md max-w-xl">{headline}</h1> : <KineticWordmark />}
 
-        <div
-          key={`copy-${index}`}
-          className={cn("flex max-w-md flex-col items-start gap-8", copyAnimation)}
-        >
-          <p className="text-body-lg text-pretty text-ink-muted">{slideIntro}</p>
-          <div className="flex flex-wrap gap-3">
-            <MagneticButton href={slideCtaHref} size="lg" arrow cursorLabel="view">
-              {slideCtaLabel}
-            </MagneticButton>
-            <MagneticButton href="/contact" size="lg" variant="secondary" cursorLabel="view">
-              {ctaSecondary}
-            </MagneticButton>
+          <div key={`copy-${index}`} className={cn("flex flex-col items-start gap-7", copyAnimation)}>
+            <p className="max-w-md text-body-lg text-pretty text-ink-muted">{slideIntro}</p>
+            <div className="flex flex-wrap gap-3">
+              <MagneticButton href={slideCtaHref} size="lg" arrow cursorLabel="view">
+                {slideCtaLabel}
+              </MagneticButton>
+              <MagneticButton href="/contact" size="lg" variant="secondary" cursorLabel="view">
+                {ctaSecondary}
+              </MagneticButton>
+            </div>
           </div>
+
+          <ProofLine stats={stats} note={proofNote} className="mt-3 w-full max-w-xl" />
         </div>
       </div>
 
