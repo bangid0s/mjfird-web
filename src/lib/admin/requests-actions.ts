@@ -207,7 +207,10 @@ export async function advanceRequest(id: string) {
   const copy: Partial<Record<CommissionStatus, [string, string]>> = {
     in_progress: [`Work has started on #${req.ref}`, "Payment is confirmed and I've started on your commission."],
     delivered: [`Your ${req.service_title} is ready (#${req.ref})`, "Your files are ready — open your request to download them."],
-    completed: [`Completed: ${req.service_title} (#${req.ref})`, "This commission is now complete. Thank you so much!"],
+    completed: [
+      `Completed: ${req.service_title} (#${req.ref})`,
+      "This commission is now complete. Thank you so much!\n\nIf you have a minute, you can leave a short review from your request page. It helps other clients feel confident ordering, and you choose whether it's shown publicly.",
+    ],
   };
   const [subject, line] = copy[step.to] ?? [];
   if (subject && line) {

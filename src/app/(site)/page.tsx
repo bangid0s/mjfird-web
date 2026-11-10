@@ -5,13 +5,13 @@ import FeaturedWork from "@/components/work/FeaturedWork";
 import AnimatedNumber from "@/components/ui/AnimatedNumber";
 import Reveal from "@/components/motion/Reveal";
 import SectionBand, { type SectionTone } from "@/components/layout/SectionBand";
-import SmartImage from "@/components/media/SmartImage";
 import { getProjects } from "@/lib/data/projects";
 import { getServices } from "@/lib/data/services";
 import { getTestimonials } from "@/lib/data/testimonials";
 import { getProfile } from "@/lib/data/profile";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import JsonLd from "@/components/seo/JsonLd";
+import { ReviewBody } from "@/components/reviews/ReviewCard";
 import { SITE_URL } from "@/lib/site-url";
 
 /*
@@ -139,26 +139,12 @@ export default async function Home() {
         <div className="grid border-t border-line md:grid-cols-3">
           {testimonials.map((t, i) => (
             <Reveal
-              key={t.name}
+              key={t.id ?? t.name}
               delay={i * 70}
               as="figure"
               className="flex flex-col justify-between gap-8 border-b border-line py-9 md:border-r md:px-8 md:py-10 md:last:border-r-0 md:[&:first-child]:pl-0 md:[&:last-child]:pr-0"
             >
-              <blockquote className="text-body text-pretty text-ink">
-                <span aria-hidden="true" className="mb-4 block h-2 w-6 bg-accent" />
-                {t.quote}
-              </blockquote>
-              <figcaption className="flex items-center gap-3">
-                {t.avatarUrl && (
-                  <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-line">
-                    <SmartImage src={t.avatarUrl} alt={t.name} sizes="36px" />
-                  </span>
-                )}
-                <span className="spec">
-                  {t.name}
-                  {t.role ? ` — ${t.role}` : ""}
-                </span>
-              </figcaption>
+              <ReviewBody t={t} />
             </Reveal>
           ))}
         </div>

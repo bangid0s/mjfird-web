@@ -17,6 +17,7 @@ export default function ReorderableList<T extends { id: string }>({
 
   if (list.length !== items.length || list.some((item, i) => item.id !== items[i]?.id)) {
     // Server data changed under us (create/delete elsewhere) — resync.
+    // Rows below always render the latest item data (e.g. a status change).
     setList(items);
   }
 
@@ -72,7 +73,7 @@ export default function ReorderableList<T extends { id: string }>({
               </button>
             </div>
           </div>
-          <div className="min-w-0 flex-1">{renderRow(item)}</div>
+          <div className="min-w-0 flex-1">{renderRow(items.find((fresh) => fresh.id === item.id) ?? item)}</div>
         </div>
       ))}
     </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import MagneticButton from "@/components/ui/MagneticButton";
 import AvailabilityBadge from "@/components/services/AvailabilityBadge";
+import Stars from "@/components/reviews/Stars";
 import type { StorefrontService } from "@/lib/data/services";
 import { effectiveAvailability, formatUSD, quote } from "@/lib/services/storefront";
 import { cn } from "@/lib/cn";
@@ -12,7 +13,14 @@ import { cn } from "@/lib/cn";
   whatever the client picks travels as ids, and the server re-prices it from the
   stored service before anything is quoted or charged.
 */
-export default function ServiceOrderPanel({ service }: { service: StorefrontService }) {
+export default function ServiceOrderPanel({
+  service,
+  rating,
+}: {
+  service: StorefrontService;
+  /** Published verified reviews for this service, if any. */
+  rating?: { average: number; count: number };
+}) {
   const [packageId, setPackageId] = useState(service.packages[0]?.id ?? "");
   const [addonIds, setAddonIds] = useState<string[]>([]);
 
@@ -41,6 +49,15 @@ export default function ServiceOrderPanel({ service }: { service: StorefrontServ
           slotsTaken={service.slotsTaken}
         />
       </div>
+
+      {rating && (
+        <a href="#reviews" className="-mt-2 flex items-center gap-2 text-body-sm text-ink-muted transition-colors hover:text-ink">
+          <Stars rating={rating.average} />
+          <span>
+            {rating.average.toFixed(1)} · {rating.count} verified review{rating.count === 1 ? "" : "s"}
+          </span>
+        </a>
+      )}
 
       {service.packages.length > 0 && (
         <fieldset className="flex flex-col gap-2.5">

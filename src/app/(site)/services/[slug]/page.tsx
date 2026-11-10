@@ -6,7 +6,10 @@ import ProjectGallery from "@/components/media/ProjectGallery";
 import SmartImage from "@/components/media/SmartImage";
 import Reveal from "@/components/motion/Reveal";
 import ServiceOrderPanel from "@/components/services/ServiceOrderPanel";
+import { ReviewBody } from "@/components/reviews/ReviewCard";
+import Stars from "@/components/reviews/Stars";
 import { getStorefrontService, getStorefrontServices } from "@/lib/data/services";
+import { getServiceReviews } from "@/lib/data/testimonials";
 import { startingPrice } from "@/lib/services/storefront";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -60,6 +63,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
   const service = await getStorefrontService(slug);
   if (!service) notFound();
 
+  const reviews = await getServiceReviews(service.id);
   const from = startingPrice(service.packages);
   const hasSamples = service.samples.length > 0;
 
@@ -80,6 +84,14 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
               lowPrice: from,
               highPrice: Math.max(...service.packages.map((p) => p.price)),
               offerCount: service.packages.length,
+            },
+          }),
+          ...(reviews.count > 0 && {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: reviews.average,
+              reviewCount: reviews.count,
+              bestRating: 5,
             },
           }),
         }}
@@ -115,7 +127,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
 
           {/* On phones the order panel sits here, right after the samples. */}
           <div className="lg:hidden">
-            <ServiceOrderPanel service={service} />
+            <ServiceOrderPanel service={service} rating={reviews.count > 0 ? { average: reviews.average, count: reviews.count } : undefined} />
           </div>
 
           {service.details && (
@@ -159,6 +171,27 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
             </Section>
           )}
 
+          {reviews.count > 0 && (
+            <section id="reviews" className="flex scroll-mt-28 flex-col gap-6 border-t border-line pt-8">
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <h2 className="eyebrow">Client reviews</h2>
+                <p className="flex items-center gap-2 text-body-sm text-ink-muted">
+                  <Stars rating={reviews.average} />
+                  <span>
+                    {reviews.average.toFixed(1)} · {reviews.count} verified review{reviews.count === 1 ? "" : "s"}
+                  </span>
+                </p>
+              </div>
+              <div className="grid gap-x-10 border-b border-line sm:grid-cols-2">
+                {reviews.reviews.map((t) => (
+                  <figure key={t.id} className="flex flex-col justify-between gap-6 border-t border-line py-7">
+                    <ReviewBody t={t} showService={false} />
+                  </figure>
+                ))}
+              </div>
+            </section>
+          )}
+
           {service.faq.length > 0 && (
             <Section title="FAQ">
               <div className="flex flex-col border-b border-line">
@@ -186,7 +219,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
 
         <aside className="hidden lg:block">
           <div className="sticky top-[calc(var(--nav-h)+2rem)]">
-            <ServiceOrderPanel service={service} />
+            <ServiceOrderPanel service={service} rating={reviews.count > 0 ? { average: reviews.average, count: reviews.count } : undefined} />
           </div>
         </aside>
       </div>

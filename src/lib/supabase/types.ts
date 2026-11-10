@@ -65,6 +65,14 @@ export type TestimonialRow = {
   sort_order: number;
   status: ContentStatus;
   created_at: string;
+  /** Set only for verified reviews written by a client from a completed request. */
+  request_id: string | null;
+  service_id: string | null;
+  service_title: string | null;
+  rating: number | null;
+  public_consent: boolean;
+  submitted_at: string | null;
+  updated_at: string | null;
 };
 
 export type BlogPostRow = {

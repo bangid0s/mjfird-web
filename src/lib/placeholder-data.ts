@@ -131,10 +131,17 @@ export const process: { title: string; description: string }[] = [
 ];
 
 export type Testimonial = {
+  id?: string;
   quote: string;
   name: string;
   role: string;
   avatarUrl?: string;
+  /** 1–5, only on verified reviews. */
+  rating?: number;
+  /** Written by a real client from a completed commission on this site. */
+  verified?: boolean;
+  serviceId?: string;
+  serviceTitle?: string;
 };
 
 export const testimonials: Testimonial[] = [

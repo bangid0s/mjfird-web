@@ -12,9 +12,10 @@ import { RequestPayment } from "@/components/commissions/RequestPayment";
 import { requireUser } from "@/lib/auth/session";
 import { clientPaymentView } from "@/lib/commissions/payment-link";
 import { paypalButtonAvailable, readPaypalSandboxConfig } from "@/lib/payments/config";
-import { postClientMessage } from "@/lib/client/request-actions";
+import ReviewForm from "@/components/commissions/ReviewForm";
+import { postClientMessage, submitReview } from "@/lib/client/request-actions";
 import { STATUS_HINT, STATUS_LABEL } from "@/lib/commissions/status";
-import type { CommissionMessageRow, CommissionRequestRow } from "@/lib/supabase/types";
+import type { CommissionMessageRow, CommissionRequestRow, TestimonialRow } from "@/lib/supabase/types";
 
 export const metadata: Metadata = { title: "Request", robots: { index: false } };
 
@@ -44,11 +45,19 @@ export default async function ClientRequestPage({
     checkoutAvailable: paypalClientId !== null,
   });
 
-  const [{ data: msgs }, refs, deliveries] = await Promise.all([
+  const [{ data: msgs }, refs, deliveries, { data: reviewRow }] = await Promise.all([
     supabase.from("commission_messages").select("*").eq("request_id", id).order("created_at"),
     signFiles(supabase, req.reference_paths),
     signFiles(supabase, req.delivery_paths),
+    req.status === "completed"
+      ? supabase
+          .from("testimonials")
+          .select("quote, name, role, rating, public_consent, status")
+          .eq("request_id", id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
+  const review = reviewRow as Pick<TestimonialRow, "quote" | "name" | "role" | "rating" | "public_consent" | "status"> | null;
 
   return (
     <div className="container-page pb-[var(--space-section)] pt-10 sm:pt-14">
@@ -91,6 +100,13 @@ export default async function ClientRequestPage({
             <section className="flex flex-col gap-4 border-t border-line pt-8">
               <h2 className="eyebrow">Your files</h2>
               <FileLinks files={deliveries} />
+            </section>
+          )}
+
+          {req.status === "completed" && (
+            <section id="review" className="flex scroll-mt-28 flex-col gap-4 border-t border-line pt-8">
+              <h2 className="eyebrow">{review ? "Your review" : "Leave a review"}</h2>
+              <ReviewForm action={submitReview.bind(null, id)} existing={review} defaultName={req.contact_name} />
             </section>
           )}
 

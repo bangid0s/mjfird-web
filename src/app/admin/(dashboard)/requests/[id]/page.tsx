@@ -10,7 +10,8 @@ import { DeliveryUploader, StatusActions } from "@/components/admin/RequestActio
 import { postAdminMessage } from "@/lib/admin/requests-actions";
 import { formatDate } from "@/lib/admin/format";
 import { priceOf } from "@/lib/commissions/status";
-import type { CommissionMessageRow, CommissionRequestRow } from "@/lib/supabase/types";
+import Link from "next/link";
+import type { CommissionMessageRow, CommissionRequestRow, TestimonialRow } from "@/lib/supabase/types";
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -28,11 +29,13 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
   if (!data) notFound();
   const req = data as CommissionRequestRow;
 
-  const [{ data: msgs }, refs, deliveries] = await Promise.all([
+  const [{ data: msgs }, refs, deliveries, { data: reviewRow }] = await Promise.all([
     supabase.from("commission_messages").select("*").eq("request_id", id).order("created_at"),
     signFiles(supabase, req.reference_paths),
     signFiles(supabase, req.delivery_paths),
+    supabase.from("testimonials").select("*").eq("request_id", id).maybeSingle(),
   ]);
+  const review = reviewRow as TestimonialRow | null;
   const deliveryFiles = req.delivery_paths.map((path) => {
     const signed = deliveries.find((d) => d.path === path);
     return { path, name: signed?.name ?? path.split("/").pop() ?? path, url: signed?.url ?? "#" };
@@ -96,6 +99,33 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
           {["in_progress", "delivered", "completed"].includes(req.status) && (
             <Panel title="Delivery">
               <DeliveryUploader id={req.id} clientId={req.client_id} files={deliveryFiles} />
+            </Panel>
+          )}
+          {req.status === "completed" && (
+            <Panel title="Client review">
+              {review ? (
+                <div className="flex flex-col gap-3">
+                  {review.rating ? (
+                    <p className="text-accent" aria-label={`${review.rating} out of 5 stars`}>
+                      {"★".repeat(review.rating)}
+                      <span className="text-line">{"★".repeat(5 - review.rating)}</span>
+                    </p>
+                  ) : null}
+                  <blockquote className="whitespace-pre-line text-body-sm text-ink">{review.quote}</blockquote>
+                  <p className="text-[13px] text-ink-muted">
+                    {!review.public_consent
+                      ? "Private feedback (client didn't allow publishing)."
+                      : review.status === "published"
+                        ? "Published."
+                        : "Waiting for your approval."}
+                  </p>
+                  <Link href={`/admin/testimonials/${review.id}`} className="text-body-sm font-medium text-ink-muted hover:text-ink">
+                    Open review →
+                  </Link>
+                </div>
+              ) : (
+                <p className="text-body-sm text-ink-muted">No review yet. The client was invited to leave one when you marked it completed.</p>
+              )}
             </Panel>
           )}
           <Panel title="Client">

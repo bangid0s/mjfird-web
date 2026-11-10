@@ -62,6 +62,10 @@ const RPC_ERRORS: Record<string, string> = {
   cannot_cancel: "This request can't be cancelled anymore — send a message instead.",
   capture_in_progress: "PayPal checkout is in progress. Refresh to confirm before changing this request.",
   capture_recorded: "PayPal already captured this payment.",
+  review_not_open: "Reviews open once the commission is marked completed.",
+  invalid_rating: "Please pick a rating from 1 to 5 stars.",
+  invalid_review: "Please write a few words (10 to 1,000 characters).",
+  invalid_role: "Role or company is too long (80 characters max).",
 };
 
 export function manualAdvanceConflict(message: string) {
