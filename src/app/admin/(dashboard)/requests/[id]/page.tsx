@@ -88,7 +88,7 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
 
         <div className="flex flex-col gap-6">
           <Panel title="Actions">
-            <StatusActions id={req.id} status={req.status} estimate={priceOf(req)} note={req.artist_note} />
+            <StatusActions id={req.id} status={req.status} estimate={priceOf(req)} note={req.artist_note} paymentUrl={req.payment_url} />
           </Panel>
           <Panel title="Order">
             <OrderSummary req={req} />

@@ -8,7 +8,9 @@ import StatusChip from "@/components/commissions/StatusChip";
 import Timeline from "@/components/commissions/Timeline";
 import CancelRequestButton from "@/components/commissions/CancelRequestButton";
 import { PayPalCheckout } from "@/components/commissions/PayPalCheckout";
+import { RequestPayment } from "@/components/commissions/RequestPayment";
 import { requireUser } from "@/lib/auth/session";
+import { clientPaymentView } from "@/lib/commissions/payment-link";
 import { paypalButtonAvailable, readPaypalSandboxConfig } from "@/lib/payments/config";
 import { postClientMessage } from "@/lib/client/request-actions";
 import { STATUS_HINT, STATUS_LABEL } from "@/lib/commissions/status";
@@ -35,6 +37,12 @@ export default async function ClientRequestPage({
     paypal && paypalButtonAvailable(paypal, { status: req.status, currency: req.currency, finalPrice: req.final_price })
       ? paypal.publicClientId
       : null;
+  const paymentView = clientPaymentView({
+    status: req.status,
+    paymentUrl: req.payment_url,
+    finalPrice: req.final_price,
+    checkoutAvailable: paypalClientId !== null,
+  });
 
   const [{ data: msgs }, refs, deliveries] = await Promise.all([
     supabase.from("commission_messages").select("*").eq("request_id", id).order("created_at"),
@@ -118,13 +126,14 @@ export default async function ClientRequestPage({
           <div className="flex flex-col gap-5 border border-line bg-bg-raised/60 p-5 sm:p-6">
             <p className="eyebrow">Order</p>
             <OrderSummary req={req} />
-            {paypalClientId ? (
-              <PayPalCheckout requestId={req.id} clientId={paypalClientId} />
-            ) : req.status === "awaiting_payment" ? (
-              <p className="border border-accent/40 px-4 py-3 text-body-sm text-ink">
-                Payment via PayPal is coming here shortly — I&apos;ll message you with the payment link.
-              </p>
-            ) : null}
+            <RequestPayment
+              view={paymentView}
+              checkout={
+                paymentView.kind === "checkout" && paypalClientId ? (
+                  <PayPalCheckout requestId={req.id} clientId={paypalClientId} />
+                ) : null
+              }
+            />
           </div>
           {(req.status === "pending" || req.status === "awaiting_payment") && <CancelRequestButton requestId={req.id} />}
         </aside>

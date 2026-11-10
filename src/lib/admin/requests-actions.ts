@@ -3,7 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email";
-import { manualAdvanceConflict, manualWritePlan, priceOf } from "@/lib/commissions/status";
+import { manualAdvanceConflict, manualWritePlan, priceOf, toNumber } from "@/lib/commissions/status";
+import {
+  PaymentUrlError,
+  acceptEmailCopy,
+  normalizePaymentUrl,
+  paymentReadyEmailCopy,
+  paymentWriteMessage,
+  safePaymentUrl,
+} from "@/lib/commissions/payment-link";
 import { readPaypalSandboxConfig } from "@/lib/payments/config";
 import { formatUSD } from "@/lib/services/storefront";
 import type { CommissionRequestRow, CommissionStatus } from "@/lib/supabase/types";
@@ -55,26 +63,76 @@ export async function acceptRequest(id: string, formData: FormData) {
   const raw = Number.parseFloat(String(formData.get("final_price") ?? ""));
   const finalPrice = Number.isFinite(raw) && raw >= 0 ? Math.round(raw * 100) / 100 : priceOf(req);
   const note = String(formData.get("artist_note") ?? "").trim();
+  const paymentUrl = readPaymentUrl(formData);
 
-  const { error } = await supabase
+  const patch: {
+    status: "awaiting_payment";
+    final_price: number;
+    artist_note: string;
+    accepted_at: string;
+    payment_url?: string;
+  } = {
+    status: "awaiting_payment",
+    final_price: finalPrice,
+    artist_note: note,
+    accepted_at: new Date().toISOString(),
+  };
+  if (paymentUrl) patch.payment_url = paymentUrl;
+
+  const { data: updated, error } = await supabase
     .from("commission_requests")
-    .update({ status: "awaiting_payment", final_price: finalPrice, artist_note: note, accepted_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+    .update(patch)
+    .eq("id", id)
+    .eq("status", "pending")
+    .select("id");
+  if (error) throw new Error(paymentWriteMessage(error.message) ?? error.message);
+  if (!updated || updated.length === 0) throw new Error("This request changed. Refresh and try again.");
   await bumpSlots(supabase, req.service_id, 1);
 
-  await sendEmail({
-    to: req.contact_email,
-    subject: `Accepted: ${req.service_title} (#${req.ref}) — ${formatUSD(finalPrice)}`,
-    lines: [
-      `Hi ${req.contact_name},`,
-      `Good news — I've accepted your request for ${req.service_title} — ${req.package_name}.`,
-      `Final price: ${formatUSD(finalPrice)} (USD).`,
-      ...(note ? [note] : []),
-      "Open your request to see the details and next steps.",
-    ],
-    cta: { label: "View request", path: `/account/requests/${id}` },
+  const mail = acceptEmailCopy({
+    contactName: req.contact_name,
+    serviceTitle: req.service_title,
+    packageName: req.package_name,
+    ref: req.ref,
+    priceLabel: formatUSD(finalPrice),
+    note,
+    paymentReady: Boolean(paymentUrl || safePaymentUrl(req.payment_url)),
+    requestId: id,
   });
+  await sendEmail({ to: req.contact_email, subject: mail.subject, lines: mail.lines, cta: mail.cta });
+  refresh(id);
+}
+
+function readPaymentUrl(formData: FormData) {
+  try {
+    return normalizePaymentUrl(String(formData.get("payment_url") ?? ""));
+  } catch (err) {
+    throw new Error(err instanceof PaymentUrlError ? err.message : "Use an https link on paypal.com or paypal.me.");
+  }
+}
+
+/** Paste, replace, or clear the PayPal link. Does not change status or price. */
+export async function setPaymentUrl(id: string, formData: FormData) {
+  const { supabase, req } = await load(id);
+  if (req.status !== "pending" && req.status !== "awaiting_payment") {
+    throw new Error("The payment link can only be changed while the request is pending or awaiting payment.");
+  }
+  const paymentUrl = readPaymentUrl(formData);
+  const previous = safePaymentUrl(req.payment_url);
+  const { error } = await supabase.rpc("set_commission_payment_url", { p_request_id: id, p_url: paymentUrl });
+  if (error) throw new Error(paymentWriteMessage(error.message) ?? error.message);
+
+  if (req.status === "awaiting_payment" && paymentUrl && paymentUrl !== previous) {
+    const amount = toNumber(req.final_price);
+    const mail = paymentReadyEmailCopy({
+      contactName: req.contact_name,
+      serviceTitle: req.service_title,
+      ref: req.ref,
+      priceLabel: amount === null ? null : formatUSD(amount),
+      requestId: id,
+    });
+    await sendEmail({ to: req.contact_email, subject: mail.subject, lines: mail.lines, cta: mail.cta });
+  }
   refresh(id);
 }
 

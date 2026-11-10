@@ -330,6 +330,8 @@ export type CommissionRequestRow = {
   created_at: string;
   updated_at: string;
   accepted_at: string | null;
+  payment_url: string | null;
+  payment_url_set_at: string | null;
   paid_at: string | null;
   delivered_at: string | null;
   completed_at: string | null;
