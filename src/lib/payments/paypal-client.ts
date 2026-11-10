@@ -37,12 +37,17 @@ export type PaypalClient = {
   verifyWebhook(headers: Headers, event: unknown): Promise<boolean>;
 };
 
-/** A configured merchant matches only a present string id. Absence is not a match. */
+/** Payment requires a configured merchant and a payee string equal to it. */
 export function merchantAllowsPayment(expected: string | null, observed: MerchantObservation): { ok: true } | { ok: false; evidence: string } {
-  if (!expected) return { ok: true };
+  const configured = expected?.trim() || null;
+  if (!configured) {
+    if (observed.state === "present") return { ok: false, evidence: `merchant unconfigured ${observed.merchantId}` };
+    if (observed.state === "malformed") return { ok: false, evidence: "merchant unconfigured malformed" };
+    return { ok: false, evidence: "merchant unconfigured" };
+  }
   if (observed.state === "absent") return { ok: false, evidence: "merchant missing" };
   if (observed.state === "malformed") return { ok: false, evidence: "merchant malformed" };
-  if (observed.merchantId !== expected) return { ok: false, evidence: `merchant ${observed.merchantId}` };
+  if (observed.merchantId !== configured) return { ok: false, evidence: `merchant ${observed.merchantId}` };
   return { ok: true };
 }
 
@@ -165,10 +170,12 @@ export function interpretCapture(requestedOrderId: string, expectedMerchant: str
   }
 
   const parent = orderStatus ? ` parent:${orderStatus}` : "";
+  const amounts = seen.map((item) => `${item.id ?? "unknown"} ${item.currency ?? "?"} ${item.value ?? "?"}`).join(" ");
   for (const item of seen) {
     const observed: MerchantObservation = item.merchantBad ? { state: "malformed" } : item.merchant ? { state: "present", merchantId: item.merchant } : { state: "absent" };
-    if (!merchantAllowsPayment(expectedMerchant, observed).ok) {
-      return { outcome: "hold", captureId: soleId, evidence: `${listed}${parent}`.trim() };
+    const decision = merchantAllowsPayment(expectedMerchant, observed);
+    if (!decision.ok) {
+      return { outcome: "hold", captureId: soleId, evidence: `${listed}${parent} ${decision.evidence} ${amounts}`.trim() };
     }
   }
 

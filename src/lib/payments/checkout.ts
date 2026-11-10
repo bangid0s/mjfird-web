@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { CheckoutDbError, type CheckoutDb } from "@/lib/payments/checkout-db";
 import { normalizeUsd } from "@/lib/payments/money";
-import { merchantAllowsPayment, observeResourceMerchant, PaypalRequestError, type PaypalClient } from "@/lib/payments/paypal-client";
+import { observeResourceMerchant, PaypalRequestError, type PaypalClient } from "@/lib/payments/paypal-client";
 
 export type HttpResult = {
   status: number;
@@ -108,9 +108,9 @@ export async function captureSandboxOrder(
   if (!claim.ok) return { status: 409, body: { error: unavailable } };
   if (claim.state === "done") {
     const current = await deps.db.getCheckoutByOrder(checkout.orderId);
-    if (!current?.captureId) return { status: 502, body: { error: retry } };
+    if (!current?.captureId || !current.merchantProven) return { status: 409, body: { error: "Payment could not be confirmed." } };
     const settled = await finishCapture(deps.db, checkout.orderId, current.captureId, current.amount);
-    if (!settled) return { status: 502, body: { error: retry } };
+    if (settled !== "duplicate" && settled !== "completed") return { status: 409, body: { error: "Payment could not be confirmed." } };
     return { status: 200, body: { ok: true, duplicate: true } };
   }
 
@@ -138,13 +138,8 @@ export async function captureSandboxOrder(
     });
     return { status: captured.outcome === "hold" ? 409 : 502, body: captured.outcome === "hold" ? { error: "Payment could not be confirmed." } : { error: retry } };
   }
-  if (deps.paypal.merchantId) {
-    const proof = captured.merchantId ? await deps.db.proveMerchant(checkout.orderId, captured.merchantId) : "rejected";
-    if (proof !== "proven") {
-      await deps.db.holdCapture({ orderId: checkout.orderId, captureId: captured.captureId, evidence: "merchant rejected", kind: "held" });
-      return { status: 409, body: { error: "Payment could not be confirmed." } };
-    }
-  }
+  const proven = await provePayee(deps.db, checkout.orderId, deps.paypal.merchantId, captured.merchantId, captured.captureId, `${captured.currency} ${captured.amount}`);
+  if (!proven) return { status: 409, body: { error: "Payment could not be confirmed." } };
   if (captured.currency !== "USD" || captured.amount !== checkout.amount) {
     await deps.db.holdCapture({
       orderId: checkout.orderId,
@@ -159,6 +154,35 @@ export async function captureSandboxOrder(
   if (settled === "held") return { status: 409, body: { error: "Payment could not be confirmed." } };
   if (!settled) return { status: 502, body: { error: retry } };
   return { status: 200, body: { ok: true, duplicate: settled === "duplicate" } };
+}
+
+function configuredMerchant(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+/** Stores the capture and returns false unless the payee equals the configured merchant. */
+async function provePayee(db: CheckoutDb, orderId: string, expected: string | null | undefined, observed: string | null, captureId: string, detail: string) {
+  const configured = configuredMerchant(expected);
+  const payee = observed?.trim() || null;
+  const evidence = !configured
+    ? `${detail} merchant unconfigured${payee ? ` ${payee}` : ""}`
+    : !payee
+      ? `${detail} merchant missing`
+      : payee === configured
+        ? detail
+        : `${detail} merchant ${payee}`;
+  if (!configured || !payee || payee !== configured) {
+    await db.holdCapture({ orderId, captureId, evidence, kind: "held" });
+    return false;
+  }
+  await db.noteExpectedMerchant(orderId, configured);
+  const proof = await db.proveMerchant(orderId, payee);
+  if (proof !== "proven") {
+    await db.holdCapture({ orderId, captureId, evidence: `${detail} merchant rejected`, kind: "held" });
+    return false;
+  }
+  return true;
 }
 
 async function finishCapture(db: CheckoutDb, orderId: string, captureId: string, amount: string) {
@@ -200,26 +224,10 @@ export async function handleSandboxWebhook(
   if (!orderId) return { status: 200, body: { ignored: true } };
   const checkout = await deps.db.getCheckoutByOrder(orderId);
   if (!checkout) return { status: 200, body: { ignored: true } };
-  const expected = deps.expectedMerchant ?? checkout.expectedMerchant;
   const observed = observeResourceMerchant(event.data.resource);
-  const merchant = merchantAllowsPayment(expected, observed);
-  if (!merchant.ok) {
-    await deps.db.holdCapture({
-      orderId,
-      captureId: resource.data.id,
-      evidence: `webhook ${merchant.evidence}`,
-      kind: observed.state === "absent" ? "uncertain" : "held",
-    });
-    return { status: 200, body: { held: true } };
-  }
-  if (expected && observed.state === "present") {
-    await deps.db.noteExpectedMerchant(orderId, expected);
-    const proof = await deps.db.proveMerchant(orderId, observed.merchantId);
-    if (proof !== "proven") {
-      await deps.db.holdCapture({ orderId, captureId: resource.data.id, evidence: "webhook merchant rejected", kind: "held" });
-      return { status: 200, body: { held: true } };
-    }
-  }
+  const observedId = observed.state === "present" ? observed.merchantId : null;
+  const proven = await provePayee(deps.db, orderId, deps.expectedMerchant ?? checkout.expectedMerchant, observedId, resource.data.id, `webhook ${resource.data.amount.currency_code} ${resource.data.amount.value}`);
+  if (!proven) return { status: 200, body: { held: true } };
   const amount = normalizeUsd(resource.data.amount.value);
   const currency = resource.data.amount.currency_code;
   if (!amount || currency !== "USD") {

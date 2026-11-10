@@ -148,3 +148,83 @@ test("configured merchant is required on pending, unparsed, and webhook evidence
   assert.notEqual((await stored(reconciled.db)).paid_at, null);
   await reconciled.db.pg.close();
 });
+
+test("a missing merchant configuration never marks a capture or webhook paid", async () => {
+  const unconfigured = readPaypalSandboxConfig({
+    PAYPAL_ENV: "sandbox",
+    PAYPAL_CLIENT_ID: "fake-sandbox-client",
+    PAYPAL_CLIENT_SECRET: "fake-sandbox-secret",
+    PAYPAL_WEBHOOK_ID: "WH-fake",
+    NEXT_PUBLIC_PAYPAL_CLIENT_ID: "fake-public-client",
+    SUPABASE_SERVICE_ROLE_KEY: "fake-service-role",
+    NEXT_PUBLIC_SUPABASE_URL: "https://isolated.invalid",
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: "fake-anon",
+  });
+  assert.ok(unconfigured);
+  assert.equal(unconfigured.merchantId, null);
+  const db = await ordered();
+  const body = order([{ id: "CAP-OPEN", status: "COMPLETED", amount: { currency_code: "USD", value: "80.00" }, payee: { merchant_id: "SOME-PAYEE" } }]);
+  const result = await captureSandboxOrder(
+    { db: db.checkout, paypal: createPaypalSandboxClient(unconfigured, fetchFor(body)), userId: CLIENT_ID },
+    { orderId: "ORDER-1" },
+  );
+  assert.equal(result.status, 409);
+  const held = await stored(db);
+  assert.equal(held.status, "awaiting_payment");
+  assert.equal(held.paid_at, null);
+  assert.equal(held.capture_disposition, "held");
+  assert.equal(held.capture_id, "CAP-OPEN");
+  assert.match(held.provider_evidence ?? "", /SOME-PAYEE/);
+  assert.match(held.provider_evidence ?? "", /80\.00/);
+  const again = await captureSandboxOrder(
+    { db: db.checkout, paypal: createPaypalSandboxClient(unconfigured, fetchFor(body)), userId: CLIENT_ID },
+    { orderId: "ORDER-1" },
+  );
+  assert.equal(again.status, 409);
+  assert.equal((await stored(db)).paid_at, null);
+  const notice = await handleSandboxWebhook(
+    { db: db.checkout, paypal: stub },
+    {
+      headers: new Headers(),
+      rawBody: JSON.stringify({
+        event_type: "PAYMENT.CAPTURE.COMPLETED",
+        resource: {
+          id: "CAP-OPEN",
+          status: "COMPLETED",
+          amount: { currency_code: "USD", value: "80.00" },
+          payee: { merchant_id: "SOME-PAYEE" },
+          supplementary_data: { related_ids: { order_id: "ORDER-1" } },
+        },
+      }),
+    },
+  );
+  assert.equal("held" in notice.body && notice.body.held, true);
+  assert.equal((await stored(db)).paid_at, null);
+  assert.equal((await stored(db)).capture_disposition, "held");
+  await db.pg.close();
+
+  const open = await ordered();
+  const webhookOnly = await handleSandboxWebhook(
+    { db: open.checkout, paypal: stub },
+    {
+      headers: new Headers(),
+      rawBody: JSON.stringify({
+        event_type: "PAYMENT.CAPTURE.COMPLETED",
+        resource: {
+          id: "CAP-WEB",
+          status: "COMPLETED",
+          amount: { currency_code: "USD", value: "80.00" },
+          payee: { merchant_id: "SOME-PAYEE" },
+          supplementary_data: { related_ids: { order_id: "ORDER-1" } },
+        },
+      }),
+    },
+  );
+  assert.equal("held" in webhookOnly.body && webhookOnly.body.held, true);
+  const webhookRow = await stored(open);
+  assert.equal(webhookRow.paid_at, null);
+  assert.equal(webhookRow.capture_disposition, "held");
+  assert.equal(webhookRow.capture_id, "CAP-WEB");
+  assert.match(webhookRow.provider_evidence ?? "", /SOME-PAYEE/);
+  await open.pg.close();
+});

@@ -38,6 +38,7 @@ function scriptedPaypal(options?: { capture?: CaptureInterpretation }) {
   let noteCreate: (() => void) | null = null;
   let noteCapture: (() => void) | null = null;
   const client: PaypalClient = {
+    merchantId: "TEST-MERCHANT",
     async createOrder(amount, _requestId, _ref, key) {
       orderCalls += 1;
       const existing = orders.get(key);
@@ -58,7 +59,7 @@ function scriptedPaypal(options?: { capture?: CaptureInterpretation }) {
         captureId: "CAP-1",
         amount: "80.00",
         currency: "USD",
-        merchantId: null,
+        merchantId: "TEST-MERCHANT",
       };
       if (captured.outcome !== "completed") return captured;
       captures.set(key, captured);
@@ -287,6 +288,7 @@ test("webhook ignores approval and a mismatched amount, then stores one replayed
       id: "CAP-1",
       status: "COMPLETED",
       amount: { currency_code: "USD", value: "80.00" },
+      payee: { merchant_id: "TEST-MERCHANT" },
       supplementary_data: { related_ids: { order_id: "ORDER-1" } },
     },
   });
@@ -297,15 +299,15 @@ test("webhook ignores approval and a mismatched amount, then stores one replayed
     { headers, rawBody: JSON.stringify({ event_type: "CHECKOUT.ORDER.APPROVED", resource: { status: "APPROVED" } }) },
   );
   assert.deepEqual(approved, { status: 200, body: { ignored: true } });
-  const first = await handleSandboxWebhook({ db: db.checkout, paypal: guarded }, { headers, rawBody: completed });
+  const first = await handleSandboxWebhook({ db: db.checkout, paypal: guarded, expectedMerchant: "TEST-MERCHANT" }, { headers, rawBody: completed });
   assert.deepEqual(first.body, { ok: true, duplicate: false });
   const paidAt = (await db.read()).paidAt;
-  const replay = await handleSandboxWebhook({ db: db.checkout, paypal: guarded }, { headers, rawBody: completed });
+  const replay = await handleSandboxWebhook({ db: db.checkout, paypal: guarded, expectedMerchant: "TEST-MERCHANT" }, { headers, rawBody: completed });
   assert.deepEqual(replay.body, { ok: true, duplicate: true });
   assert.equal((await db.read()).paidAt, paidAt);
   assert.equal((await db.read()).captureId, "CAP-1");
   const mismatch = await handleSandboxWebhook(
-    { db: db.checkout, paypal: guarded },
+    { db: db.checkout, paypal: guarded, expectedMerchant: "TEST-MERCHANT" },
     {
       headers,
       rawBody: JSON.stringify({
@@ -314,6 +316,7 @@ test("webhook ignores approval and a mismatched amount, then stores one replayed
           id: "CAP-2",
           status: "COMPLETED",
           amount: { currency_code: "USD", value: "1.00" },
+          payee: { merchant_id: "TEST-MERCHANT" },
           supplementary_data: { related_ids: { order_id: "ORDER-1" } },
         },
       }),

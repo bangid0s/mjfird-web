@@ -15,6 +15,7 @@ export type CheckoutRecord = {
   capturePending: boolean;
   disposition: "open" | "uncertain" | "held" | "matched";
   expectedMerchant: string | null;
+  merchantProven: boolean;
   amount: string;
   currency: "USD";
   capturedAt: string | null;

@@ -11,7 +11,10 @@ export type PaypalSandboxConfig = {
   serviceRoleKey: string;
   supabaseUrl: string;
   supabaseAnonKey: string;
-  /** When set, a capture payee must report this merchant id or the request is not marked paid. */
+  /**
+   * Optional for turning checkout on. A capture is marked paid only when this
+   * is set and the payee equals it. Missing or different payees stay held.
+   */
   merchantId: string | null;
 };
 

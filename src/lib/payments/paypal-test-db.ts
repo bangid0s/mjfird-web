@@ -282,6 +282,7 @@ async function readCheckout(result: { rows: Record<string, unknown>[] }) {
     capturePending: row.capture_pending === true,
     disposition: dispositionOf(row.capture_disposition),
     expectedMerchant: typeof row.expected_merchant === "string" ? row.expected_merchant : null,
+    merchantProven: row.merchant_proven === true,
     amount: cents,
     currency: "USD" as const,
     capturedAt: typeof row.captured_at === "string" ? row.captured_at : null,
