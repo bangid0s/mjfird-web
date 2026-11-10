@@ -236,6 +236,7 @@ test("a missing merchant configuration never marks a capture or webhook paid", a
   assert.equal(webhookRow.paid_at, null);
   assert.equal(webhookRow.capture_disposition, "held");
   assert.equal(webhookRow.capture_id, "CAP-WEB");
+  assert.equal(webhookRow.merchant_proven, false);
   assert.match(webhookRow.provider_evidence ?? "", /SOME-PAYEE/);
   await open.pg.close();
 });

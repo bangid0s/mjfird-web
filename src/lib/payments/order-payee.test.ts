@@ -501,3 +501,130 @@ test("an order read whose capture is not completed is held", async () => {
   assert.equal(run.result.status, 409);
   await run.db.pg.close();
 });
+
+test("an order read with two units is held when the first unit matches", async () => {
+  const bothOurs = {
+    id: "ORDER-1",
+    status: "COMPLETED",
+    purchase_units: [
+      { payee: { merchant_id: "MERCHANT-OURS" }, payments: { captures: [{ id: "CAP-1", status: "COMPLETED", amount: { currency_code: "USD", value: "80.00" } }] } },
+      { payee: { merchant_id: "MERCHANT-OURS" }, payments: { captures: [{ id: "CAP-2", status: "COMPLETED", amount: { currency_code: "USD", value: "80.00" } }] } },
+    ],
+  };
+  const run = await heldLookup(bothOurs);
+  assert.equal(run.result.status, 409);
+  await run.db.pg.close();
+});
+
+test("a capture response with two purchase units is held", async () => {
+  assert.ok(config);
+  const db = await createPaypalTestDb();
+  await db.seed();
+  await createSandboxOrder({ db: db.checkout, paypal: stub, userId: CLIENT_ID }, { requestId: REQUEST_ID });
+  const body = {
+    id: "ORDER-1",
+    status: "COMPLETED",
+    purchase_units: [
+      { payee: { merchant_id: "MERCHANT-OURS" }, payments: { captures: [{ id: "CAP-1", status: "COMPLETED", amount: { currency_code: "USD", value: "80.00" } }] } },
+      { payee: { merchant_id: "MERCHANT-OURS" } },
+    ],
+  };
+  const result = await captureSandboxOrder(
+    { db: db.checkout, paypal: createPaypalSandboxClient(config, fetchFor({ capture: body })), userId: CLIENT_ID },
+    { orderId: "ORDER-1" },
+  );
+  assert.equal(result.status, 409);
+  const stored = await detail(db);
+  assert.equal(stored.status, "awaiting_payment");
+  assert.equal(stored.paid_at, null);
+  assert.equal(stored.capture_disposition, "held");
+  assert.equal(stored.merchant_proven, false);
+  assert.equal(stored.capture_id, "CAP-1");
+  await db.pg.close();
+});
+
+test("an order read whose capture is pending is held", async () => {
+  const pending = {
+    id: "ORDER-1",
+    status: "COMPLETED",
+    purchase_units: [{ payee: { merchant_id: "MERCHANT-OURS" }, payments: { captures: [{ id: "CAP-1", status: "PENDING", amount: { currency_code: "USD", value: "80.00" } }] } }],
+  };
+  const run = await heldLookup(pending);
+  assert.equal(run.result.status, 409);
+  await run.db.pg.close();
+});
+
+test("an order read whose capture payee disagrees with the unit payee is held", async () => {
+  const disagreed = {
+    id: "ORDER-1",
+    status: "COMPLETED",
+    purchase_units: [{
+      payee: { merchant_id: "MERCHANT-OURS" },
+      payments: { captures: [{ id: "CAP-1", status: "COMPLETED", amount: { currency_code: "USD", value: "80.00" }, payee: { merchant_id: "MERCHANT-OTHER" } }] },
+    }],
+  };
+  const run = await heldLookup(disagreed);
+  assert.equal(run.result.status, 409);
+  await run.db.pg.close();
+});
+
+test("a capture payee that disagrees with the unit payee is held", async () => {
+  assert.ok(config);
+  const db = await createPaypalTestDb();
+  await db.seed();
+  await createSandboxOrder({ db: db.checkout, paypal: stub, userId: CLIENT_ID }, { requestId: REQUEST_ID });
+  const body = {
+    id: "ORDER-1",
+    status: "COMPLETED",
+    purchase_units: [{
+      payee: { merchant_id: "MERCHANT-OTHER" },
+      payments: { captures: [{ id: "CAP-1", status: "COMPLETED", amount: { currency_code: "USD", value: "80.00" }, payee: { merchant_id: "MERCHANT-OURS" } }] },
+    }],
+  };
+  const result = await captureSandboxOrder(
+    { db: db.checkout, paypal: createPaypalSandboxClient(config, fetchFor({ capture: body })), userId: CLIENT_ID },
+    { orderId: "ORDER-1" },
+  );
+  assert.equal(result.status, 409);
+  const stored = await detail(db);
+  assert.equal(stored.paid_at, null);
+  assert.equal(stored.capture_disposition, "held");
+  assert.equal(stored.merchant_proven, false);
+  assert.equal(stored.capture_id, "CAP-1");
+  await db.pg.close();
+});
+
+test("a webhook with two purchase units is held", async () => {
+  assert.ok(config);
+  const db = await createPaypalTestDb();
+  await db.seed();
+  await createSandboxOrder({ db: db.checkout, paypal: stub, userId: CLIENT_ID }, { requestId: REQUEST_ID });
+  const webhook = await handleSandboxWebhook(
+    { db: db.checkout, paypal: stub, expectedMerchant: "MERCHANT-OURS" },
+    {
+      headers: new Headers(),
+      rawBody: JSON.stringify({
+        event_type: "PAYMENT.CAPTURE.COMPLETED",
+        resource: {
+          id: "CAP-1",
+          status: "COMPLETED",
+          amount: { currency_code: "USD", value: "80.00" },
+          payee: { merchant_id: "MERCHANT-OURS" },
+          purchase_units: [
+            { payee: { merchant_id: "MERCHANT-OURS" } },
+            { payee: { merchant_id: "MERCHANT-OURS" } },
+          ],
+          supplementary_data: { related_ids: { order_id: "ORDER-1" } },
+        },
+      }),
+    },
+  );
+  assert.equal("held" in webhook.body && webhook.body.held, true);
+  const stored = await detail(db);
+  assert.equal(stored.status, "awaiting_payment");
+  assert.equal(stored.paid_at, null);
+  assert.equal(stored.capture_disposition, "held");
+  assert.equal(stored.merchant_proven, false);
+  assert.equal(stored.capture_id, "CAP-1");
+  await db.pg.close();
+});

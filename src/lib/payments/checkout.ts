@@ -258,6 +258,16 @@ export async function handleSandboxWebhook(
   if (!orderId) return { status: 200, body: { ignored: true } };
   const checkout = await deps.db.getCheckoutByOrder(orderId);
   if (!checkout) return { status: 200, body: { ignored: true } };
+  const rawUnits = typeof event.data.resource === "object" && event.data.resource !== null && "purchase_units" in event.data.resource ? event.data.resource.purchase_units : null;
+  if (Array.isArray(rawUnits) && rawUnits.length > 1) {
+    await deps.db.holdCapture({
+      orderId,
+      captureId: resource.data.id,
+      evidence: `webhook purchase units ${rawUnits.length}`,
+      kind: "held",
+    });
+    return { status: 200, body: { held: true } };
+  }
   const observed = observeResourceMerchant(event.data.resource);
   const observedId = observed.state === "present" ? observed.merchantId : null;
   const configured = configuredMerchant(deps.expectedMerchant);

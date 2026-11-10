@@ -38,7 +38,7 @@ export type PaypalClient = {
   merchantId?: string | null;
   createOrder(amount: string, requestId: string, ref: number, idempotencyKey: string): Promise<{ id: string }>;
   captureOrder(orderId: string, idempotencyKey: string): Promise<CaptureInterpretation>;
-  /** Reads only purchase_units[0].payee. Confirms the POST capture id and amount on that same order. */
+  /** Requires one purchase unit and a COMPLETED capture with the POST id, amount, and currency, then reads that unit's payee. */
   confirmOrderPayee(orderId: string, capture: { captureId: string; amount: string; currency: string }): Promise<OrderPayeeCheck>;
   verifyWebhook(headers: Headers, event: unknown): Promise<boolean>;
 };
@@ -132,6 +132,7 @@ type SeenCapture = {
   value: string | null;
   merchant: string | null;
   merchantBad: boolean;
+  payeeConflict: boolean;
 };
 
 function readCaptures(root: Record<string, unknown>): SeenCapture[] {
@@ -145,11 +146,16 @@ function readCaptures(root: Record<string, unknown>): SeenCapture[] {
     for (const capValue of caps) {
       const cap = asRecord(capValue);
       if (!cap) continue;
-      const payee = asRecord(cap.payee) ?? asRecord(unit.payee);
+      const capturePayee = asRecord(cap.payee);
+      const unitPayee = asRecord(unit.payee);
+      const captureMerchant = capturePayee && typeof capturePayee.merchant_id === "string" ? capturePayee.merchant_id.trim() : "";
+      const unitMerchant = unitPayee && typeof unitPayee.merchant_id === "string" ? unitPayee.merchant_id.trim() : "";
+      const payeeConflict = Boolean(captureMerchant && unitMerchant && captureMerchant !== unitMerchant);
+      const payee = capturePayee ?? unitPayee;
       let merchant: string | null = null;
       let merchantBad = false;
       if (payee && "merchant_id" in payee && payee.merchant_id != null && payee.merchant_id !== "") {
-        if (typeof payee.merchant_id === "string") merchant = payee.merchant_id;
+        if (typeof payee.merchant_id === "string") merchant = payee.merchant_id.trim();
         else merchantBad = true;
       }
       const amount = asRecord(cap.amount);
@@ -160,6 +166,7 @@ function readCaptures(root: Record<string, unknown>): SeenCapture[] {
         value: amount && typeof amount.value === "string" ? amount.value : null,
         merchant,
         merchantBad,
+        payeeConflict,
       });
     }
   }
@@ -208,6 +215,9 @@ export function interpretCapture(requestedOrderId: string, expectedMerchant: str
   const amounts = seen.map((item) => `${item.id ?? "unknown"} ${item.currency ?? "?"} ${item.value ?? "?"}`).join(" ");
   for (const item of seen) {
     const observed: MerchantObservation = item.merchantBad ? { state: "malformed" } : item.merchant ? { state: "present", merchantId: item.merchant } : { state: "absent" };
+    if (item.payeeConflict) {
+      return { outcome: "hold", captureId: item.id, evidence: `${item.id ?? "unknown"} payee disagreement` };
+    }
     if (observed.state === "absent") continue;
     const decision = merchantAllowsPayment(expectedMerchant, observed);
     if (!decision.ok) {
@@ -323,7 +333,16 @@ export function createPaypalSandboxClient(
       if (matches.length !== 1) return { ok: false, evidence: `capture ${capture.captureId} ${capture.currency} ${capture.amount}` };
       const matched = matches[0];
       if (!matched || matched.status !== "COMPLETED") return { ok: false, evidence: `capture ${capture.captureId} ${matched?.status ?? "missing"}` };
+      const payments = asRecord(unit.payments);
+      const caps = payments && Array.isArray(payments.captures) ? payments.captures : [];
+      const matchedRow = caps.map((item) => asRecord(item)).find((row) => row !== null && row.id === capture.captureId);
+      const capturePayee = matchedRow ? asRecord(matchedRow.payee) : null;
+      const captureMerchant = capturePayee && typeof capturePayee.merchant_id === "string" ? capturePayee.merchant_id.trim() : "";
       const payee = asRecord(unit.payee);
+      const unitMerchant = payee && typeof payee.merchant_id === "string" ? payee.merchant_id.trim() : "";
+      if (captureMerchant && unitMerchant && captureMerchant !== unitMerchant) {
+        return { ok: false, evidence: `payee disagreement ${capture.captureId}` };
+      }
       const merchant = payee && typeof payee.merchant_id === "string" && payee.merchant_id.trim() ? payee.merchant_id.trim() : null;
       if (!merchant) return { ok: false, evidence: "merchant missing" };
       return { ok: true, merchantId: merchant };
