@@ -28,7 +28,7 @@ function MoreLink({ href, children }: { href: string; children: React.ReactNode 
     <Link
       href={href}
       data-cursor="view"
-      className="spec group inline-flex items-center gap-2 transition-colors duration-[var(--duration-fast)] hover:text-ink"
+      className="label group inline-flex items-center gap-2 transition-colors duration-[var(--duration-fast)] hover:text-ink"
     >
       {children}
       <span
@@ -80,15 +80,17 @@ export default async function Home() {
       />
 
       {/* Featured work — deliberately untinted: the artwork supplies the colour. */}
-      <SectionBand id="work">
-        <SectionHeader
-          index={1}
-          eyebrow={settings.workSectionEyebrow}
-          title={settings.workSectionTitle}
-          action={<MoreLink href="/work">All work</MoreLink>}
-        />
-        <FeaturedWork projects={featured} />
-      </SectionBand>
+      {featured.length > 0 && (
+        <SectionBand id="work">
+          <SectionHeader
+            index={1}
+            eyebrow={settings.workSectionEyebrow}
+            title={settings.workSectionTitle}
+            action={<MoreLink href="/work">All work</MoreLink>}
+          />
+          <FeaturedWork projects={featured} />
+        </SectionBand>
+      )}
 
       {/* Stats */}
       <SectionBand tone={STATS_TONE} size="compact">

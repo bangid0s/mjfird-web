@@ -5,7 +5,7 @@ import { getProjects } from "@/lib/data/projects";
 
 export const metadata: Metadata = {
   title: "Work",
-  description: "Brand, motion, and web projects by MJFIRD.",
+  description: "Character art, card illustration and brand work for clients worldwide.",
 };
 
 export default async function WorkPage() {
@@ -17,6 +17,7 @@ export default async function WorkPage() {
         index={1}
         eyebrow="Selected Work"
         title="Everything I've shipped"
+        description="Character art, card illustration and brand work for clients worldwide."
         action={
           <p className="mono-meta">
             {projects.length} {projects.length === 1 ? "project" : "projects"}
