@@ -26,6 +26,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "" ? 1 : 0.7,
   }));
 
+  const legalRoutes: MetadataRoute.Sitemap = ["/privacy", "/terms"].map((path) => ({
+    url: `${BASE_URL}${path}`,
+    lastModified: new Date("2026-11-10"),
+    changeFrequency: "yearly",
+    priority: 0.3,
+  }));
+
   const projectRoutes: MetadataRoute.Sitemap = projects.map((p) => ({
     url: `${BASE_URL}/work/${p.slug}`,
     lastModified: new Date(),
@@ -47,5 +54,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticRoutes, ...projectRoutes, ...postRoutes, ...serviceRoutes];
+  return [...staticRoutes, ...legalRoutes, ...projectRoutes, ...postRoutes, ...serviceRoutes];
 }

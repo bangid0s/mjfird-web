@@ -25,7 +25,15 @@ export default function Footer({
   const showCta = pathname !== "/contact";
   const headingLines = heading.split("\n");
   // The CTA band already links to /contact, so skip it in the sitemap column.
-  const sitemap = links.filter((l) => l.href !== "/contact");
+  // Privacy and Terms stay here even when the nav list in settings does not include them.
+  const legalLinks = [
+    { label: "Privacy", href: "/privacy" },
+    { label: "Terms", href: "/terms" },
+  ];
+  const sitemap = [
+    ...links.filter((l) => l.href !== "/contact" && !legalLinks.some((item) => item.href === l.href)),
+    ...legalLinks,
+  ];
 
   return (
     <footer className="relative mt-auto border-t border-line bg-bg">
