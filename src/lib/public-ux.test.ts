@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { isBrokenImage } from "@/lib/media";
 import { partitionNavLinks } from "@/lib/nav-links";
 import { normalizeProcessStep } from "@/lib/process-steps";
 import { formatStat } from "@/lib/stats";
@@ -96,4 +97,13 @@ test("inquiry: a complete form validates and keeps its values", () => {
   const result = validateInquiry(values);
   assert.equal(result.ok, true);
   assert.deepEqual(result.ok && result.data, { ...values, company: "" });
+});
+
+test("avatar: an image that finished loading with no pixels counts as broken", () => {
+  // The state of an <img> whose request failed before React attached its
+  // error listener: complete, but with no natural size.
+  assert.equal(isBrokenImage({ complete: true, naturalWidth: 0 }), true);
+  assert.equal(isBrokenImage({ complete: true, naturalWidth: 96 }), false);
+  assert.equal(isBrokenImage({ complete: false, naturalWidth: 0 }), false);
+  assert.equal(isBrokenImage(null), false);
 });

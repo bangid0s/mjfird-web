@@ -11,16 +11,20 @@ type Props = {
   >;
 };
 
-/** The one accent band on the page: ongoing monthly work, for clients who want more than one piece. */
+/**
+ * The one accent band on the page: ongoing monthly work, for clients who want
+ * more than one piece. Copy is set in full ink: the muted ink is a 76% mix that
+ * drops below AA for body text on some accent colours.
+ */
 export default function RetainerBand({ settings }: Props) {
   if (!settings.retainerEnabled) return null;
   return (
     <SectionBand tone="accent" id="retainer">
       <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
         <Reveal className="flex flex-col items-start gap-6">
-          <p className="eyebrow">{settings.retainerEyebrow}</p>
+          <p className="eyebrow text-ink">{settings.retainerEyebrow}</p>
           <h2 className="display-lg">{settings.retainerTitle}</h2>
-          <p className="max-w-lg text-body-lg text-pretty text-ink-muted">{settings.retainerIntro}</p>
+          <p className="max-w-lg text-body-lg text-pretty text-ink">{settings.retainerIntro}</p>
           <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-4">
             <MagneticButton href="/contact?type=retainer" size="lg" variant="secondary" arrow>
               {settings.retainerCtaLabel}

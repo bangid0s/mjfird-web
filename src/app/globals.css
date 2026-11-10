@@ -331,6 +331,12 @@ body {
   border-radius: var(--radius-xs);
 }
 
+/* ...except on an accent fill, where an accent ring is invisible. Unlayered,
+   like the rule above, so it is not outranked by it. */
+.tone-accent :focus-visible {
+  outline-color: var(--color-accent-ink);
+}
+
 /* Theme-paired assets (e.g. dark-mode vs light-mode logo) */
 .theme-light-only {
   display: none;
@@ -547,6 +553,9 @@ html[data-cursor="custom"] [contenteditable="true"] {
     --color-line-strong: color-mix(in oklab, var(--color-accent-ink) 38%, transparent);
     /* Accent-coloured text would vanish on an accent fill. */
     --color-accent-strong: var(--color-accent-ink);
+    /* The ground here is the accent, so anything that inverts against "the
+       page" (an outlined button filling on hover) inverts against that. */
+    --color-bg: var(--color-accent);
   }
 
   /*
