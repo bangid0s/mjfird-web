@@ -29,11 +29,17 @@ export type CaptureInterpretation =
 
 export type MerchantObservation = { state: "absent" } | { state: "malformed" } | { state: "present"; merchantId: string };
 
+export type OrderPayeeCheck =
+  | { ok: true; merchantId: string }
+  | { ok: false; evidence: string };
+
 export type PaypalClient = {
   /** Set when PAYPAL_MERCHANT_ID is configured. Stubs may omit it. */
   merchantId?: string | null;
   createOrder(amount: string, requestId: string, ref: number, idempotencyKey: string): Promise<{ id: string }>;
   captureOrder(orderId: string, idempotencyKey: string): Promise<CaptureInterpretation>;
+  /** Reads only purchase_units[0].payee. Confirms the POST capture id and amount on that same order. */
+  confirmOrderPayee(orderId: string, capture: { captureId: string; amount: string; currency: string }): Promise<OrderPayeeCheck>;
   verifyWebhook(headers: Headers, event: unknown): Promise<boolean>;
 };
 
@@ -103,27 +109,32 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return Object.fromEntries(Object.entries(value));
 }
 
-function orderPayee(body: unknown): { id: string | null; merchant: string | null } {
+function orderPayeeMerchant(body: unknown): string | null {
   const root = asRecord(body);
-  if (!root) return { id: null, merchant: null };
-  const id = typeof root.id === "string" && root.id ? root.id : null;
-  const units = Array.isArray(root.purchase_units) ? root.purchase_units : [];
+  const units = root && Array.isArray(root.purchase_units) ? root.purchase_units : [];
   const unit = asRecord(units[0]);
   const payee = unit ? asRecord(unit.payee) : null;
-  const merchant = payee && typeof payee.merchant_id === "string" && payee.merchant_id.trim() ? payee.merchant_id.trim() : null;
-  return { id, merchant };
+  return payee && typeof payee.merchant_id === "string" && payee.merchant_id.trim() ? payee.merchant_id.trim() : null;
 }
 
-/** Copy the order-level payee onto a capture body that omitted it. */
-function withOrderPayee(captureBody: unknown, orderBody: unknown): unknown {
-  const order = orderPayee(orderBody);
-  if (!order.merchant) return captureBody;
-  const root = asRecord(captureBody);
+function listedCaptures(body: unknown): Array<{ id: string; currency: string; amount: string }> {
+  const root = asRecord(body);
   const units = root && Array.isArray(root.purchase_units) ? root.purchase_units : [];
-  if (!root || units.length === 0) return orderBody;
-  const unit = asRecord(units[0]);
-  if (!unit || orderPayee(captureBody).merchant) return captureBody;
-  return { ...root, purchase_units: [{ ...unit, payee: { merchant_id: order.merchant } }, ...units.slice(1)] };
+  const found: Array<{ id: string; currency: string; amount: string }> = [];
+  for (const unitValue of units) {
+    const unit = asRecord(unitValue);
+    const payments = unit ? asRecord(unit.payments) : null;
+    const caps = payments && Array.isArray(payments.captures) ? payments.captures : [];
+    for (const capValue of caps) {
+      const cap = asRecord(capValue);
+      const amount = cap ? asRecord(cap.amount) : null;
+      const id = cap && typeof cap.id === "string" ? cap.id : "";
+      const currency = amount && typeof amount.currency_code === "string" ? amount.currency_code : "";
+      const value = amount && typeof amount.value === "string" ? normalizeUsd(amount.value) : null;
+      if (id && currency && value) found.push({ id, currency, amount: value });
+    }
+  }
+  return found;
 }
 
 type SeenCapture = {
@@ -171,6 +182,14 @@ function readCaptures(root: Record<string, unknown>): SeenCapture[] {
 export function interpretCapture(requestedOrderId: string, expectedMerchant: string | null, body: unknown): CaptureInterpretation {
   const root = asRecord(body);
   if (!root) return { outcome: "uncertain", captureId: null, evidence: "unparsed" };
+  const units = Array.isArray(root.purchase_units) ? root.purchase_units : [];
+  const topAmount = asRecord(root.amount);
+  const topValue = topAmount && typeof topAmount.value === "string" ? topAmount.value : null;
+  const topCurrency = topAmount && typeof topAmount.currency_code === "string" ? topAmount.currency_code : null;
+  if (units.length === 0 && typeof root.id === "string" && root.id && topValue && topCurrency) {
+    const status = typeof root.status === "string" && root.status ? root.status : "unknown";
+    return { outcome: "hold", captureId: root.id, evidence: `${root.id}:${status} ${topCurrency} ${topValue} capture resource` };
+  }
   const responseOrderId = typeof root.id === "string" && root.id ? root.id : null;
   const orderStatus = typeof root.status === "string" && root.status ? root.status : null;
   const seen = readCaptures(root);
@@ -196,6 +215,7 @@ export function interpretCapture(requestedOrderId: string, expectedMerchant: str
   const amounts = seen.map((item) => `${item.id ?? "unknown"} ${item.currency ?? "?"} ${item.value ?? "?"}`).join(" ");
   for (const item of seen) {
     const observed: MerchantObservation = item.merchantBad ? { state: "malformed" } : item.merchant ? { state: "present", merchantId: item.merchant } : { state: "absent" };
+    if (observed.state === "absent") continue;
     const decision = merchantAllowsPayment(expectedMerchant, observed);
     if (!decision.ok) {
       return { outcome: "hold", captureId: soleId, evidence: `${listed}${parent} ${decision.evidence} ${amounts}`.trim() };
@@ -218,8 +238,8 @@ export function interpretCapture(requestedOrderId: string, expectedMerchant: str
   if (one.merchantBad) return { outcome: "hold", captureId: one.id, evidence: `${one.id} merchant malformed` };
   const amount = one.value ? normalizeUsd(one.value) : null;
   if (!amount || !one.currency || !responseOrderId) return uncertain(one.id, one.id);
-  if (expectedMerchant && one.merchant !== expectedMerchant) {
-    return { outcome: "hold", captureId: one.id, evidence: `merchant ${one.merchant ?? "missing"}` };
+  if (one.merchant && expectedMerchant && one.merchant !== expectedMerchant) {
+    return { outcome: "hold", captureId: one.id, evidence: `merchant ${one.merchant}` };
   }
   return { outcome: "completed", orderId: responseOrderId, captureId: one.id, amount, currency: one.currency, merchantId: one.merchant };
 }
@@ -288,17 +308,25 @@ export function createPaypalSandboxClient(
         },
       });
       if (!res.ok) throw new PaypalRequestError("capture", res.status);
-      let body = await readJson(res);
-      if (!orderPayee(body).merchant) {
-        const lookedUp = await fetchImpl(`${PAYPAL_SANDBOX_API}/v2/checkout/orders/${orderId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (lookedUp.ok) {
-          const orderBody = await readJson(lookedUp);
-          if (orderPayee(orderBody).id === orderId) body = withOrderPayee(body, orderBody);
-        }
-      }
-      return interpretCapture(orderId, config.merchantId, body);
+      return interpretCapture(orderId, config.merchantId, await readJson(res));
+    },
+
+    async confirmOrderPayee(orderId, capture) {
+      if (!/^[A-Za-z0-9-]+$/.test(orderId)) throw new PaypalRequestError("order_id", 400);
+      const token = await accessToken();
+      const lookedUp = await fetchImpl(`${PAYPAL_SANDBOX_API}/v2/checkout/orders/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!lookedUp.ok) throw new PaypalRequestError("order_lookup", lookedUp.status);
+      const orderBody = await readJson(lookedUp);
+      const root = asRecord(orderBody);
+      const id = root && typeof root.id === "string" ? root.id : null;
+      if (id !== orderId) return { ok: false, evidence: `order ${id ?? "missing"}` };
+      const matches = listedCaptures(orderBody).filter((item) => item.id === capture.captureId && item.currency === capture.currency && item.amount === capture.amount);
+      if (matches.length !== 1) return { ok: false, evidence: `capture ${capture.captureId} ${capture.currency} ${capture.amount}` };
+      const merchant = orderPayeeMerchant(orderBody);
+      if (!merchant) return { ok: false, evidence: "merchant missing" };
+      return { ok: true, merchantId: merchant };
     },
 
     async verifyWebhook(headers, event) {

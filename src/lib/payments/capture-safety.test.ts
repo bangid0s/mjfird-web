@@ -43,6 +43,9 @@ async function capture(responseBody: unknown, status = 200) {
         async captureOrder() {
           return { outcome: "uncertain" as const, evidence: "uncertain", captureId: null };
         },
+        async confirmOrderPayee() {
+          return { ok: false as const, evidence: "unused" };
+        },
         async verifyWebhook() {
           return false;
         },
@@ -96,7 +99,7 @@ test("pending, ambiguous, and multiple captures stay claimed", async () => {
   assert.equal((await pending.db.read()).capturePending, true);
   assert.equal(await pending.db.cancelClient(), "blocked");
   const completed = await handleSandboxWebhook(
-    { db: pending.db.checkout, paypal: { async createOrder() { return { id: "ORDER-1" }; }, async captureOrder() { return { outcome: "uncertain" as const, evidence: "uncertain", captureId: null }; }, async verifyWebhook() { return true; } }, expectedMerchant: "OUR-MERCHANT" },
+    { db: pending.db.checkout, paypal: { async createOrder() { return { id: "ORDER-1" }; }, async captureOrder() { return { outcome: "uncertain" as const, evidence: "uncertain", captureId: null }; }, async confirmOrderPayee() { return { ok: false as const, evidence: "unused" }; }, async verifyWebhook() { return true; } }, expectedMerchant: "OUR-MERCHANT" },
     {
       headers: new Headers(),
       rawBody: JSON.stringify({
@@ -175,6 +178,9 @@ test("uncertain results stay recorded, and a merchant hold is not paid by a late
         },
         async captureOrder() {
           return { outcome: "uncertain", evidence: "uncertain", captureId: null };
+        },
+        async confirmOrderPayee() {
+          return { ok: false as const, evidence: "unused" };
         },
         async verifyWebhook() {
           return true;

@@ -68,6 +68,9 @@ function scriptedPaypal(options?: { capture?: CaptureInterpretation }) {
       if (pauseCapture && captureCharges === 1) await pauseCapture;
       return captured;
     },
+    async confirmOrderPayee() {
+      return { ok: false, evidence: "unused" };
+    },
     async verifyWebhook() {
       return true;
     },

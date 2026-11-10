@@ -33,6 +33,9 @@ const stub: PaypalClient = {
   async captureOrder() {
     return { outcome: "uncertain", evidence: "unused", captureId: null };
   },
+  async confirmOrderPayee() {
+    return { ok: false, evidence: "unused" };
+  },
   async verifyWebhook() {
     return true;
   },

@@ -138,6 +138,40 @@ export async function captureSandboxOrder(
     });
     return { status: captured.outcome === "hold" ? 409 : 502, body: captured.outcome === "hold" ? { error: "Payment could not be confirmed." } : { error: retry } };
   }
+  if (!captured.merchantId) {
+    await deps.db.holdCapture({
+      orderId: checkout.orderId,
+      captureId: captured.captureId,
+      evidence: `${captured.currency} ${captured.amount} COMPLETED merchant missing`,
+      kind: "uncertain",
+    });
+    let looked;
+    try {
+      looked = await deps.paypal.confirmOrderPayee(checkout.orderId, {
+        captureId: captured.captureId,
+        amount: captured.amount,
+        currency: captured.currency,
+      });
+    } catch {
+      await deps.db.holdCapture({
+        orderId: checkout.orderId,
+        captureId: captured.captureId,
+        evidence: `${captured.currency} ${captured.amount} order lookup failed`,
+        kind: "held",
+      });
+      return { status: 502, body: { error: retry } };
+    }
+    if (!looked.ok) {
+      await deps.db.holdCapture({
+        orderId: checkout.orderId,
+        captureId: captured.captureId,
+        evidence: `${captured.currency} ${captured.amount} ${looked.evidence}`,
+        kind: "held",
+      });
+      return { status: 409, body: { error: "Payment could not be confirmed." } };
+    }
+    captured = { ...captured, merchantId: looked.merchantId };
+  }
   const proven = await provePayee(deps.db, checkout.orderId, deps.paypal.merchantId, captured.merchantId, captured.captureId, `${captured.currency} ${captured.amount}`);
   if (!proven) return { status: 409, body: { error: "Payment could not be confirmed." } };
   if (captured.currency !== "USD" || captured.amount !== checkout.amount) {
