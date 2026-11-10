@@ -403,7 +403,7 @@ test("order route stays unavailable without a complete sandbox env and does not 
     throw new Error("network");
   };
   const previous = new Map<string, string | undefined>();
-  for (const key of Object.keys(fullEnv)) {
+  for (const key of [...Object.keys(fullEnv), "PAYPAL_MERCHANT_ID"]) {
     previous.set(key, process.env[key]);
     delete process.env[key];
   }
@@ -421,6 +421,31 @@ test("order route stays unavailable without a complete sandbox env and does not 
     const webhook = await import("@/app/api/webhooks/paypal/route");
     assert.equal((await capture.POST(new Request("http://localhost/api/payments/paypal/capture", { method: "POST", body: "{}" }))).status, 404);
     assert.equal((await webhook.POST(new Request("http://localhost/api/webhooks/paypal", { method: "POST", body: "{}" }))).status, 404);
+    assert.deepEqual(calls, []);
+
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:9";
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "dummy-anon-key";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "dummy-service-role-key";
+    for (const key of ["PAYPAL_ENV", "PAYPAL_CLIENT_ID", "PAYPAL_CLIENT_SECRET", "PAYPAL_WEBHOOK_ID", "NEXT_PUBLIC_PAYPAL_CLIENT_ID", "PAYPAL_MERCHANT_ID"]) {
+      delete process.env[key];
+    }
+    const routes = [await import("@/app/api/payments/paypal/order/route"), capture, webhook];
+    for (const route of routes) {
+      const got = await route.GET();
+      const posted = await route.POST(new Request("http://localhost/api/payments/paypal", { method: "POST", body: "{}" }));
+      for (const response of [got, posted]) {
+        assert.equal(response.status, 404);
+        const text = await response.text();
+        assert.equal(text.includes("dummy-service-role-key"), false);
+        assert.equal(text.includes("stack"), false);
+        assert.equal(text.includes("PayPal checkout is not available."), true);
+      }
+    }
+    assert.equal(readPaypalSandboxConfig(), null);
+    assert.equal(paypalButtonAvailable(null, { status: "awaiting_payment", currency: "USD", finalPrice: "80.00" }), false);
+    const page = readFileSync(new URL("../../app/(site)/account/requests/[id]/page.tsx", import.meta.url), "utf8");
+    assert.equal(page.includes("Payment via PayPal is coming here shortly"), true);
+    assert.equal(page.includes("paypalClientId ?"), true);
     assert.deepEqual(calls, []);
   } finally {
     globalThis.fetch = original;

@@ -16,6 +16,10 @@ function failureCode(err: unknown): string {
   return "error";
 }
 
+export function GET() {
+  return NextResponse.json({ error: "PayPal checkout is not available." }, { status: 404 });
+}
+
 export async function POST(request: Request) {
   const config = readPaypalSandboxConfig();
   if (!config) {

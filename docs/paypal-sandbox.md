@@ -42,7 +42,7 @@ The functions are revoked from `public`, `anon`, and `authenticated`, and grante
 - `POST /api/payments/paypal/capture` with `{ "orderId": "<paypal order id>" }`
 - `POST /api/webhooks/paypal`
 
-All three return 404 until the sandbox env names above are set.
+All three return 404 until the sandbox env names above are set. GET on those paths returns the same 404 and does not read or write the database. That stays true when the Supabase variables are set and every `PAYPAL_*` name is unset: the request page shows the manual-payment message and does not render the PayPal button. Sign-in, sign-up, the account list, and a new commission request do not read PayPal configuration.
 
 ## Sandbox webhook
 
