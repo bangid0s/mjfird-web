@@ -280,6 +280,17 @@ export type SiteSettingsRow = {
   process_section_eyebrow: string;
   process_section_title: string;
   process_steps: { title: string; description: string }[];
+  // Added by migration 0034 — optional because a row may predate it.
+  hero_headline?: string | null;
+  hero_proof_note?: string | null;
+  services_faq?: { q: string; a: string }[] | null;
+  retainer_enabled?: boolean | null;
+  retainer_eyebrow?: string | null;
+  retainer_title?: string | null;
+  retainer_intro?: string | null;
+  retainer_points?: string[] | null;
+  retainer_price_label?: string | null;
+  retainer_cta_label?: string | null;
   resume_headline: string;
   resume_role: string;
   resume_location: string;

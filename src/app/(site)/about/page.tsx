@@ -3,12 +3,14 @@ import Avatar from "@/components/ui/Avatar";
 import SectionHeader from "@/components/ui/SectionHeader";
 import MagneticButton from "@/components/ui/MagneticButton";
 import Reveal from "@/components/motion/Reveal";
+import AnimatedNumber from "@/components/ui/AnimatedNumber";
+import Timeline from "@/components/about/Timeline";
 import { getProfile } from "@/lib/data/profile";
 import { getSiteSettings } from "@/lib/data/site-settings";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "MJFIRD — breaker, designer, builder.",
+  description: "About M.J. Fird: illustrator and graphic designer based in Indonesia.",
 };
 
 export default async function AboutPage() {
@@ -57,25 +59,22 @@ export default async function AboutPage() {
         </Reveal>
       </div>
 
+      {settings.stats.length > 0 && (
+        <div className="border-t border-line">
+          <div className="container-page grid grid-cols-2 gap-x-6 gap-y-10 py-14 sm:grid-cols-4">
+            {settings.stats.map((stat, i) => (
+              <Reveal key={stat.label} delay={i * 60}>
+                <AnimatedNumber value={stat.value} suffix={stat.suffix} label={stat.label} />
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="border-y border-line bg-bg-raised/60">
         <div className="container-page py-[var(--space-section)]">
           <SectionHeader index={1} eyebrow="Timeline" title="How I got here" />
-          <ol className="flex flex-col">
-            {settings.aboutTimeline.map((item, i) => (
-              <Reveal
-                as="li"
-                key={item.year}
-                delay={i * 50}
-                className="grid grid-cols-[4.5rem_1fr] gap-6 border-t border-line py-7 last:border-b sm:grid-cols-[9rem_1fr]"
-              >
-                <span className="mono-meta pt-1 text-accent">{item.year}</span>
-                <div>
-                  <h3 className="display-sm">{item.label}</h3>
-                  <p className="mt-1.5 max-w-2xl text-body-sm text-pretty text-ink-muted">{item.detail}</p>
-                </div>
-              </Reveal>
-            ))}
-          </ol>
+          <Timeline items={settings.aboutTimeline} />
         </div>
       </div>
 

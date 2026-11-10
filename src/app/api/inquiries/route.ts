@@ -4,11 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/data/config";
 
 const schema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  projectType: z.string().min(1),
-  budget: z.string().min(1),
-  message: z.string().min(20),
+  name: z.string().min(1).max(200),
+  email: z.string().email().max(320),
+  projectType: z.string().min(1).max(60),
+  budget: z.string().min(1).max(60),
+  message: z.string().min(20).max(5000),
   company: z.string().max(0).optional(), // honeypot — must stay empty
 });
 

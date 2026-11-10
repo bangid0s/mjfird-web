@@ -58,7 +58,7 @@ export default function Footer({
                 <MagneticButton href="/contact" cursorLabel="view">
                   Start an inquiry
                 </MagneticButton>
-  <p className="spec">Usually replies within 48 hours</p>
+  <p className="label">Usually replies within 48 hours</p>
               </div>
             </div>
           </Reveal>

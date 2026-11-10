@@ -12,8 +12,8 @@ import { cn } from "@/lib/cn";
   Shared by /work and the homepage's featured strip, which were two copies of
   the same component before.
 
-  Large 4:3 cards, every piece framed the same way; `columns` picks two or three
-  across at the widest breakpoint. A wide "lead" card was tried here and
+  Large 4:3 cards, every piece framed the same way, two across by default;
+  `columns` can ask for three at the widest breakpoint. A wide "lead" card was tried here and
   dropped: at desktop width it filled the
   viewport on its own, so nothing else was visible without scrolling, and the
   crop it needed cut vertical illustration in half.
@@ -22,14 +22,14 @@ import { cn } from "@/lib/cn";
 export default function ProjectsGrid({
   projects,
   columns = 2,
-  showFilterWhenSingleCategory = true,
+  showFilter = true,
   emptyHint = "check back soon",
 }: {
   projects: Project[];
   /** Widest breakpoint's column count. Three reads as an index, two as a feature. */
   columns?: 2 | 3;
-  /** The homepage hides a filter that would only ever have one option. */
-  showFilterWhenSingleCategory?: boolean;
+  /** The homepage shows a fixed handful, so it carries no filter. */
+  showFilter?: boolean;
   emptyHint?: string;
 }) {
   const [filter, setFilter] = useState("All");
@@ -42,13 +42,11 @@ export default function ProjectsGrid({
   const filtered =
     filter === "All" ? projects : projects.filter((p) => p.category === filter);
 
-  const showFilter = showFilterWhenSingleCategory
-    ? categories.length > 0
-    : categories.length > 1;
+  const hasFilter = showFilter && categories.length > 0;
 
   return (
     <div className="flex flex-col gap-10">
-      {showFilter && <FilterChips options={categories} onChange={setFilter} />}
+      {hasFilter && <FilterChips options={categories} onChange={setFilter} />}
 
       <div
         className={cn(
@@ -66,7 +64,7 @@ export default function ProjectsGrid({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.34, ease: easeFreeze }}
             >
-              <ProjectCard project={project} index={i} priority={i < 3} columns={columns} />
+              <ProjectCard project={project} priority={i < 2} columns={columns} />
             </motion.div>
           ))}
         </AnimatePresence>

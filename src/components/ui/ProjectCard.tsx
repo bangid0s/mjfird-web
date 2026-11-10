@@ -8,24 +8,23 @@ import type { Project } from "@/lib/placeholder-data";
   224px thumbnail in a list row this replaces. Every card is framed the same
   way — a portfolio grid shouldn't rank its own pieces by crop.
 
-  Nothing is painted on top of the artwork. The index and the hover affordance
-  used to sit on the image as translucent chips; they live in the meta line
-  below it now, so the cover renders at full colour with nothing over it.
+  Nothing is painted on top of the artwork, and the caption stays out of its
+  way: title, discipline, and who it was for. The pitch sentence lives on the
+  project page, where there is room to read it.
 */
 
 export default function ProjectCard({
   project,
-  index,
   priority = false,
   columns = 2,
 }: {
   project: Project;
-  index: number;
   priority?: boolean;
   /** Only used to size the image request correctly. */
   columns?: 2 | 3;
 }) {
   const hasCover = Boolean(project.cover) && !project.cover.startsWith("/placeholder");
+  const byline = [project.client, project.year].filter(Boolean).join(" · ");
 
   return (
     <Link
@@ -53,33 +52,14 @@ export default function ProjectCard({
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <h3 className="display-sm transition-colors duration-[var(--duration-fast)] group-hover:text-accent">
+          <h3 className="display-sm transition-colors duration-[var(--duration-fast)] group-hover:text-accent-strong">
             {project.title}
           </h3>
-          <span className="spec border border-line px-2 py-1">
-            {project.category}
-          </span>
+          <span className="spec border border-line px-2 py-1">{project.category}</span>
         </div>
-
-        <p className="max-w-xl text-body-sm text-pretty text-ink-muted">{project.hook}</p>
-
-        <div className="mt-1 flex items-center justify-between gap-4">
-          <p className="mono-meta">
-            {String(index + 1).padStart(2, "0")}
-            <span className="px-2 opacity-50">/</span>
-            {project.client}
-            <span className="px-2 opacity-50">/</span>
-            {project.year}
-          </p>
-          <span
-            aria-hidden="true"
-            className="spec flex shrink-0 items-center gap-1.5 text-accent-strong opacity-0 transition-[opacity,transform] duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-0 group-hover:opacity-100 sm:translate-x-2"
-          >
-            View project →
-          </span>
-        </div>
+        {byline && <p className="label">{byline}</p>}
       </div>
     </Link>
   );

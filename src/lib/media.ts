@@ -53,3 +53,12 @@ export function normalizeMediaUrl(url: string) {
   if (/^[\w-]+(\.[\w-]+)+([/?#].*)?$/.test(trimmed)) return `https://${trimmed}`;
   return trimmed;
 }
+
+/**
+ * True for an <img> that has finished loading with nothing to show. This is how
+ * a failed image looks when its `error` event fired before React hydrated and
+ * so was never delivered to an `onError` handler.
+ */
+export function isBrokenImage(img: { complete: boolean; naturalWidth: number } | null | undefined): boolean {
+  return Boolean(img && img.complete && img.naturalWidth === 0);
+}

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeMediaUrl } from "@/lib/media";
 import { normalizeGaId } from "@/lib/analytics";
+import { OVERHAUL_COLUMNS, parseFaq, withoutOverhaulColumns } from "@/lib/admin/site-settings-columns";
 
 function text(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -153,13 +154,35 @@ export async function saveSiteSettings(formData: FormData) {
     process_section_eyebrow: String(formData.get("process_section_eyebrow") ?? ""),
     process_section_title: String(formData.get("process_section_title") ?? ""),
     process_steps: parseProcessSteps(String(formData.get("process_steps") ?? "")),
+    // Migration 0034 — see OVERHAUL_COLUMNS for what happens before it is applied.
+    hero_headline: String(formData.get("hero_headline") ?? "").trim(),
+    hero_proof_note: String(formData.get("hero_proof_note") ?? "").trim(),
+    services_faq: parseFaq(String(formData.get("services_faq") ?? "")),
+    retainer_enabled: formData.get("retainer_enabled") === "on",
+    retainer_eyebrow: String(formData.get("retainer_eyebrow") ?? "").trim(),
+    retainer_title: String(formData.get("retainer_title") ?? "").trim(),
+    retainer_intro: String(formData.get("retainer_intro") ?? "").trim(),
+    retainer_points: linesToList(String(formData.get("retainer_points") ?? "")),
+    retainer_price_label: String(formData.get("retainer_price_label") ?? "").trim(),
+    retainer_cta_label: String(formData.get("retainer_cta_label") ?? "").trim(),
   };
 
   const { data: existing } = await supabase.from("site_settings").select("id").limit(1).single();
 
-  const { error } = existing
-    ? await supabase.from("site_settings").update(payload).eq("id", existing.id)
-    : await supabase.from("site_settings").insert(payload);
+  const write = (values: Record<string, unknown>) =>
+    existing
+      ? supabase.from("site_settings").update(values).eq("id", existing.id)
+      : supabase.from("site_settings").insert(values);
+
+  let { error } = await write(payload);
+  let pendingMigration = false;
+  // PGRST204: a column in the payload does not exist yet, i.e. 0034 has not
+  // been applied. Save everything else rather than losing the whole form.
+  const missingColumn = error?.code === "PGRST204" || OVERHAUL_COLUMNS.some((c) => error?.message.includes(c));
+  if (error && missingColumn) {
+    ({ error } = await write(withoutOverhaulColumns(payload)));
+    pendingMigration = !error;
+  }
 
   if (error) {
     // Most common cause: a migration in supabase/migrations hasn't been run yet.
@@ -169,5 +192,5 @@ export async function saveSiteSettings(formData: FormData) {
   revalidatePath("/", "layout");
   // The generated share card is its own route, so redraw it with the new settings.
   revalidatePath("/opengraph-image");
-  redirect("/admin/settings?saved=1");
+  redirect(pendingMigration ? "/admin/settings?saved=1&pending=0034" : "/admin/settings?saved=1");
 }

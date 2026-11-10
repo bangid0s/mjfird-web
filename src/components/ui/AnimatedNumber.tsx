@@ -24,7 +24,7 @@ export default function AnimatedNumber({
     if (!el) return;
 
     if (reducedMotion) {
-      el.textContent = String(value);
+      el.textContent = value.toLocaleString("en-US");
       return;
     }
 
@@ -35,7 +35,7 @@ export default function AnimatedNumber({
       ease: "power2.out",
       scrollTrigger: { trigger: el, start: "top 85%", once: true },
       onUpdate: () => {
-        el.textContent = String(Math.round(counter.value));
+        el.textContent = Math.round(counter.value).toLocaleString("en-US");
       },
     });
 
@@ -50,7 +50,7 @@ export default function AnimatedNumber({
         <span ref={ref}>0</span>
         {suffix}
       </p>
-      <p className="spec">{label}</p>
+      <p className="text-body-sm text-ink-muted">{label}</p>
     </div>
   );
 }
