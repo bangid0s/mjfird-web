@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email";
-import { manualAdvanceConflict, manualWritePlan, priceOf } from "@/lib/commissions/status";
-import { readPaypalSandboxConfig } from "@/lib/payments/config";
+import { priceOf } from "@/lib/commissions/status";
 import { formatUSD } from "@/lib/services/storefront";
 import type { CommissionRequestRow, CommissionStatus } from "@/lib/supabase/types";
 
@@ -22,18 +21,6 @@ function refresh(id: string) {
   revalidatePath(`/admin/requests/${id}`);
   revalidatePath(`/account/requests/${id}`);
   revalidatePath("/account");
-}
-
-function missingDbObject(message: string, name: string) {
-  return message.includes(name) && message.includes("does not exist");
-}
-
-async function checkoutTableState(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const { error } = await supabase.from("commission_paypal_checkouts").select("request_id").limit(1);
-  if (!error) return "present" as const;
-  const code = "code" in error && typeof error.code === "string" ? error.code : "";
-  if (code === "42P01" || missingDbObject(error.message, "commission_paypal_checkouts")) return "absent" as const;
-  return "unknown" as const;
 }
 
 async function bumpSlots(supabase: Awaited<ReturnType<typeof createClient>>, serviceId: string | null, delta: 1 | -1) {
@@ -111,37 +98,11 @@ export async function advanceRequest(id: string) {
   const step = NEXT_STATUS[req.status];
   if (!step) throw new Error("Nothing to advance.");
 
-  if (req.status === "awaiting_payment") {
-    const { error } = await supabase.rpc("mark_commission_paid_manual", { p_request_id: id });
-    if (error && missingDbObject(error.message, "mark_commission_paid_manual")) {
-      const plan = manualWritePlan({
-        rpcMissing: true,
-        checkoutTable: await checkoutTableState(supabase),
-        paypalEnabled: readPaypalSandboxConfig() !== null,
-      });
-      if (plan !== "legacy") throw new Error("PayPal checkout can't change this request until its database functions are installed.");
-      const { data: updated, error: legacyError } = await supabase
-        .from("commission_requests")
-        .update({ status: "in_progress", paid_at: new Date().toISOString() })
-        .eq("id", id)
-        .eq("status", "awaiting_payment")
-        .select("id");
-      if (legacyError || !updated || updated.length === 0) throw new Error("This request changed. Refresh and try again.");
-    } else if (error) {
-      throw new Error(manualAdvanceConflict(error.message));
-    }
-  } else {
-    const { data: updated, error } = await supabase
-      .from("commission_requests")
-      .update({ status: step.to, ...(step.stamp && { [step.stamp]: new Date().toISOString() }) })
-      .eq("id", id)
-      .eq("status", req.status)
-      .select("id");
-    if (error) throw new Error(error.message);
-    if (!updated || updated.length === 0) {
-      throw new Error("This request changed. Refresh and try again.");
-    }
-  }
+  const { error } = await supabase
+    .from("commission_requests")
+    .update({ status: step.to, ...(step.stamp && { [step.stamp]: new Date().toISOString() }) })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
 
   // A finished commission frees its slot.
   if (step.to === "completed") await bumpSlots(supabase, req.service_id, -1);
@@ -166,20 +127,9 @@ export async function advanceRequest(id: string) {
 export async function cancelRequestAsAdmin(id: string) {
   const { supabase, req } = await load(id);
   if (["completed", "declined", "cancelled"].includes(req.status)) throw new Error("Already closed.");
-  const { error } = await supabase.rpc("admin_cancel_commission_request", { p_request_id: id });
-  if (error && missingDbObject(error.message, "admin_cancel_commission_request")) {
-    const plan = manualWritePlan({
-      rpcMissing: true,
-      checkoutTable: await checkoutTableState(supabase),
-      paypalEnabled: readPaypalSandboxConfig() !== null,
-    });
-    if (plan !== "legacy") throw new Error("PayPal checkout can't change this request until its database functions are installed.");
-    const { error: legacyError } = await supabase.from("commission_requests").update({ status: "cancelled" }).eq("id", id);
-    if (legacyError) throw new Error("This request changed. Refresh and try again.");
-    if (req.status !== "pending") await bumpSlots(supabase, req.service_id, -1);
-  } else if (error) {
-    throw new Error(manualAdvanceConflict(error.message));
-  }
+  const { error } = await supabase.from("commission_requests").update({ status: "cancelled" }).eq("id", id);
+  if (error) throw new Error(error.message);
+  if (req.status !== "pending") await bumpSlots(supabase, req.service_id, -1);
   refresh(id);
 }
 

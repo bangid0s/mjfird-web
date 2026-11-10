@@ -1,63 +1,82 @@
-# Isolated client auth setup
+# Setup: login Google + pengirim email (SMTP)
 
-The site already has the Google button, email sign-up, and `GET /auth/callback`. Those routes talk to whatever Supabase project is in the environment. This setup is for an **isolated** Supabase project (local or a throwaway cloud project). Do not point the script or these dashboard steps at a production project.
+Kode di website sudah siap (tombol Google muncul otomatis begitu provider aktif,
+`/auth/callback` menangani Google, konfirmasi email, dan reset password). Yang
+tersisa adalah konfigurasi di tiga dasbor luar, karena butuh kunci rahasia yang
+hanya bisa dibuat oleh pemilik akun.
 
-Nothing in this repository changes Auth remotely. Running `scripts/setup-auth.mjs` is a separate step you take yourself, and only after `SUPABASE_PROJECT_REF` is the isolated project.
+Project Supabase: `vocrpuxcgkokuxmrkmqo` (mjfird website).
 
-## Environment names
+## 1. Resend — verifikasi domain (± 10 menit + tunggu DNS)
 
-Set these in the shell for the script. Do not commit the values.
+1. Masuk ke resend.com → **Domains → Add domain** → `mjfird.com`.
+2. Tambahkan record DNS yang diberikan Resend (SPF/TXT, DKIM, MX untuk
+   `send.mjfird.com`) di pengelola DNS domain-mu. Tunggu status **Verified**.
+3. **API Keys → Create API key** (permission *Sending access*, domain `mjfird.com`).
+   Simpan kuncinya (`re_...`) — kunci yang sama dipakai untuk:
+   - `RESEND_API_KEY` di Vercel (notifikasi request & inquiry dari website), dan
+   - password SMTP Supabase (email konfirmasi akun & reset password).
 
-| Name | Where | Notes |
-|---|---|---|
-| `SUPABASE_PROJECT_REF` | Script process only | Required. No default. |
-| `SUPABASE_ACCESS_TOKEN` | Script process only | Supabase account access token. Sent as a bearer header and never logged. |
-| `RESEND_API_KEY` or `SMTP_PASS` | Script process, and `RESEND_API_KEY` also in Vercel Preview / `.env.local` for app mail | SMTP password for the script. |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_FROM`, `SMTP_SENDER_NAME` | Script process, optional | Defaults: `smtp.resend.com`, `465`, `resend`, `notifications@mjfird.com`, `MJFIRD`. |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Script process only | Written to the isolated project's Auth provider. The Next app does not read them. |
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel Preview and `.env.local` | Public. Already used by the app. |
-| `NEXT_PUBLIC_SITE_URL` | Vercel Preview and `.env.local` | Public origin, no trailing slash. Local default in the app code is the request host. |
-| `RESEND_FROM` | Vercel Preview and `.env.local` | Server-only sender for app mail (`src/lib/email.ts`). |
-| `INQUIRY_NOTIFY_EMAIL` | Vercel Preview and `.env.local` | Server-only. |
+## 2. Google Cloud — OAuth client (± 10 menit)
 
-`SUPABASE_SERVICE_ROLE_KEY` is not used by this script.
+1. console.cloud.google.com → buat project (mis. "MJFIRD Website").
+2. **APIs & Services → OAuth consent screen**: User type *External*, nama app
+   "MJFIRD", support email, logo opsional, authorized domain `mjfird.com`.
+   Scope cukup `email`, `profile`, `openid`. Lalu **Publish app** (status
+   *In production*) supaya klien di luar daftar tester bisa login.
+3. **Credentials → Create credentials → OAuth client ID** → *Web application*:
+   - Authorized JavaScript origins: `https://mjfird.com`
+   - Authorized redirect URIs:
+     `https://vocrpuxcgkokuxmrkmqo.supabase.co/auth/v1/callback`
+4. Salin **Client ID** dan **Client secret**.
 
-## Google provider callback
+## 3. Masukkan ke Supabase
 
-In the Google Cloud OAuth client for this isolated app, set the authorized redirect URI to:
+Pilih salah satu.
 
-`https://<SUPABASE_PROJECT_REF>.supabase.co/auth/v1/callback`
+**A. Lewat dasbor (paling mudah)**
 
-That is Supabase's callback, not the Next.js route. Authorized JavaScript origins for local work: `http://localhost:3000`.
+- **Authentication → Sign In / Providers → Google**: aktifkan, tempel Client ID
+  & Client secret, Save.
+- **Authentication → Emails → SMTP Settings**: aktifkan custom SMTP
+  - Sender email: `notifications@mjfird.com` · Sender name: `MJFIRD`
+  - Host `smtp.resend.com` · Port `465` · Username `resend` · Password = API key Resend
+- **Authentication → Rate Limits**: naikkan *emails per hour* (mis. 60).
+- **Authentication → Sign In / Providers → Email**: nyalakan *Confirm email*.
+- Template bermerek: salin isi `supabase/templates/*.html` ke
+  **Authentication → Emails → Templates** — atau jalankan opsi B yang
+  melakukan semua langkah ini sekaligus.
 
-## Supabase redirect allow-list
+**B. Lewat skrip (sekali jalan, di Mac-mu)**
 
-In the isolated project, Authentication → URL configuration:
-
-- Site URL: `http://localhost:3000`
-- Redirect URLs:
-  - `http://localhost:3000/auth/callback`
-  - `https://<isolated-preview-host>/auth/callback` when you have an isolated preview
-
-The app sends people to `{request origin}/auth/callback` after Google, email confirmation, and password reset (`next=/account/password` for resets). If that URL is not on the allow-list, Supabase will not return to the site.
-
-## Script
-
-From the repo root, with the isolated ref and tokens in the environment (values not shown):
+Buat personal access token di supabase.com/dashboard/account/tokens, lalu dari
+folder repo:
 
 ```bash
-SUPABASE_PROJECT_REF= \
-SUPABASE_ACCESS_TOKEN= \
-RESEND_API_KEY= \
-GOOGLE_CLIENT_ID= \
-GOOGLE_CLIENT_SECRET= \
-node scripts/setup-auth.mjs
+SUPABASE_ACCESS_TOKEN=sbp_xxx RESEND_API_KEY=re_xxx GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com GOOGLE_CLIENT_SECRET=GOCSPX-xxx node scripts/setup-auth.mjs
 ```
 
-The script applies SMTP, then requires email confirmation, then branded templates, then the Google provider. Each part is skipped when its env names are missing. A failed request prints `✗ <label>: HTTP <status>` and does not print the response body.
+Skrip memasang SMTP → mewajibkan konfirmasi email → template bermerek → Google.
+Aman dijalankan ulang; kunci hanya dibaca dari environment, tidak disimpan.
 
-You can do the same three steps in the isolated project's Auth dashboard instead of running the script. Copy `supabase/templates/*.html` into the email templates only after custom SMTP is on.
+## 4. Vercel
 
-## What this document does not prove
+Project Settings → Environment Variables (Production), lalu redeploy:
 
-Code and this checklist do not show that an isolated project was actually updated, that Google sign-in completed, or that mail was delivered. Those need a run against an isolated project, which this change does not perform.
+- `RESEND_API_KEY` = kunci Resend tadi
+- `RESEND_FROM` = `MJFIRD <notifications@mjfird.com>`
+- `INQUIRY_NOTIFY_EMAIL` = alamat yang menerima notifikasi request baru
+
+## 5. Cek
+
+1. Buka `https://mjfird.com/login` → tombol **Continue with Google** muncul
+   (dicek ulang tiap ± 5 menit) → login dengan akun Google → sampai di `/account`.
+2. `/signup` dengan email lain → email "Confirm your MJFIRD client account"
+   datang dari `notifications@mjfird.com` → klik → masuk `/account`.
+3. `/forgot-password` → email reset datang → link membuka `/account/password`.
+4. Kirim satu request komisi uji → email notifikasi masuk ke inbox admin.
+
+Catatan: selama SMTP belum terpasang, Supabase hanya mengirim email bawaan
+(maks. 2/jam, hanya ke anggota tim Supabase), jadi konfirmasi email sengaja
+masih *off* (`mailer_autoconfirm = true`). Skrip mematikannya otomatis begitu
+SMTP berhasil dipasang.

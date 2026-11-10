@@ -42,12 +42,8 @@ Optional: set `RESEND_API_KEY` to email yourself on new inquiries, and
 contact form (the form currently ships with a honeypot field only).
 
 Client accounts (Google sign-in + the SMTP sender for confirmation and password-reset
-emails) need a one-time setup against an isolated Supabase project — see
+emails) need a one-time setup in Resend, Google Cloud and Supabase — see
 [`docs/setup-client-auth.md`](docs/setup-client-auth.md).
-
-PayPal checkout on an accepted commission is sandbox-only. It stays hidden until
-`PAYPAL_ENV=sandbox` and the other names in [`docs/paypal-sandbox.md`](docs/paypal-sandbox.md)
-are set for Vercel Preview or `.env.local`. There is no live PayPal mode.
 
 ## Project structure
 
