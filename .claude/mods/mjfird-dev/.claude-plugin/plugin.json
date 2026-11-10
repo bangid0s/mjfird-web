@@ -1,0 +1,9 @@
+{
+  "name": "mjfird-dev",
+  "version": "0.1.0",
+  "description": "Dev dashboard pane for mjfird-web: git state, migrations, and lint/test/typecheck results",
+  "types": "./types/index.d.ts",
+  "author": {
+    "name": "M.J Fird"
+  }
+}

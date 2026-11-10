@@ -1,0 +1,14 @@
+{
+  "name": "mjfird-web",
+  "description": "Claude Code mods for developing mjfird-web",
+  "owner": {
+    "name": "M.J Fird"
+  },
+  "plugins": [
+    {
+      "name": "mjfird-dev",
+      "source": "./.claude/mods/mjfird-dev",
+      "description": "Dev dashboard pane for mjfird-web: git state, migrations, and lint/test/typecheck results"
+    }
+  ]
+}

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Claude Code mods: their own runtime and tsconfig, not part of the site.
+    ".claude/**",
   ]),
 ]);
 

@@ -49,6 +49,16 @@ PayPal checkout on an accepted commission is sandbox-only. It stays hidden until
 `PAYPAL_ENV=sandbox` and the other names in [`docs/paypal-sandbox.md`](docs/paypal-sandbox.md)
 are set for Vercel Preview or `.env.local`. There is no live PayPal mode.
 
+## Claude Code dev dashboard (optional)
+
+A Claude Code mod in [`.claude/mods/mjfird-dev`](.claude/mods/mjfird-dev/README.md) shows a
+pane with git state, the migration count, and lint/typecheck/test results while you work.
+At the Claude Code prompt:
+
+```
+/plugin install mjfird-dev --marketplace bangid0s/mjfird-web
+```
+
 ## Project structure
 
 - `src/app/(site)` — public pages (home, work, services, about, dance, blog, contact).
