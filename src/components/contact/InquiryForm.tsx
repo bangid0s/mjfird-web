@@ -1,21 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { z } from "zod";
 import MagneticButton from "@/components/ui/MagneticButton";
+import { BUDGETS, PROJECT_TYPES, validateInquiry, type InquiryErrors } from "@/lib/inquiry-options";
 import { cn } from "@/lib/cn";
 
-const schema = z.object({
-  name: z.string().min(1, "Tell us your name."),
-  email: z.string().email("That email doesn't look right."),
-  projectType: z.string().min(1, "Pick what this is about."),
-  budget: z.string().min(1, "Pick a rough budget range."),
-  message: z.string().min(20, "Give us at least a couple sentences."),
-  company: z.string().max(0, "").optional(), // honeypot
-});
-
 type FormState = "idle" | "loading" | "success" | "error";
-type Errors = Partial<Record<keyof z.infer<typeof schema>, string>>;
 
 const inputClasses =
   "w-full border border-line bg-bg-raised px-4 py-3.5 text-body text-ink transition-colors duration-[var(--duration-fast)] placeholder:text-ink-faint focus:border-ink focus:outline-none disabled:opacity-50";
@@ -29,23 +19,29 @@ const selectClasses = cn(
 const CHEVRON =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237e7e89' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")";
 
-export default function InquiryForm({ initialMessage = "" }: { initialMessage?: string }) {
+export default function InquiryForm({
+  initialMessage = "",
+  initialProjectType = "",
+  initialBudget = "",
+  contactEmail,
+}: {
+  initialMessage?: string;
+  /** Preselected from `/contact?type=…`; blank leaves "Select one". */
+  initialProjectType?: string;
+  initialBudget?: string;
+  contactEmail: string;
+}) {
   const [state, setState] = useState<FormState>("idle");
-  const [errors, setErrors] = useState<Errors>({});
+  const [errors, setErrors] = useState<InquiryErrors>({});
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const values = Object.fromEntries(formData.entries());
 
-    const parsed = schema.safeParse(values);
-    if (!parsed.success) {
-      const fieldErrors: Errors = {};
-      for (const issue of parsed.error.issues) {
-        const key = issue.path[0] as keyof Errors;
-        fieldErrors[key] = issue.message;
-      }
-      setErrors(fieldErrors);
+    const result = validateInquiry(values);
+    if (!result.ok) {
+      setErrors(result.errors);
       return;
     }
 
@@ -56,7 +52,7 @@ export default function InquiryForm({ initialMessage = "" }: { initialMessage?: 
       const res = await fetch("/api/inquiries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify(result.data),
       });
       if (!res.ok) throw new Error("Request failed");
       setState("success");
@@ -126,7 +122,7 @@ export default function InquiryForm({ initialMessage = "" }: { initialMessage?: 
         <Field label="Project type" error={errors.projectType}>
           <select
             name="projectType"
-            defaultValue=""
+            defaultValue={initialProjectType}
             className={selectClasses}
             style={{ backgroundImage: CHEVRON }}
             disabled={state === "loading"}
@@ -134,16 +130,17 @@ export default function InquiryForm({ initialMessage = "" }: { initialMessage?: 
             <option value="" disabled>
               Select one
             </option>
-            <option value="brand">Brand / identity</option>
-            <option value="web">Web design &amp; build</option>
-            <option value="motion">Motion / interaction</option>
-            <option value="other">Something else</option>
+            {PROJECT_TYPES.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </Field>
         <Field label="Budget range" error={errors.budget}>
           <select
             name="budget"
-            defaultValue=""
+            defaultValue={initialBudget}
             className={selectClasses}
             style={{ backgroundImage: CHEVRON }}
             disabled={state === "loading"}
@@ -151,10 +148,11 @@ export default function InquiryForm({ initialMessage = "" }: { initialMessage?: 
             <option value="" disabled>
               Select one
             </option>
-            <option value="<5k">Under $5k</option>
-            <option value="5-10k">$5k – $10k</option>
-            <option value="10-25k">$10k – $25k</option>
-            <option value="25k+">$25k+</option>
+            {BUDGETS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </Field>
       </div>
@@ -164,7 +162,7 @@ export default function InquiryForm({ initialMessage = "" }: { initialMessage?: 
           name="message"
           rows={6}
           defaultValue={initialMessage}
-          placeholder="What are you building, and what's the timeline?"
+          placeholder="What do you need made, what is it for, and when do you need it?"
           className={cn(inputClasses, "resize-none")}
           disabled={state === "loading"}
         />
@@ -172,7 +170,11 @@ export default function InquiryForm({ initialMessage = "" }: { initialMessage?: 
 
       {state === "error" && (
         <p className="border border-error/50 px-4 py-3 text-body-sm text-error">
-          Something went wrong on our end — try again, or email hello@mjfird.com directly.
+          Something went wrong on my end. Try again, or email{" "}
+          <a href={`mailto:${contactEmail}`} className="underline underline-offset-2">
+            {contactEmail}
+          </a>{" "}
+          directly.
         </p>
       )}
 
@@ -202,9 +204,13 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="spec">{label}</span>
+      <span className="label text-ink">{label}</span>
       {children}
-      {error && <span className="spec text-error">{error}</span>}
+      {error && (
+        <span role="alert" className="label text-error">
+          {error}
+        </span>
+      )}
     </label>
   );
 }

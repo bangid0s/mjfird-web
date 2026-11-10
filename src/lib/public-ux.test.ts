@@ -5,7 +5,7 @@ import { normalizeProcessStep } from "@/lib/process-steps";
 import { formatStat } from "@/lib/stats";
 import { splitTimeline } from "@/lib/timeline";
 import { OVERHAUL_COLUMNS, parseFaq, withoutOverhaulColumns } from "@/lib/admin/site-settings-columns";
-import { BUDGETS, PROJECT_TYPES, inquiryPreselect } from "@/lib/inquiry-options";
+import { BUDGETS, PROJECT_TYPES, inquiryPreselect, validateInquiry } from "@/lib/inquiry-options";
 
 const link = (label: string, href: string) => ({ label, href });
 
@@ -79,4 +79,21 @@ test("settings: FAQ lines are Question|Answer, blanks and half-lines are skipped
   assert.deepEqual(parseFaq("Do you do rush work?|Yes | for a fee.\n\nNo answer here\n|No question"), [
     { q: "Do you do rush work?", a: "Yes | for a fee." },
   ]);
+});
+
+test("inquiry: an untouched dropdown gets a readable message, not a type error", () => {
+  // A select left on its disabled placeholder is absent from FormData entirely.
+  const result = validateInquiry({ name: "A", email: "a@b.co", message: "Twenty characters of brief." });
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.ok ? {} : result.errors, {
+    projectType: "Pick what this is about.",
+    budget: "Pick a rough budget range.",
+  });
+});
+
+test("inquiry: a complete form validates and keeps its values", () => {
+  const values = { name: "A", email: "a@b.co", projectType: "retainer", budget: "retainer", message: "Twenty characters of brief." };
+  const result = validateInquiry(values);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.ok && result.data, { ...values, company: "" });
 });

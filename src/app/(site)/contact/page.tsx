@@ -4,11 +4,15 @@ import Reveal from "@/components/motion/Reveal";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { getStorefrontService } from "@/lib/data/services";
 import { formatUSD, quote } from "@/lib/services/storefront";
+import { inquiryPreselect } from "@/lib/inquiry-options";
 
 export const metadata: Metadata = {
   title: "Contact",
   description: "Start a project with MJFIRD.",
 };
+
+// What a client can expect after sending the form.
+const NEXT_STEPS = ["I reply within two days.", "You get a quote and a timeline.", "Work starts once payment is in."];
 
 /*
   "Request this service" on /services/[slug] lands here with the chosen
@@ -40,10 +44,9 @@ export default async function ContactPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const [settings, initialMessage] = await Promise.all([
-    getSiteSettings(),
-    searchParams.then(servicePrefill),
-  ]);
+  const params = await searchParams;
+  const [settings, initialMessage] = await Promise.all([getSiteSettings(), servicePrefill(params)]);
+  const preselect = inquiryPreselect(params.type);
 
   return (
     <div className="container-page grid gap-12 pb-[var(--space-section)] pt-14 sm:pt-20 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
@@ -51,12 +54,20 @@ export default async function ContactPage({
         <p className="eyebrow eyebrow-accent">Contact</p>
         <h1 className="display-lg">Start a project</h1>
         <p className="max-w-sm text-body-lg text-pretty text-ink-muted">
-          Tell me what you&apos;re building. I read every inquiry myself and reply
-          within a couple of days.
+          Tell me what you need made. I read every inquiry myself.
         </p>
 
-        <div className="mt-4 flex flex-col gap-1.5 border-t border-line pt-6">
-          <p className="eyebrow">Or, email direct</p>
+        <ol className="flex flex-col border-t border-line">
+          {NEXT_STEPS.map((line, i) => (
+            <li key={line} className="flex items-baseline gap-4 border-b border-line py-3.5 text-body text-ink">
+              <span className="mono-meta text-ink">{String(i + 1).padStart(2, "0")}</span>
+              {line}
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-2 flex flex-col gap-1.5">
+          <p className="label">Or email me directly</p>
           <a
             href={`mailto:${settings.contactEmail}`}
             data-cursor="view"
@@ -68,7 +79,12 @@ export default async function ContactPage({
       </Reveal>
 
       <Reveal delay={80}>
-        <InquiryForm initialMessage={initialMessage} />
+        <InquiryForm
+          initialMessage={initialMessage}
+          initialProjectType={preselect.projectType}
+          initialBudget={preselect.budget}
+          contactEmail={settings.contactEmail}
+        />
       </Reveal>
     </div>
   );
