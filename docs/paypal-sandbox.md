@@ -32,7 +32,7 @@ The API host is always `https://api-m.sandbox.paypal.com`.
 
 ## Isolated database
 
-`supabase/migrations/0030_paypal_sandbox_checkout.sql` adds `commission_paypal_checkouts` (`order_id` nullable until PayPal returns one, plus `capture_pending`) and the reserve, attach, begin, release, complete, manual-pay, and cancel functions. Apply that file yourself to an **isolated** database that already has `0029_commission_requests.sql`. Do not apply it to a production database as part of this change. The app does not run migrations.
+`supabase/migrations/0030_paypal_sandbox_checkout.sql` adds `commission_paypal_checkouts` (`order_id` nullable until PayPal returns one, plus `capture_pending`) and the reserve, attach, begin, release, complete, manual-pay, and cancel functions. `supabase/migrations/0031_paypal_capture_requires_proven_merchant.sql` replaces only `complete_commission_paypal_capture` so it returns `held` unless `merchant_proven` is true, including when `expected_merchant` is null. Apply `0030` to an **isolated** database that already has `0029_commission_requests.sql`, then apply `0031`. Do not apply either file to a production database as part of this change. The app does not run migrations. `0031` does not update existing rows.
 
 The functions are revoked from `public`, `anon`, and `authenticated`, and granted to `service_role` when that role exists. Clients cannot call them with the anon key.
 

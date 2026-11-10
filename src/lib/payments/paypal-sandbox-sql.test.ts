@@ -22,11 +22,32 @@ test("anon and authenticated cannot execute capture writes", async () => {
   assert.equal(service.rows[0]?.allowed, true);
 });
 
+test("an unproven capture is not marked paid", async () => {
+  const db = await createPaypalTestDb();
+  await db.seed();
+  await db.pg.query("select reserve_commission_paypal_order($1, '80.00', 'USD')", [REQUEST_ID]);
+  await db.pg.query("select attach_commission_paypal_order($1, 'ORDER-1', '80.00', 'USD')", [REQUEST_ID]);
+  const held = await db.pg.query<{ complete_commission_paypal_capture: string }>(
+    "select complete_commission_paypal_capture('ORDER-1', 'CAP-1', '80.00', 'USD')",
+  );
+  assert.equal(held.rows[0]?.complete_commission_paypal_capture, "held");
+  assert.equal((await db.read()).status, "awaiting_payment");
+  assert.equal((await db.read()).paidAt, null);
+  assert.equal((await db.read()).captureId, null);
+  const row = await db.pg.query<{ merchant_proven: boolean; expected_merchant: string | null; capture_disposition: string }>(
+    "select merchant_proven, expected_merchant, capture_disposition from commission_paypal_checkouts where order_id = 'ORDER-1'",
+  );
+  assert.equal(row.rows[0]?.merchant_proven, false);
+  assert.equal(row.rows[0]?.expected_merchant, null);
+  assert.equal(row.rows[0]?.capture_disposition, "open");
+});
+
 test("a mismatched capture does not change the request, and a second capture id is rejected", async () => {
   const db = await createPaypalTestDb();
   await db.seed();
   await db.pg.query("select reserve_commission_paypal_order($1, '80.00', 'USD')", [REQUEST_ID]);
   await db.pg.query("select attach_commission_paypal_order($1, 'ORDER-1', '80.00', 'USD')", [REQUEST_ID]);
+  await db.pg.query("update commission_paypal_checkouts set merchant_proven = true where order_id = 'ORDER-1'");
   const held = await db.pg.query<{ complete_commission_paypal_capture: string }>(
     "select complete_commission_paypal_capture('ORDER-1', 'CAP-WRONG', '1.00', 'USD')",
   );
@@ -101,6 +122,7 @@ test("manual payment after a stored capture keeps the capture id", async () => {
   await db.seed();
   await db.pg.query("select reserve_commission_paypal_order($1, '80.00', 'USD')", [REQUEST_ID]);
   await db.pg.query("select attach_commission_paypal_order($1, 'ORDER-9', '80.00', 'USD')", [REQUEST_ID]);
+  await db.pg.query("update commission_paypal_checkouts set merchant_proven = true where order_id = 'ORDER-9'");
   await db.pg.query("select complete_commission_paypal_capture('ORDER-9', 'CAP-9', '80.00', 'USD')");
   assert.equal(await db.manualMark(), "blocked");
   const state = await db.read();

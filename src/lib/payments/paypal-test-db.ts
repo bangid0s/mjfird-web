@@ -10,6 +10,7 @@ import {
 } from "@/lib/payments/checkout-db";
 
 const migration = readFileSync(new URL("../../../supabase/migrations/0030_paypal_sandbox_checkout.sql", import.meta.url), "utf8");
+const merchantProof = readFileSync(new URL("../../../supabase/migrations/0031_paypal_capture_requires_proven_merchant.sql", import.meta.url), "utf8");
 
 const REASONS = [
   "amount_mismatch",
@@ -74,6 +75,7 @@ export async function createPaypalTestDb() {
     grant usage on schema public to anon, authenticated, service_role;
   `);
   await pg.exec(migration);
+  await pg.exec(merchantProof);
   await pg.exec(`create or replace function public.is_admin() returns boolean language sql stable as $$ select true $$;`);
 
   let failCompletes = 0;
