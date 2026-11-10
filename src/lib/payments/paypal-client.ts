@@ -103,6 +103,29 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return Object.fromEntries(Object.entries(value));
 }
 
+function orderPayee(body: unknown): { id: string | null; merchant: string | null } {
+  const root = asRecord(body);
+  if (!root) return { id: null, merchant: null };
+  const id = typeof root.id === "string" && root.id ? root.id : null;
+  const units = Array.isArray(root.purchase_units) ? root.purchase_units : [];
+  const unit = asRecord(units[0]);
+  const payee = unit ? asRecord(unit.payee) : null;
+  const merchant = payee && typeof payee.merchant_id === "string" && payee.merchant_id.trim() ? payee.merchant_id.trim() : null;
+  return { id, merchant };
+}
+
+/** Copy the order-level payee onto a capture body that omitted it. */
+function withOrderPayee(captureBody: unknown, orderBody: unknown): unknown {
+  const order = orderPayee(orderBody);
+  if (!order.merchant) return captureBody;
+  const root = asRecord(captureBody);
+  const units = root && Array.isArray(root.purchase_units) ? root.purchase_units : [];
+  if (!root || units.length === 0) return orderBody;
+  const unit = asRecord(units[0]);
+  if (!unit || orderPayee(captureBody).merchant) return captureBody;
+  return { ...root, purchase_units: [{ ...unit, payee: { merchant_id: order.merchant } }, ...units.slice(1)] };
+}
+
 type SeenCapture = {
   id: string | null;
   status: string | null;
@@ -261,10 +284,21 @@ export function createPaypalSandboxClient(
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
           "PayPal-Request-Id": idempotencyKey,
+          Prefer: "return=representation",
         },
       });
       if (!res.ok) throw new PaypalRequestError("capture", res.status);
-      return interpretCapture(orderId, config.merchantId, await readJson(res));
+      let body = await readJson(res);
+      if (!orderPayee(body).merchant) {
+        const lookedUp = await fetchImpl(`${PAYPAL_SANDBOX_API}/v2/checkout/orders/${orderId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (lookedUp.ok) {
+          const orderBody = await readJson(lookedUp);
+          if (orderPayee(orderBody).id === orderId) body = withOrderPayee(body, orderBody);
+        }
+      }
+      return interpretCapture(orderId, config.merchantId, body);
     },
 
     async verifyWebhook(headers, event) {

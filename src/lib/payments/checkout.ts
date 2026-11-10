@@ -226,7 +226,19 @@ export async function handleSandboxWebhook(
   if (!checkout) return { status: 200, body: { ignored: true } };
   const observed = observeResourceMerchant(event.data.resource);
   const observedId = observed.state === "present" ? observed.merchantId : null;
-  const proven = await provePayee(deps.db, orderId, deps.expectedMerchant ?? checkout.expectedMerchant, observedId, resource.data.id, `webhook ${resource.data.amount.currency_code} ${resource.data.amount.value}`);
+  const configured = configuredMerchant(deps.expectedMerchant);
+  const pinned = configuredMerchant(checkout.expectedMerchant);
+  if (!configured || (pinned && pinned !== configured) || !observedId || observedId !== configured) {
+    const why = !configured ? `merchant unconfigured${observedId ? ` ${observedId}` : ""}` : pinned && pinned !== configured ? `merchant ${pinned}` : !observedId ? "merchant missing" : `merchant ${observedId}`;
+    await deps.db.holdCapture({
+      orderId,
+      captureId: resource.data.id,
+      evidence: `webhook ${resource.data.amount.currency_code} ${resource.data.amount.value} ${why}`,
+      kind: "held",
+    });
+    return { status: 200, body: { held: true } };
+  }
+  const proven = await provePayee(deps.db, orderId, configured, observedId, resource.data.id, `webhook ${resource.data.amount.currency_code} ${resource.data.amount.value}`);
   if (!proven) return { status: 200, body: { held: true } };
   const amount = normalizeUsd(resource.data.amount.value);
   const currency = resource.data.amount.currency_code;
