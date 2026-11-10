@@ -404,3 +404,100 @@ test("an order read with a different amount is held", async () => {
   assert.equal(run.result.status, 409);
   await run.db.pg.close();
 });
+
+test("a missing payee stays held on retry", async () => {
+  assert.ok(config);
+  const bare = {
+    id: "ORDER-1",
+    status: "COMPLETED",
+    purchase_units: [{ payments: { captures: [{ id: "CAP-1", status: "COMPLETED", amount: { currency_code: "USD", value: "80.00" } }] } }],
+  };
+  const db = await createPaypalTestDb();
+  await db.seed();
+  await createSandboxOrder({ db: db.checkout, paypal: stub, userId: CLIENT_ID }, { requestId: REQUEST_ID });
+  const paypal = createPaypalSandboxClient(config, fetchFor({ capture: bare, order: bare }));
+  const first = await captureSandboxOrder({ db: db.checkout, paypal, userId: CLIENT_ID }, { orderId: "ORDER-1" });
+  assert.equal(first.status, 409);
+  const retry = await captureSandboxOrder({ db: db.checkout, paypal, userId: CLIENT_ID }, { orderId: "ORDER-1" });
+  assert.equal(retry.status, 409);
+  const stored = await detail(db);
+  assert.equal(stored.status, "awaiting_payment");
+  assert.equal(stored.paid_at, null);
+  assert.equal(stored.capture_disposition, "held");
+  assert.equal(stored.merchant_proven, false);
+  assert.equal(stored.capture_id, "CAP-1");
+  await db.pg.close();
+});
+
+test("a blank merchant id stays held on retry and webhook", async () => {
+  const blank = readPaypalSandboxConfig({
+    PAYPAL_ENV: "sandbox",
+    PAYPAL_CLIENT_ID: "fake-sandbox-client",
+    PAYPAL_CLIENT_SECRET: "fake-sandbox-secret",
+    PAYPAL_WEBHOOK_ID: "WH-fake",
+    NEXT_PUBLIC_PAYPAL_CLIENT_ID: "fake-public-client",
+    SUPABASE_SERVICE_ROLE_KEY: "fake-service-role",
+    NEXT_PUBLIC_SUPABASE_URL: "https://isolated.invalid",
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: "fake-anon",
+    PAYPAL_MERCHANT_ID: "",
+  });
+  assert.ok(blank);
+  assert.equal(blank.merchantId, null);
+  const db = await createPaypalTestDb();
+  await db.seed();
+  await createSandboxOrder({ db: db.checkout, paypal: stub, userId: CLIENT_ID }, { requestId: REQUEST_ID });
+  const paypal = createPaypalSandboxClient(blank, fetchFor({ capture: orderShape("MERCHANT-OURS", "order") }));
+  const first = await captureSandboxOrder({ db: db.checkout, paypal, userId: CLIENT_ID }, { orderId: "ORDER-1" });
+  assert.equal(first.status, 409);
+  const retry = await captureSandboxOrder({ db: db.checkout, paypal, userId: CLIENT_ID }, { orderId: "ORDER-1" });
+  assert.equal(retry.status, 409);
+  const webhook = await handleSandboxWebhook(
+    { db: db.checkout, paypal: stub, expectedMerchant: "   " },
+    {
+      headers: new Headers(),
+      rawBody: JSON.stringify({
+        event_type: "PAYMENT.CAPTURE.COMPLETED",
+        resource: {
+          id: "CAP-1",
+          status: "COMPLETED",
+          amount: { currency_code: "USD", value: "80.00" },
+          payee: { merchant_id: "MERCHANT-OURS" },
+          supplementary_data: { related_ids: { order_id: "ORDER-1" } },
+        },
+      }),
+    },
+  );
+  assert.equal("held" in webhook.body && webhook.body.held, true);
+  const stored = await detail(db);
+  assert.equal(stored.status, "awaiting_payment");
+  assert.equal(stored.paid_at, null);
+  assert.equal(stored.capture_disposition, "held");
+  assert.equal(stored.merchant_proven, false);
+  assert.equal(stored.capture_id, "CAP-1");
+  await db.pg.close();
+});
+
+test("an order with two purchase units is held", async () => {
+  const twoUnits = {
+    id: "ORDER-1",
+    status: "COMPLETED",
+    purchase_units: [
+      { payee: { merchant_id: "MERCHANT-OURS" }, payments: { captures: [] } },
+      { payee: { merchant_id: "MERCHANT-OTHER" }, payments: { captures: [{ id: "CAP-1", status: "COMPLETED", amount: { currency_code: "USD", value: "80.00" } }] } },
+    ],
+  };
+  const run = await heldLookup(twoUnits);
+  assert.equal(run.result.status, 409);
+  await run.db.pg.close();
+});
+
+test("an order read whose capture is not completed is held", async () => {
+  const declined = {
+    id: "ORDER-1",
+    status: "COMPLETED",
+    purchase_units: [{ payee: { merchant_id: "MERCHANT-OURS" }, payments: { captures: [{ id: "CAP-1", status: "DECLINED", amount: { currency_code: "USD", value: "80.00" } }] } }],
+  };
+  const run = await heldLookup(declined);
+  assert.equal(run.result.status, 409);
+  await run.db.pg.close();
+});

@@ -109,30 +109,18 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return Object.fromEntries(Object.entries(value));
 }
 
-function orderPayeeMerchant(body: unknown): string | null {
-  const root = asRecord(body);
-  const units = root && Array.isArray(root.purchase_units) ? root.purchase_units : [];
-  const unit = asRecord(units[0]);
-  const payee = unit ? asRecord(unit.payee) : null;
-  return payee && typeof payee.merchant_id === "string" && payee.merchant_id.trim() ? payee.merchant_id.trim() : null;
-}
-
-function listedCaptures(body: unknown): Array<{ id: string; currency: string; amount: string }> {
-  const root = asRecord(body);
-  const units = root && Array.isArray(root.purchase_units) ? root.purchase_units : [];
-  const found: Array<{ id: string; currency: string; amount: string }> = [];
-  for (const unitValue of units) {
-    const unit = asRecord(unitValue);
-    const payments = unit ? asRecord(unit.payments) : null;
-    const caps = payments && Array.isArray(payments.captures) ? payments.captures : [];
-    for (const capValue of caps) {
-      const cap = asRecord(capValue);
-      const amount = cap ? asRecord(cap.amount) : null;
-      const id = cap && typeof cap.id === "string" ? cap.id : "";
-      const currency = amount && typeof amount.currency_code === "string" ? amount.currency_code : "";
-      const value = amount && typeof amount.value === "string" ? normalizeUsd(amount.value) : null;
-      if (id && currency && value) found.push({ id, currency, amount: value });
-    }
+function unitCaptures(unit: Record<string, unknown>): Array<{ id: string; status: string; currency: string; amount: string }> {
+  const payments = asRecord(unit.payments);
+  const caps = payments && Array.isArray(payments.captures) ? payments.captures : [];
+  const found: Array<{ id: string; status: string; currency: string; amount: string }> = [];
+  for (const capValue of caps) {
+    const cap = asRecord(capValue);
+    const amount = cap ? asRecord(cap.amount) : null;
+    const id = cap && typeof cap.id === "string" ? cap.id : "";
+    const status = cap && typeof cap.status === "string" ? cap.status : "";
+    const currency = amount && typeof amount.currency_code === "string" ? amount.currency_code : "";
+    const value = amount && typeof amount.value === "string" ? normalizeUsd(amount.value) : null;
+    if (id && currency && value) found.push({ id, status, currency, amount: value });
   }
   return found;
 }
@@ -189,6 +177,11 @@ export function interpretCapture(requestedOrderId: string, expectedMerchant: str
   if (units.length === 0 && typeof root.id === "string" && root.id && topValue && topCurrency) {
     const status = typeof root.status === "string" && root.status ? root.status : "unknown";
     return { outcome: "hold", captureId: root.id, evidence: `${root.id}:${status} ${topCurrency} ${topValue} capture resource` };
+  }
+  if (units.length > 1) {
+    const seenUnits = readCaptures(root);
+    const unitIds = seenUnits.map((item) => item.id).filter((id): id is string => id !== null);
+    return { outcome: "hold", captureId: unitIds.length === 1 ? unitIds[0] ?? null : null, evidence: `purchase units ${units.length}${unitIds.length ? ` ${unitIds.join(" ")}` : ""}` };
   }
   const responseOrderId = typeof root.id === "string" && root.id ? root.id : null;
   const orderStatus = typeof root.status === "string" && root.status ? root.status : null;
@@ -321,10 +314,17 @@ export function createPaypalSandboxClient(
       const orderBody = await readJson(lookedUp);
       const root = asRecord(orderBody);
       const id = root && typeof root.id === "string" ? root.id : null;
-      if (id !== orderId) return { ok: false, evidence: `order ${id ?? "missing"}` };
-      const matches = listedCaptures(orderBody).filter((item) => item.id === capture.captureId && item.currency === capture.currency && item.amount === capture.amount);
+      if (!root || id !== orderId) return { ok: false, evidence: `order ${id ?? "missing"}` };
+      const units = Array.isArray(root.purchase_units) ? root.purchase_units : [];
+      if (units.length !== 1) return { ok: false, evidence: `purchase units ${units.length}` };
+      const unit = asRecord(units[0]);
+      if (!unit) return { ok: false, evidence: "purchase units 1" };
+      const matches = unitCaptures(unit).filter((item) => item.id === capture.captureId && item.currency === capture.currency && item.amount === capture.amount);
       if (matches.length !== 1) return { ok: false, evidence: `capture ${capture.captureId} ${capture.currency} ${capture.amount}` };
-      const merchant = orderPayeeMerchant(orderBody);
+      const matched = matches[0];
+      if (!matched || matched.status !== "COMPLETED") return { ok: false, evidence: `capture ${capture.captureId} ${matched?.status ?? "missing"}` };
+      const payee = asRecord(unit.payee);
+      const merchant = payee && typeof payee.merchant_id === "string" && payee.merchant_id.trim() ? payee.merchant_id.trim() : null;
       if (!merchant) return { ok: false, evidence: "merchant missing" };
       return { ok: true, merchantId: merchant };
     },

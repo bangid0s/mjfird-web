@@ -64,9 +64,10 @@ async function stored(db: Awaited<ReturnType<typeof ordered>>) {
     paid_at: string | null;
     capture_id: string | null;
     capture_disposition: string;
+    merchant_proven: boolean;
     provider_evidence: string | null;
   }>(
-    `select r.status::text as status, r.paid_at::text as paid_at, c.capture_id, c.capture_disposition, c.provider_evidence
+    `select r.status::text as status, r.paid_at::text as paid_at, c.capture_id, c.capture_disposition, c.merchant_proven, c.provider_evidence
      from commission_requests r join commission_paypal_checkouts c on c.request_id = r.id`,
   );
   const row = result.rows[0];
@@ -176,6 +177,7 @@ test("a missing merchant configuration never marks a capture or webhook paid", a
   assert.equal(held.status, "awaiting_payment");
   assert.equal(held.paid_at, null);
   assert.equal(held.capture_disposition, "held");
+  assert.equal(held.merchant_proven, false);
   assert.equal(held.capture_id, "CAP-OPEN");
   assert.match(held.provider_evidence ?? "", /SOME-PAYEE/);
   assert.match(held.provider_evidence ?? "", /80\.00/);
@@ -184,7 +186,11 @@ test("a missing merchant configuration never marks a capture or webhook paid", a
     { orderId: "ORDER-1" },
   );
   assert.equal(again.status, 409);
-  assert.equal((await stored(db)).paid_at, null);
+  const retried = await stored(db);
+  assert.equal(retried.paid_at, null);
+  assert.equal(retried.capture_disposition, "held");
+  assert.equal(retried.merchant_proven, false);
+  assert.equal(retried.capture_id, "CAP-OPEN");
   const notice = await handleSandboxWebhook(
     { db: db.checkout, paypal: stub },
     {
@@ -202,8 +208,10 @@ test("a missing merchant configuration never marks a capture or webhook paid", a
     },
   );
   assert.equal("held" in notice.body && notice.body.held, true);
-  assert.equal((await stored(db)).paid_at, null);
-  assert.equal((await stored(db)).capture_disposition, "held");
+  const afterNotice = await stored(db);
+  assert.equal(afterNotice.paid_at, null);
+  assert.equal(afterNotice.capture_disposition, "held");
+  assert.equal(afterNotice.merchant_proven, false);
   await db.pg.close();
 
   const open = await ordered();
