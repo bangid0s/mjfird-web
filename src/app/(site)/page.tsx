@@ -2,24 +2,25 @@ import Link from "next/link";
 import Hero from "@/components/hero/Hero";
 import SectionHeader from "@/components/ui/SectionHeader";
 import FeaturedWork from "@/components/work/FeaturedWork";
-import AnimatedNumber from "@/components/ui/AnimatedNumber";
 import Reveal from "@/components/motion/Reveal";
 import SectionBand, { type SectionTone } from "@/components/layout/SectionBand";
 import { getProjects } from "@/lib/data/projects";
-import { getServices } from "@/lib/data/services";
+import { getStorefrontServices } from "@/lib/data/services";
 import { getTestimonials } from "@/lib/data/testimonials";
 import { getProfile } from "@/lib/data/profile";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import JsonLd from "@/components/seo/JsonLd";
-import { ReviewBody } from "@/components/reviews/ReviewCard";
+import Testimonials from "@/components/reviews/Testimonials";
+import ServiceCard from "@/components/services/ServiceCard";
+import RetainerBand from "@/components/services/RetainerBand";
 import { SITE_URL } from "@/lib/site-url";
+import { cn } from "@/lib/cn";
 
 /*
-  Which band carries what. A coloured band is filled with the accent; a band
-  that wants to stand apart without colour flips the sheet instead. Both are one
+  Which band carries what. A band that wants to stand apart without colour
+  flips the sheet; the accent fill is spent once, on the retainer band. One
   line, because this is the kind of decision that gets revisited.
 */
-const STATS_TONE: SectionTone = "accent";
 const SERVICES_TONE: SectionTone = "invert";
 
 // Small shared link, used as the trailing control on two section headers.
@@ -44,12 +45,13 @@ function MoreLink({ href, children }: { href: string; children: React.ReactNode 
 export default async function Home() {
   const [projects, services, testimonials, profile, settings] = await Promise.all([
     getProjects(),
-    getServices(),
+    getStorefrontServices(),
     getTestimonials(),
     getProfile(),
     getSiteSettings(),
   ]);
   const featured = projects.filter((p) => p.featured);
+  const homeServices = services.slice(0, 3);
 
   return (
     <>
@@ -92,68 +94,45 @@ export default async function Home() {
         </SectionBand>
       )}
 
-      {/* Stats */}
-      <SectionBand tone={STATS_TONE} size="compact">
-        <div className="grid grid-cols-2 gap-y-10 sm:grid-cols-4">
-          {settings.stats.map((stat, i) => (
-            <Reveal key={stat.label} delay={i * 60}>
-              <AnimatedNumber value={stat.value} suffix={stat.suffix} label={stat.label} />
-            </Reveal>
-          ))}
-        </div>
-      </SectionBand>
+      {/* Services — the real storefront cards: image, price, turnaround. */}
+      {homeServices.length > 0 && (
+        <SectionBand tone={SERVICES_TONE}>
+          <SectionHeader
+            index={2}
+            eyebrow={settings.servicesSectionEyebrow}
+            title={settings.servicesSectionTitle}
+            action={<MoreLink href="/services">All services</MoreLink>}
+          />
+          {/* Two services fill the row as a pair rather than leaving a third column empty. */}
+          <div
+            className={cn(
+              "grid gap-x-8 gap-y-14 sm:grid-cols-2",
+              homeServices.length >= 3 && "lg:grid-cols-3",
+            )}
+          >
+            {homeServices.map((service, i) => (
+              <Reveal key={service.id} delay={i * 70}>
+                <ServiceCard service={service} headingLevel="h3" />
+              </Reveal>
+            ))}
+          </div>
+        </SectionBand>
+      )}
 
-      {/* Services — hairline compartments, not floating cards. */}
-      <SectionBand tone={SERVICES_TONE}>
-        <SectionHeader
-          index={2}
-          eyebrow={settings.servicesSectionEyebrow}
-          title={settings.servicesSectionTitle}
-          action={<MoreLink href="/services">How I work</MoreLink>}
-        />
-        <div className="grid border-t border-line md:grid-cols-3">
-          {services.map((service, i) => (
-            <Reveal
-              key={service.title}
-              delay={i * 70}
-              className="flex flex-col gap-5 border-b border-line py-9 md:border-r md:px-8 md:py-10 md:last:border-r-0 md:[&:first-child]:pl-0 md:[&:last-child]:pr-0"
-            >
-              <span className="mono-meta text-ink">{String(i + 1).padStart(2, "0")}</span>
-              <h3 className="display-sm">{service.title}</h3>
-              <p className="text-body-sm text-pretty text-ink-muted">{service.description}</p>
-              <ul className="mt-auto flex flex-col gap-2 pt-4">
-                {service.deliverables.map((d) => (
-                  <li key={d} className="spec flex items-start gap-2.5">
-                    <span aria-hidden="true" className="mt-[0.5em] h-1 w-1 shrink-0 bg-accent" />
-                    {d}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          ))}
-        </div>
-      </SectionBand>
+      {/* The one accent band on the page. */}
+      <RetainerBand settings={settings} />
 
       {/* Testimonials */}
-      <SectionBand>
-        <SectionHeader
-          index={3}
-          eyebrow={settings.testimonialsSectionEyebrow}
-          title={settings.testimonialsSectionTitle}
-        />
-        <div className="grid border-t border-line md:grid-cols-3">
-          {testimonials.map((t, i) => (
-            <Reveal
-              key={t.id ?? t.name}
-              delay={i * 70}
-              as="figure"
-              className="flex flex-col justify-between gap-8 border-b border-line py-9 md:border-r md:px-8 md:py-10 md:last:border-r-0 md:[&:first-child]:pl-0 md:[&:last-child]:pr-0"
-            >
-              <ReviewBody t={t} />
-            </Reveal>
-          ))}
-        </div>
-      </SectionBand>
+      {testimonials.length > 0 && (
+        <SectionBand>
+          <SectionHeader
+            index={3}
+            eyebrow={settings.testimonialsSectionEyebrow}
+            title={settings.testimonialsSectionTitle}
+          />
+          <Testimonials items={testimonials} />
+        </SectionBand>
+      )}
     </>
   );
 }

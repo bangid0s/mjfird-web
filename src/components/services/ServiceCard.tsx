@@ -4,7 +4,16 @@ import AvailabilityBadge from "@/components/services/AvailabilityBadge";
 import type { StorefrontService } from "@/lib/data/services";
 import { formatUSD, startingPrice } from "@/lib/services/storefront";
 
-export default function ServiceCard({ service, priority = false }: { service: StorefrontService; priority?: boolean }) {
+export default function ServiceCard({
+  service,
+  priority = false,
+  headingLevel: Heading = "h2",
+}: {
+  service: StorefrontService;
+  priority?: boolean;
+  /** "h3" where the card sits under a section heading, as on the homepage. */
+  headingLevel?: "h2" | "h3";
+}) {
   const from = startingPrice(service.packages);
   const fastest = service.packages.length
     ? Math.min(...service.packages.map((p) => p.delivery_days).filter((d) => d > 0))
@@ -37,9 +46,9 @@ export default function ServiceCard({ service, priority = false }: { service: St
           />
           {service.category && <span className="mono-meta">{service.category}</span>}
         </div>
-        <h2 className="display-sm transition-colors duration-[var(--duration-fast)] group-hover:text-accent">
+        <Heading className="display-sm transition-colors duration-[var(--duration-fast)] group-hover:text-accent-strong">
           {service.title}
-        </h2>
+        </Heading>
         {service.description && (
           <p className="text-body-sm text-pretty text-ink-muted">{service.description}</p>
         )}
@@ -55,7 +64,7 @@ export default function ServiceCard({ service, priority = false }: { service: St
             )}
           </span>
           {fastest !== null && Number.isFinite(fastest) && (
-            <span className="mono-meta">{fastest}+ days</span>
+            <span className="label">{fastest}+ days</span>
           )}
         </div>
       </div>
