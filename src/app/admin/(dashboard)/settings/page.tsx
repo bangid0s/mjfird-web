@@ -16,9 +16,9 @@ import SubmitButton, { FormActions } from "@/components/admin/SubmitButton";
 export default async function AdminSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string; pending?: string }>;
 }) {
-  const { saved, error } = await searchParams;
+  const { saved, error, pending } = await searchParams;
   const supabase = await createClient();
   const { data: settings } = await supabase
     .from("site_settings")
@@ -36,6 +36,7 @@ export default async function AdminSettingsPage({
     .join("\n");
   const processStepsText =
     settings?.process_steps?.map((s) => `${s.title}|${s.description}`).join("\n") ?? "";
+  const faqText = settings?.services_faq?.map((f) => `${f.q}|${f.a}`).join("\n") ?? "";
   const gaId = settings?.ga_measurement_id ?? "";
   const gaIdLooksValid = isValidGaId(gaId);
 
@@ -49,6 +50,12 @@ export default async function AdminSettingsPage({
       {saved && (
         <p className="mb-8 border border-success px-4 py-3 text-body-sm font-medium text-success">
           Settings saved — the site is updated.
+        </p>
+      )}
+      {pending && (
+        <p className="mb-8 border border-line-strong px-4 py-3 text-body-sm text-ink">
+          Saved, except the hero headline, proof note, FAQ and retainer fields. Run
+          supabase/migrations/0034_public_ux_overhaul.sql against your project, then save again.
         </p>
       )}
       {error && (
@@ -179,7 +186,15 @@ export default async function AdminSettingsPage({
         <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
           <legend className="mb-2 text-body font-semibold text-ink">Homepage — /</legend>
 
-          <Field label="Eyebrow (above the wordmark) — used by any slide that doesn’t set its own">
+          <Field label="Headline — what you do and for whom. Blank shows the MJFIRD wordmark instead.">
+            <input name="hero_headline" defaultValue={settings?.hero_headline ?? ""} className={fieldInputClasses} />
+          </Field>
+
+          <Field label="Proof note — one short credential shown beside the stats, e.g. a marketplace rating. Blank hides it.">
+            <input name="hero_proof_note" defaultValue={settings?.hero_proof_note ?? ""} className={fieldInputClasses} />
+          </Field>
+
+          <Field label="Eyebrow (above the headline) — used by any slide that doesn’t set its own">
             <input name="hero_eyebrow" defaultValue={settings?.hero_eyebrow ?? ""} className={fieldInputClasses} />
           </Field>
 
@@ -449,6 +464,90 @@ export default async function AdminSettingsPage({
               className={`${fieldInputClasses} resize-none`}
             />
           </Field>
+
+          <Field label="FAQ — one per line, “Question|Answer”. Blank hides the section.">
+            <textarea
+              name="services_faq"
+              rows={6}
+              defaultValue={faqText}
+              placeholder={"How do revisions work?|Each package lists its included rounds."}
+              className={`${fieldInputClasses} resize-none`}
+            />
+          </Field>
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
+          <legend className="mb-2 text-body font-semibold text-ink">
+            Monthly retainer — Home and /services
+          </legend>
+
+          <label className="flex items-center gap-3 text-body-sm font-medium text-ink">
+            <input
+              type="checkbox"
+              name="retainer_enabled"
+              defaultChecked={settings?.retainer_enabled ?? true}
+              className="h-4 w-4 accent-[var(--color-accent)]"
+            />
+            Show the retainer section
+          </label>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Field label="Eyebrow">
+              <input
+                name="retainer_eyebrow"
+                defaultValue={settings?.retainer_eyebrow ?? "Ongoing work"}
+                className={fieldInputClasses}
+              />
+            </Field>
+            <Field label="Title">
+              <input
+                name="retainer_title"
+                defaultValue={settings?.retainer_title ?? "Monthly retainer"}
+                className={fieldInputClasses}
+              />
+            </Field>
+          </div>
+
+          <Field label="Intro — who it is for, in a sentence or two">
+            <textarea
+              name="retainer_intro"
+              rows={3}
+              defaultValue={
+                settings?.retainer_intro ??
+                "A reserved block of illustration and design time every month, for studios and brands with a steady pipeline."
+              }
+              className={`${fieldInputClasses} resize-none`}
+            />
+          </Field>
+
+          <Field label="What a month includes — one per line">
+            <textarea
+              name="retainer_points"
+              rows={5}
+              defaultValue={
+                settings?.retainer_points?.join("\n") ??
+                "Priority scheduling\nOne point of contact\nConsistent style across every piece\nMonthly invoice"
+              }
+              className={`${fieldInputClasses} resize-none`}
+            />
+          </Field>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Field label="Price label — e.g. “From $X / month”">
+              <input
+                name="retainer_price_label"
+                defaultValue={settings?.retainer_price_label ?? "Quote on request"}
+                className={fieldInputClasses}
+              />
+            </Field>
+            <Field label="Button label — goes to /contact with the retainer preselected">
+              <input
+                name="retainer_cta_label"
+                defaultValue={settings?.retainer_cta_label ?? "Ask about a retainer"}
+                className={fieldInputClasses}
+              />
+            </Field>
+          </div>
         </fieldset>
 
         <FormActions>

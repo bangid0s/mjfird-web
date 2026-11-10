@@ -114,6 +114,20 @@ export type SiteSettings = {
   /** /gallery */
   galleryHeadline: string;
   galleryIntro: string;
+  /** Homepage h1. Blank falls back to the kinetic wordmark. */
+  heroHeadline: string;
+  /** One short credential beside the hero stats. Blank hides it. */
+  heroProofNote: string;
+  /** General questions on /services. Empty hides the section. */
+  servicesFaq: { q: string; a: string }[];
+  /** The monthly retainer band on Home and /services. */
+  retainerEnabled: boolean;
+  retainerEyebrow: string;
+  retainerTitle: string;
+  retainerIntro: string;
+  retainerPoints: string[];
+  retainerPriceLabel: string;
+  retainerCtaLabel: string;
 };
 
 export const defaultNavLinks = [
@@ -239,6 +253,20 @@ const placeholderSettings: SiteSettings = {
   ],
   galleryHeadline: "Gallery",
   galleryIntro: "Selected frames — work, process and the floor.",
+  heroHeadline: "Character art, card illustration and brand design for games, studios and creators.",
+  heroProofNote: "",
+  servicesFaq: [
+    { q: "How do revisions work?", a: "Each package lists its included revision rounds. Extra rounds are quoted before any work starts." },
+    { q: "How do I pay?", a: "Payment is in USD through PayPal, by balance or card, once the quote is agreed." },
+  ],
+  retainerEnabled: true,
+  retainerEyebrow: "Ongoing work",
+  retainerTitle: "Monthly retainer",
+  retainerIntro:
+    "A reserved block of illustration and design time every month, for studios and brands with a steady pipeline.",
+  retainerPoints: ["Priority scheduling", "One point of contact", "Consistent style across every piece", "Monthly invoice"],
+  retainerPriceLabel: "Quote on request",
+  retainerCtaLabel: "Ask about a retainer",
 };
 
 function mapRow(row: SiteSettingsRow): SiteSettings {
@@ -369,6 +397,18 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
       .map((language) => ({ name: language.name, level: language.level ?? "" })),
     galleryHeadline: row.gallery_headline || placeholderSettings.galleryHeadline,
     galleryIntro: row.gallery_intro ?? "",
+    // Live data never inherits the placeholder headline or FAQ: those are
+    // local-preview content, and a blank headline means "show the wordmark".
+    heroHeadline: row.hero_headline ?? "",
+    heroProofNote: row.hero_proof_note ?? "",
+    servicesFaq: (row.services_faq ?? []).filter((item) => item?.q && item?.a),
+    retainerEnabled: row.retainer_enabled ?? true,
+    retainerEyebrow: row.retainer_eyebrow || placeholderSettings.retainerEyebrow,
+    retainerTitle: row.retainer_title || placeholderSettings.retainerTitle,
+    retainerIntro: row.retainer_intro || placeholderSettings.retainerIntro,
+    retainerPoints: row.retainer_points?.length ? row.retainer_points : placeholderSettings.retainerPoints,
+    retainerPriceLabel: row.retainer_price_label || placeholderSettings.retainerPriceLabel,
+    retainerCtaLabel: row.retainer_cta_label || placeholderSettings.retainerCtaLabel,
   };
 }
 

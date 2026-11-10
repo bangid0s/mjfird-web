@@ -4,6 +4,7 @@ import { partitionNavLinks } from "@/lib/nav-links";
 import { normalizeProcessStep } from "@/lib/process-steps";
 import { formatStat } from "@/lib/stats";
 import { splitTimeline } from "@/lib/timeline";
+import { OVERHAUL_COLUMNS, parseFaq, withoutOverhaulColumns } from "@/lib/admin/site-settings-columns";
 import { BUDGETS, PROJECT_TYPES, inquiryPreselect } from "@/lib/inquiry-options";
 
 const link = (label: string, href: string) => ({ label, href });
@@ -66,4 +67,16 @@ test("inquiry: retainer preselects both selects; anything else preselects nothin
   }
   assert.ok(PROJECT_TYPES.some((o) => o.value === "retainer"));
   assert.ok(BUDGETS.some((o) => o.value === "retainer"));
+});
+
+test("settings: the fallback payload drops only the 0034 columns", () => {
+  const payload = { site_title: "x", hero_headline: "h", retainer_points: ["a"], services_faq: [] };
+  assert.deepEqual(withoutOverhaulColumns(payload), { site_title: "x" });
+  assert.equal(OVERHAUL_COLUMNS.length, 10);
+});
+
+test("settings: FAQ lines are Question|Answer, blanks and half-lines are skipped", () => {
+  assert.deepEqual(parseFaq("Do you do rush work?|Yes | for a fee.\n\nNo answer here\n|No question"), [
+    { q: "Do you do rush work?", a: "Yes | for a fee." },
+  ]);
 });
