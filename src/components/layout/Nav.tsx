@@ -9,14 +9,15 @@ import { easeFreeze } from "@/lib/motion";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import ThemedLogo from "@/components/ui/ThemedLogo";
 import AccountLink from "@/components/layout/AccountLink";
+import { partitionNavLinks } from "@/lib/nav-links";
 
 type NavLink = { label: string; href: string };
 
 /*
-  No pill, no card, no chrome — letterspaced micro-caps sitting on the page
-  with a hairline under them, which is what the bar looks like in the
-  reference. The active route is marked with a short accent rule rather than a
-  filled background.
+  No pill, no card, no chrome — plain links sitting on the page with a
+  hairline under them, and one filled button for the thing a visitor came to
+  do. The active route is marked with a short accent rule rather than a filled
+  background.
 */
 
 export default function Nav({
@@ -44,6 +45,10 @@ export default function Nav({
   const lastY = useRef(0);
   const progressRef = useRef<HTMLSpanElement>(null);
   const pathname = usePathname();
+  // The bar carries up to six links and one button; the rest live in the sheet
+  // and the footer. /contact is the button, so it never appears as a plain link.
+  const { primary, overflow } = partitionNavLinks(links, 6);
+  const sheetLinks = [...primary, ...overflow];
 
   // Lenis drives the real scroll position, so a plain scroll listener is still
   // the right signal here. The bar takes a ground as soon as the page moves,
@@ -126,8 +131,8 @@ export default function Nav({
             )}
           </Link>
 
-          <nav aria-label="Primary" className="hidden items-center gap-6 md:flex lg:gap-9">
-            {links.map((link) => {
+          <nav aria-label="Primary" className="hidden items-center gap-6 lg:flex xl:gap-8">
+            {primary.map((link) => {
               const active = pathname === link.href;
               return (
                 <Link
@@ -136,7 +141,7 @@ export default function Nav({
                   data-cursor="view"
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "spec relative py-1 transition-colors duration-[var(--duration-fast)]",
+                    "label relative py-1 transition-colors duration-[var(--duration-fast)]",
                     active ? "text-ink" : "hover:text-ink",
                   )}
                 >
@@ -153,9 +158,9 @@ export default function Nav({
             })}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-5">
+          <div className="flex shrink-0 items-center gap-4 lg:gap-5">
             {availabilityStatus && (
-              <span className="spec hidden items-center gap-2 lg:inline-flex">
+              <span className="label hidden items-center gap-2 xl:inline-flex">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70 motion-reduce:hidden" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
@@ -164,7 +169,16 @@ export default function Nav({
               </span>
             )}
 
-            <AccountLink className="hidden md:inline" />
+            <AccountLink className="hidden lg:inline" />
+
+            <Link
+              href="/contact"
+              data-cursor="view"
+              aria-current={pathname === "/contact" ? "page" : undefined}
+              className="hidden items-center bg-accent px-4 py-2.5 font-body text-body-sm font-medium text-accent-ink transition-[filter] duration-[var(--duration-fast)] hover:brightness-110 sm:inline-flex"
+            >
+              Start a project
+            </Link>
 
             <ThemeToggle />
 
@@ -173,7 +187,7 @@ export default function Nav({
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
-              className="flex h-9 w-9 items-center justify-center text-ink md:hidden"
+              className="flex h-9 w-9 items-center justify-center text-ink lg:hidden"
             >
               <span className="relative block h-3 w-5">
                 <span
@@ -202,10 +216,10 @@ export default function Nav({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.24, ease: easeFreeze }}
-            className="flex h-[calc(100svh-var(--nav-h))] flex-col overflow-y-auto border-b border-line bg-bg md:hidden"
+            className="flex h-[calc(100svh-var(--nav-h))] flex-col overflow-y-auto border-b border-line bg-bg lg:hidden"
           >
             <div className="container-page flex flex-1 flex-col py-2">
-              {links.map((link, i) => (
+              {sheetLinks.map((link, i) => (
                 <motion.div
                   key={link.href}
                   initial={{ opacity: 0, y: 14 }}
@@ -241,12 +255,19 @@ export default function Nav({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.1 + links.length * 0.035 }}
+                transition={{ duration: 0.4, delay: 0.1 + sheetLinks.length * 0.035 }}
                 className="mt-auto flex flex-col gap-6 pb-8 pt-10"
               >
+                <Link
+                  href="/contact"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-center bg-accent px-5 py-4 font-body text-body font-medium text-accent-ink"
+                >
+                  Start a project
+                </Link>
                 <AccountLink className="text-ink" onNavigate={() => setOpen(false)} />
                 {availabilityStatus && (
-                  <p className="spec flex items-center gap-2">
+                  <p className="label flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                     {availabilityStatus}
                   </p>
@@ -263,7 +284,7 @@ export default function Nav({
                   <ul className="flex flex-wrap gap-x-6 gap-y-2">
                     {socials.map((social) => (
                       <li key={social.url}>
-                        <a href={social.url} target="_blank" rel="noopener noreferrer" className="spec hover:text-ink">
+                        <a href={social.url} target="_blank" rel="noopener noreferrer" className="label hover:text-ink">
                           {social.label} ↗
                         </a>
                       </li>

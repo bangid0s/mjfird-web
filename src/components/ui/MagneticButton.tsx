@@ -67,7 +67,7 @@ export default function MagneticButton({
   };
 
   const classes = cn(
-    "spec group inline-flex items-center justify-center gap-2.5 transition-[background-color,border-color,color,filter] duration-[var(--duration-fast)] ease-[var(--ease-swing)]",
+    "group inline-flex items-center justify-center gap-2.5 font-body text-body-sm font-medium leading-snug tracking-normal transition-[background-color,border-color,color,filter] duration-[var(--duration-fast)] ease-[var(--ease-swing)]",
     SIZES[size],
     VARIANTS[variant],
     className,

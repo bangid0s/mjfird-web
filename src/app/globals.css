@@ -455,6 +455,17 @@ html[data-cursor="custom"] [contenteditable="true"] {
     letter-spacing: 0;
   }
 
+  /* Readable small text: nav links, button labels, form labels, attributions.
+     The body face in sentence case, where .spec is letterspaced mono caps. */
+  .label {
+    font-family: var(--font-body);
+    font-size: var(--text-body-sm);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: var(--color-ink-muted);
+  }
+
   /* Rotated edge label — the vertical strip running up a hero's right side. */
   .label-vertical {
     writing-mode: vertical-rl;

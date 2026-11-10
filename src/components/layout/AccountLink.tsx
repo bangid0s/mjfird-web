@@ -28,7 +28,7 @@ export default function AccountLink({ className, onNavigate }: { className?: str
     <Link
       href={signedIn ? "/account" : "/login"}
       onClick={onNavigate}
-      className={cn("spec text-ink-muted transition-colors hover:text-ink", signedIn === null && "opacity-0", className)}
+      className={cn("label text-ink-muted transition-colors hover:text-ink", signedIn === null && "opacity-0", className)}
     >
       {signedIn ? "Account" : "Sign in"}
     </Link>
