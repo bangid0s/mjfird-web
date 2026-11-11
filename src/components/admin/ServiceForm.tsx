@@ -117,8 +117,15 @@ export default function ServiceForm({
       </FieldSection>
 
       <FieldSection
+        title="Background"
+        description="The client picks exactly one (radio buttons). The first option is the default, so put the free one first — e.g. No background $0, Simple $15, Detailed scene $40. Flat price, not multiplied by characters. Leave empty to skip the choice."
+      >
+        <AddonsEditor initial={store?.backgrounds ?? []} name="backgrounds" addLabel="Add background option" />
+      </FieldSection>
+
+      <FieldSection
         title="Usage license"
-        description="How the client may use the art. Personal use is the default and always offered; the others add a percentage of the order total (package × characters + add-ons)."
+        description="How the client may use the art. Personal use is the default and always offered; the others add a percentage of the order total (package × characters + add-ons + background)."
       >
         <LicensesEditor initial={store?.licenses ?? DEFAULT_LICENSES} />
       </FieldSection>

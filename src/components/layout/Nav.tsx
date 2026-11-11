@@ -172,9 +172,9 @@ export default function Nav({
             <AccountLink className="hidden lg:inline" />
 
             <Link
-              href="/contact"
+              href="/services"
               data-cursor="view"
-              aria-current={pathname === "/contact" ? "page" : undefined}
+              aria-current={pathname === "/services" ? "page" : undefined}
               className="hidden items-center bg-accent px-4 py-2.5 font-body text-body-sm font-medium text-accent-ink transition-[filter] duration-[var(--duration-fast)] hover:brightness-110 sm:inline-flex"
             >
               Start a project
@@ -259,7 +259,7 @@ export default function Nav({
                 className="mt-auto flex flex-col gap-6 pb-8 pt-10"
               >
                 <Link
-                  href="/contact"
+                  href="/services"
                   onClick={() => setOpen(false)}
                   className="flex items-center justify-center bg-accent px-5 py-4 font-body text-body font-medium text-accent-ink"
                 >

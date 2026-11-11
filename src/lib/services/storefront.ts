@@ -40,6 +40,20 @@ export const addonSchema = z.object({
   price: money,
 });
 
+/*
+  Background options. Unlike add-ons (tick any number), the client picks exactly
+  one, as a radio list: e.g. "No background" $0, "Simple" $15, "Detailed scene"
+  $40. The price is flat (not multiplied by characters). An empty list means the
+  service doesn't offer a background choice. The first option is the default,
+  so put the free / cheapest one first.
+*/
+export const backgroundSchema = z.object({
+  id,
+  name: shortText.min(1),
+  description: z.string().trim().max(1000).default(""),
+  price: money,
+});
+
 export const faqSchema = z.object({
   q: z.string().trim().min(1).max(300),
   a: z.string().trim().min(1).max(3000),
@@ -62,7 +76,7 @@ export const questionSchema = z.object({
   tiers in a fixed order; the admin can rename them, change the surcharge or
   switch the paid ones off. Personal use is the default and is always offered.
   The surcharge is a percentage of the order total (package × characters +
-  add-ons): monetized +50%, commercial +100% unless the service says otherwise.
+  add-ons + background): monetized +50%, commercial +100% unless the service says otherwise.
 */
 export const LICENSE_IDS = ["personal", "monetized", "commercial"] as const;
 export type LicenseId = (typeof LICENSE_IDS)[number];
@@ -106,6 +120,7 @@ export type Availability = (typeof AVAILABILITY)[number];
 
 export type ServicePackage = z.infer<typeof packageSchema>;
 export type ServiceAddon = z.infer<typeof addonSchema>;
+export type ServiceBackground = z.infer<typeof backgroundSchema>;
 export type ServiceFaq = z.infer<typeof faqSchema>;
 export type ServiceQuestion = z.infer<typeof questionSchema>;
 
@@ -179,9 +194,12 @@ export type PriceQuote = {
   /** Package price × every character (1 + extraCharacters). */
   subtotal: number;
   addonsTotal: number;
+  /** The chosen background, or null when the service offers none. */
+  backgroundId: string | null;
+  backgroundPrice: number;
   licenseId: LicenseId;
   licensePercent: number;
-  /** licensePercent of (subtotal + addonsTotal). */
+  /** licensePercent of (subtotal + addonsTotal + backgroundPrice). */
   licenseFee: number;
   total: number;
 };
@@ -196,7 +214,9 @@ export function clampExtraCharacters(pkg: ServicePackage | undefined, requested:
 /**
  * Price a selection against the stored service. Unknown package → null;
  * unknown add-on ids are ignored; extra characters are clamped to the
- * package's limit; an unknown or disabled license falls back to personal use. Use this on the server for anything that moves money.
+ * package's limit; an unknown or disabled license falls back to personal use;
+ * an unknown background falls back to the service's first one. Use this on the
+ * server for anything that moves money.
  */
 export function quote(
   packages: ServicePackage[],
@@ -206,6 +226,8 @@ export function quote(
   extraCharacters = 0,
   licenses: ServiceLicense[] = DEFAULT_LICENSES,
   licenseId: string = "personal",
+  backgrounds: ServiceBackground[] = [],
+  backgroundId: string = "",
 ): PriceQuote | null {
   const pkg = packages.find((p) => p.id === packageId);
   if (!pkg) return null;
@@ -218,7 +240,9 @@ export function quote(
     offeredLicenses(licenses).find((l) => l.id === licenseId) ??
     licenses.find((l) => l.id === "personal") ??
     DEFAULT_LICENSES[0];
-  const base = Math.round((subtotal + addonsTotal) * 100) / 100;
+  const background = backgrounds.find((b) => b.id === backgroundId) ?? backgrounds[0] ?? null;
+  const backgroundPrice = background?.price ?? 0;
+  const base = Math.round((subtotal + addonsTotal + backgroundPrice) * 100) / 100;
   const licenseFee = Math.round(base * license.percent) / 100;
   return {
     packageId: pkg.id,
@@ -226,6 +250,8 @@ export function quote(
     extraCharacters: extra,
     subtotal,
     addonsTotal,
+    backgroundId: background?.id ?? null,
+    backgroundPrice,
     licenseId: license.id,
     licensePercent: license.percent,
     licenseFee,

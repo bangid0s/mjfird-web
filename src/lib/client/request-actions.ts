@@ -62,6 +62,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
     p_package_id: String(formData.get("package_id") ?? ""),
     p_addon_ids: formData.getAll("addon_ids").map(String),
     p_license: String(formData.get("license_id") ?? "personal"),
+    p_background: String(formData.get("background_id") ?? "") || null,
     p_extra_characters: Math.max(0, Number.parseInt(String(formData.get("extra_characters") ?? "0"), 10) || 0),
     p_contact_name: String(formData.get("contact_name") ?? ""),
     p_brief: String(formData.get("brief") ?? ""),
@@ -76,6 +77,9 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
     const total = formatUSD(Number(req.estimated_total));
     const extra = req.extra_characters ?? 0;
     const characters = extra ? ` · ${extra + 1} characters` : "";
+    const background = req.background_name
+      ? `${req.background_name}${Number(req.background_price) > 0 ? ` (+${formatUSD(Number(req.background_price))})` : ""}`
+      : null;
     const license = `${req.license_name ?? "Personal use"}${Number(req.license_percent) > 0 ? ` (+${Number(req.license_percent)}%)` : ""}`;
     await Promise.all([
       sendEmail({
@@ -83,6 +87,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
         subject: `New request #${req.ref}: ${req.service_title} — ${req.package_name} (${total})`,
         lines: [
           `${req.contact_name} (${req.contact_email}) requested ${req.service_title} — ${req.package_name}${characters}.`,
+          ...(background ? [`Background: ${background}`] : []),
           `License: ${license}`,
           `Estimated total: ${total}${req.waitlisted ? " · joined the waitlist" : ""}`,
           req.brief,
@@ -96,6 +101,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
         lines: [
           `Hi ${req.contact_name},`,
           `Thanks for your request for ${req.service_title} — ${req.package_name}${characters}. I review every request myself and will get back to you soon.`,
+          ...(background ? [`Background: ${background}.`] : []),
           `License: ${license}.`,
           `Estimated total: ${total}. No payment is needed until I accept.`,
         ],

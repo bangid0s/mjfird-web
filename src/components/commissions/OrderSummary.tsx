@@ -29,6 +29,14 @@ export default function OrderSummary({ req }: { req: CommissionRequestRow }) {
           <dd className="text-ink">{formatUSD(toNumber(a.price) ?? 0)}</dd>
         </div>
       ))}
+      {req.background_name && (
+        <div className="flex justify-between gap-3">
+          <dt className="text-ink-muted">Background: {req.background_name}</dt>
+          <dd className="text-ink">
+            {(toNumber(req.background_price) ?? 0) > 0 ? formatUSD(toNumber(req.background_price) ?? 0) : "Included"}
+          </dd>
+        </div>
+      )}
       <div className="flex justify-between gap-3">
         <dt className="text-ink-muted">
           License: {req.license_name ?? "Personal use"}

@@ -9,6 +9,7 @@ import { parseGallery } from "@/lib/admin/form-parse";
 import {
   AVAILABILITY,
   addonSchema,
+  backgroundSchema,
   faqSchema,
   packageSchema,
   parseList,
@@ -50,6 +51,7 @@ function parsePayload(formData: FormData) {
     samples: parseGallery(String(formData.get("samples") ?? "")),
     packages: parseList(packageSchema, String(formData.get("packages") ?? "")),
     addons: parseList(addonSchema, String(formData.get("addons") ?? "")),
+    backgrounds: parseList(backgroundSchema, String(formData.get("backgrounds") ?? "")),
     licenses: parseLicenses(String(formData.get("licenses") ?? "")),
     faq: parseList(faqSchema, String(formData.get("faq") ?? "")),
     questions: parseList(questionSchema, String(formData.get("questions") ?? "")),

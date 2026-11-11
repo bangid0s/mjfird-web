@@ -254,11 +254,23 @@ export function LicensesEditor({ initial }: { initial: ServiceLicense[] }) {
 
 /* ---------------- Add-ons ---------------- */
 
-export function AddonsEditor({ initial }: { initial: ServiceAddon[] }) {
+/**
+ * Add-ons and background options share a shape (name, description, flat
+ * price); only the form field and the button label differ.
+ */
+export function AddonsEditor({
+  initial,
+  name = "addons",
+  addLabel = "Add add-on",
+}: {
+  initial: ServiceAddon[];
+  name?: string;
+  addLabel?: string;
+}) {
   const list = useList<ServiceAddon>(initial);
   return (
     <div className="flex flex-col gap-3">
-      <input type="hidden" name="addons" value={JSON.stringify(list.items)} />
+      <input type="hidden" name={name} value={JSON.stringify(list.items)} />
       {list.items.map((addon, i) => (
         <ItemCard
           key={addon.id}
@@ -288,7 +300,7 @@ export function AddonsEditor({ initial }: { initial: ServiceAddon[] }) {
           </Mini>
         </ItemCard>
       ))}
-      <AddButton onClick={() => list.add({ id: newId(), name: "", description: "", price: 0 })}>Add add-on</AddButton>
+      <AddButton onClick={() => list.add({ id: newId(), name: "", description: "", price: 0 })}>{addLabel}</AddButton>
     </div>
   );
 }

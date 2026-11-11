@@ -5,6 +5,7 @@ import type { ServiceRow } from "@/lib/supabase/types";
 import { parseGallery } from "@/lib/admin/form-parse";
 import {
   addonSchema,
+  backgroundSchema,
   faqSchema,
   packageSchema,
   DEFAULT_LICENSES,
@@ -14,6 +15,7 @@ import {
   type Availability,
   type ServiceLicense,
   type ServiceAddon,
+  type ServiceBackground,
   type ServiceFaq,
   type ServicePackage,
   type ServiceQuestion,
@@ -60,6 +62,7 @@ export type StorefrontService = {
   slotsTaken: number;
   packages: ServicePackage[];
   addons: ServiceAddon[];
+  backgrounds: ServiceBackground[];
   licenses: ServiceLicense[];
   samples: { url: string; alt: string }[];
   willDraw: string[];
@@ -84,6 +87,7 @@ export function mapStorefrontRow(row: ServiceRow): StorefrontService {
     slotsTaken: row.slots_taken ?? 0,
     packages: parseList(packageSchema, row.packages),
     addons: parseList(addonSchema, row.addons),
+    backgrounds: parseList(backgroundSchema, row.backgrounds),
     licenses: parseLicenses(row.licenses),
     samples,
     willDraw: row.will_draw ?? [],
@@ -149,8 +153,11 @@ const placeholderStorefront: StorefrontService[] = [
       { id: "half", name: "Half body", description: "Waist up, with a pose.", price: 95, delivery_days: 14, revisions: 2, features: ["1 character", "Simple background", "High-res PNG", "Sketch process file"], extra_characters_max: 4 },
       { id: "full", name: "Full body", description: "Full figure, dynamic pose.", price: 140, delivery_days: 21, revisions: 3, features: ["1 character", "Simple background", "High-res PNG", "Sketch process file", "Timelapse"], extra_characters_max: 4 },
     ],
-    addons: [
-      { id: "bg", name: "Detailed background", description: "A painted scene instead of a flat backdrop.", price: 40 },
+    addons: [],
+    backgrounds: [
+      { id: "none", name: "No background", description: "Flat color or transparent PNG.", price: 0 },
+      { id: "simple", name: "Simple background", description: "Gradient, pattern or soft shapes.", price: 15 },
+      { id: "detailed", name: "Detailed background", description: "A painted scene instead of a flat backdrop.", price: 40 },
     ],
     licenses: DEFAULT_LICENSES,
     samples: [],
@@ -181,6 +188,7 @@ const placeholderStorefront: StorefrontService[] = [
       { id: "complete", name: "Complete", description: "A full system.", price: 1200, delivery_days: 35, revisions: 3, features: ["Logo suite", "Color & type system", "Social kit", "Brand guide PDF"], extra_characters_max: 0 },
     ],
     addons: [{ id: "rush", name: "Rush delivery", description: "Halves the timeline.", price: 300 }],
+    backgrounds: [],
     licenses: DEFAULT_LICENSES,
     samples: [],
     willDraw: [],
