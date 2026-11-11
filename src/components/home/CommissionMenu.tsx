@@ -47,13 +47,15 @@ function MenuRow({ service, samples }: { service: StorefrontService; samples: Ga
     /*
       Three blocks in one source order — heading, artwork, price — so a phone
       reads title, samples, then what it costs. From `lg` the artwork moves to
-      a right-hand column spanning both text blocks. The single column is
+      a right-hand column spanning both text blocks; the first row hugs its
+      content so the price block sits right under the heading however tall
+      the artwork is. The single column is
       `minmax(0, 1fr)` and every block may shrink: without that the sample
       strip's own width would stretch the row past the screen.
     */
     <Reveal
       as="article"
-      className="grid grid-cols-1 gap-y-5 border-b border-line py-9 lg:grid-cols-12 lg:gap-x-12 lg:py-14"
+      className="grid grid-cols-1 gap-y-5 border-b border-line py-8 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:py-14"
     >
       <div className={cn("flex min-w-0 flex-col gap-4 lg:gap-5", hasMedia ? "lg:col-span-5 xl:col-span-4" : "lg:col-span-12")}>
         <div className="flex flex-wrap items-center gap-3">
@@ -92,17 +94,18 @@ function MenuRow({ service, samples }: { service: StorefrontService; samples: Ga
           href={href}
           data-cursor="view"
           aria-label={`${service.title}: see the details`}
-          className="block min-w-0 self-start border border-line bg-bg-raised-2 lg:col-span-6 lg:col-start-7 lg:row-span-2"
+          className="block min-w-0 self-start justify-self-start border border-line bg-bg-raised-2 lg:col-span-6 lg:col-start-7 lg:row-span-2"
         >
-          {/* The cover at its own shape: covers come in more than one ratio,
-              and a fixed frame cut the ends off the wide ones. */}
+          {/* The cover at its own shape, uncropped: covers come in more than
+              one ratio, and a fixed frame cut the ends off the wide ones. The
+              height cap keeps a tall cover from taking the row over. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={mediaThumbnail(service.coverUrl!)}
             alt=""
             loading="lazy"
             decoding="async"
-            className="block h-auto w-full"
+            className="block h-auto max-h-[22rem] w-auto max-w-full lg:max-h-[26rem]"
           />
         </Link>
       )}

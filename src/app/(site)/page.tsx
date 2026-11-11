@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Hero from "@/components/hero/Hero";
 import CommissionMenu from "@/components/home/CommissionMenu";
+import HomeFaq from "@/components/home/HomeFaq";
 import HomeHero from "@/components/home/HomeHero";
 import SectionHeader from "@/components/ui/SectionHeader";
 import FeaturedWork from "@/components/work/FeaturedWork";
@@ -13,8 +14,18 @@ import { getProfile } from "@/lib/data/profile";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import JsonLd from "@/components/seo/JsonLd";
 import Testimonials from "@/components/reviews/Testimonials";
+import ProcessSteps from "@/components/services/ProcessSteps";
 import RetainerBand from "@/components/services/RetainerBand";
-import { DEFAULT_HERO_HEADLINE, commissionStatus, heroFacts, heroMode, pickWallItems } from "@/lib/home";
+import {
+  DEFAULT_HERO_HEADLINE,
+  commissionStatus,
+  heroFacts,
+  heroMode,
+  homeFaq,
+  numberSections,
+  pickWallItems,
+  processAssurances,
+} from "@/lib/home";
 import { SITE_URL } from "@/lib/site-url";
 
 // Small shared link, used as the trailing control on two section headers.
@@ -47,7 +58,18 @@ export default async function Home() {
   ]);
   const wall = pickWallItems(gallery, services.map((service) => service.slug));
   const hero = heroMode(settings.heroStyle, wall.length);
-  const featured = projects.filter((p) => p.featured);
+  // Four, not six: the commissions lead this page now, and the projects are
+  // the way in for the second audience.
+  const featured = projects.filter((p) => p.featured).slice(0, 4);
+  const faq = homeFaq(settings.servicesFaq);
+  const assurances = processAssurances(services);
+  const number = numberSections({
+    menu: services.length > 0,
+    process: settings.processSteps.length > 0,
+    faq: faq.length > 0,
+    work: featured.length > 0,
+    testimonials: testimonials.length > 0,
+  });
 
   return (
     <>
@@ -61,6 +83,7 @@ export default async function Home() {
           sameAs: profile.socials.map((s) => s.url),
         }}
       />
+
       {hero === "wall" ? (
         <HomeHero
           eyebrow={settings.heroEyebrow}
@@ -96,11 +119,12 @@ export default async function Home() {
         />
       )}
 
+
       {/* The menu: every commission with its price, its samples and its order button. */}
-      {services.length > 0 && (
+      {number.menu > 0 && (
         <SectionBand id="commissions">
           <SectionHeader
-            index={1}
+            index={number.menu}
             eyebrow={settings.servicesSectionEyebrow}
             title={settings.servicesSectionTitle}
             action={<MoreLink href="/services">All services</MoreLink>}
@@ -109,11 +133,33 @@ export default async function Home() {
         </SectionBand>
       )}
 
-      {/* Featured work — deliberately untinted: the artwork supplies the colour. */}
-      {featured.length > 0 && (
+      {/* How a commission runs — the flipped sheet, so it reads as a pause between the two halves. */}
+      {number.process > 0 && (
+        <SectionBand tone="invert" id="process">
+          <SectionHeader
+            index={number.process}
+            eyebrow={settings.processSectionEyebrow}
+            title={settings.processSectionTitle}
+          />
+          <ProcessSteps steps={settings.processSteps} dense />
+          <ul className="mt-10 flex flex-col gap-3 border-t border-line pt-6 sm:mt-12 sm:flex-row sm:flex-wrap sm:gap-x-10">
+            {assurances.map((line) => (
+              <li key={line} className="flex items-center gap-3 text-body-sm text-ink">
+                <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 bg-accent" />
+                {line}
+              </li>
+            ))}
+          </ul>
+        </SectionBand>
+      )}
+
+      <HomeFaq index={number.faq} items={faq} />
+
+      {/* From here down the page speaks to studios and brands: projects, the retainer, their words. */}
+      {number.work > 0 && (
         <SectionBand id="work">
           <SectionHeader
-            index={1}
+            index={number.work}
             eyebrow={settings.workSectionEyebrow}
             title={settings.workSectionTitle}
             action={<MoreLink href="/work">All work</MoreLink>}
@@ -125,15 +171,14 @@ export default async function Home() {
       {/* The one accent band on the page. */}
       <RetainerBand settings={settings} />
 
-      {/* Testimonials */}
-      {testimonials.length > 0 && (
+      {number.testimonials > 0 && (
         <SectionBand>
           <SectionHeader
-            index={3}
+            index={number.testimonials}
             eyebrow={settings.testimonialsSectionEyebrow}
             title={settings.testimonialsSectionTitle}
           />
-          <Testimonials items={testimonials} />
+          <Testimonials items={testimonials} limit={2} />
         </SectionBand>
       )}
     </>

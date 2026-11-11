@@ -24,6 +24,7 @@ export default function ProjectsGrid({
   columns = 2,
   showFilter = true,
   emptyHint = "check back soon",
+  dense = false,
 }: {
   projects: Project[];
   /** Widest breakpoint's column count. Three reads as an index, two as a feature. */
@@ -31,6 +32,8 @@ export default function ProjectsGrid({
   /** The homepage shows a fixed handful, so it carries no filter. */
   showFilter?: boolean;
   emptyHint?: string;
+  /** Two across on a phone too: a short strip on a page that leads with something else. */
+  dense?: boolean;
 }) {
   const [filter, setFilter] = useState("All");
 
@@ -50,7 +53,8 @@ export default function ProjectsGrid({
 
       <div
         className={cn(
-          "grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 sm:gap-y-16",
+          "grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-16",
+          dense ? "grid-cols-2 gap-x-4 gap-y-9" : "grid-cols-1 gap-x-6 gap-y-12",
           columns === 3 && "lg:grid-cols-3",
         )}
       >

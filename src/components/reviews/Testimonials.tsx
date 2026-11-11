@@ -4,13 +4,13 @@ import Stars from "@/components/reviews/Stars";
 import type { Testimonial } from "@/lib/placeholder-data";
 
 /*
-  One voice leads, at reading size; up to four more follow as short cards. Six
+  One voice leads, at reading size; a few more follow as short cards. Six
   long quotes at equal weight read as a wall and nobody finishes any of them.
 */
-export default function Testimonials({ items }: { items: Testimonial[] }) {
+export default function Testimonials({ items, limit = 4 }: { items: Testimonial[]; limit?: number }) {
   if (items.length === 0) return null;
   const [lead, ...rest] = items;
-  const cards = rest.slice(0, 4);
+  const cards = rest.slice(0, limit);
 
   return (
     <div className="flex flex-col">

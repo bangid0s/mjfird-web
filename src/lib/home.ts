@@ -197,9 +197,11 @@ export function processAssurances(services: WithPackages[]): string[] {
   const out: string[] = [];
   const revisions = includedRevisions(services.flatMap((s) => s.packages));
   if (revisions !== null) out.push(`${rounds(revisions)} included`);
+  // A quote-only service lists no packages, so it makes no promise either way.
+  const priced = services.filter((s) => s.packages.length > 0);
   const everySketch =
-    services.length > 0 &&
-    services.every((s) => s.packages.some((p) => p.features.some((feature) => /sketch/i.test(feature))));
+    priced.length > 0 &&
+    priced.every((s) => s.packages.some((p) => p.features.some((feature) => /sketch/i.test(feature))));
   if (everySketch) out.push("Sketch approval before color");
   out.push("Work starts once the invoice is paid");
   return out;

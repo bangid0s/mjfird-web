@@ -178,6 +178,17 @@ test("assurances: revisions when above zero, sketch only when every service ment
   assert.deepEqual(processAssurances([]), ["Work starts once the invoice is paid"]);
 });
 
+test("assurances: a quote-only service with no packages doesn't cancel the sketch promise", () => {
+  const sketchy = { packages: [pkg()] };
+  const quoteOnly = { packages: [] };
+  assert.deepEqual(processAssurances([sketchy, quoteOnly]), [
+    "2 revision rounds included",
+    "Sketch approval before color",
+    "Work starts once the invoice is paid",
+  ]);
+  assert.deepEqual(processAssurances([quoteOnly]), ["Work starts once the invoice is paid"]);
+});
+
 test("faq: the admin's list wins; an empty list falls back to the five defaults", () => {
   const own = [{ q: "Do you ship prints?", a: "No." }];
   assert.equal(homeFaq(own), own);
