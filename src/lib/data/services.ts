@@ -7,9 +7,12 @@ import {
   addonSchema,
   faqSchema,
   packageSchema,
+  DEFAULT_LICENSES,
+  parseLicenses,
   parseList,
   questionSchema,
   type Availability,
+  type ServiceLicense,
   type ServiceAddon,
   type ServiceFaq,
   type ServicePackage,
@@ -57,6 +60,7 @@ export type StorefrontService = {
   slotsTaken: number;
   packages: ServicePackage[];
   addons: ServiceAddon[];
+  licenses: ServiceLicense[];
   samples: { url: string; alt: string }[];
   willDraw: string[];
   wontDraw: string[];
@@ -80,6 +84,7 @@ export function mapStorefrontRow(row: ServiceRow): StorefrontService {
     slotsTaken: row.slots_taken ?? 0,
     packages: parseList(packageSchema, row.packages),
     addons: parseList(addonSchema, row.addons),
+    licenses: parseLicenses(row.licenses),
     samples,
     willDraw: row.will_draw ?? [],
     wontDraw: row.wont_draw ?? [],
@@ -146,8 +151,8 @@ const placeholderStorefront: StorefrontService[] = [
     ],
     addons: [
       { id: "bg", name: "Detailed background", description: "A painted scene instead of a flat backdrop.", price: 40 },
-      { id: "commercial", name: "Commercial license", description: "Use on merch, ads, or products you sell.", price: 80 },
     ],
+    licenses: DEFAULT_LICENSES,
     samples: [],
     willDraw: ["Original characters", "Fan art", "Armor & mecha", "Fantasy creatures"],
     wontDraw: ["NSFW", "Hate or harassment", "Real people without consent"],
@@ -176,6 +181,7 @@ const placeholderStorefront: StorefrontService[] = [
       { id: "complete", name: "Complete", description: "A full system.", price: 1200, delivery_days: 35, revisions: 3, features: ["Logo suite", "Color & type system", "Social kit", "Brand guide PDF"], extra_characters_max: 0 },
     ],
     addons: [{ id: "rush", name: "Rush delivery", description: "Halves the timeline.", price: 300 }],
+    licenses: DEFAULT_LICENSES,
     samples: [],
     willDraw: [],
     wontDraw: [],

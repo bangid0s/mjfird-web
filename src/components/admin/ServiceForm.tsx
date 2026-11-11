@@ -1,9 +1,10 @@
 import { Field, FieldSection, fieldInputClasses } from "@/components/admin/Field";
 import ImageUploader from "@/components/admin/ImageUploader";
 import GalleryUploader from "@/components/admin/GalleryUploader";
-import { AddonsEditor, FaqEditor, PackagesEditor, QuestionsEditor } from "@/components/admin/ServiceBuilderEditors";
+import { AddonsEditor, FaqEditor, LicensesEditor, PackagesEditor, QuestionsEditor } from "@/components/admin/ServiceBuilderEditors";
 import type { ServiceRow } from "@/lib/supabase/types";
 import { mapStorefrontRow } from "@/lib/data/services";
+import { DEFAULT_LICENSES } from "@/lib/services/storefront";
 import SubmitButton, { FormActions } from "@/components/admin/SubmitButton";
 
 export default function ServiceForm({
@@ -113,6 +114,13 @@ export default function ServiceForm({
 
       <FieldSection title="Add-ons" description="Optional extras the client can tick on top of a package.">
         <AddonsEditor initial={store?.addons ?? []} />
+      </FieldSection>
+
+      <FieldSection
+        title="Usage license"
+        description="How the client may use the art. Personal use is the default and always offered; the others add a percentage of the order total (package × characters + add-ons)."
+      >
+        <LicensesEditor initial={store?.licenses ?? DEFAULT_LICENSES} />
       </FieldSection>
 
       <FieldSection title="Will / won't draw" description="Set expectations before anyone requests.">

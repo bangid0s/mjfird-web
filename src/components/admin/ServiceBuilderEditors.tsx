@@ -8,6 +8,7 @@ import {
   type QuestionType,
   type ServiceAddon,
   type ServiceFaq,
+  type ServiceLicense,
   MAX_EXTRA_CHARACTERS,
   type ServicePackage,
   type ServiceQuestion,
@@ -192,6 +193,61 @@ export function PackagesEditor({ initial }: { initial: ServicePackage[] }) {
       >
         Add package
       </AddButton>
+    </div>
+  );
+}
+
+/* ---------------- Licenses ---------------- */
+
+export function LicensesEditor({ initial }: { initial: ServiceLicense[] }) {
+  const [items, setItems] = useState(initial);
+  const update = (i: number, patch: Partial<ServiceLicense>) =>
+    setItems((prev) => prev.map((l, j) => (j === i ? { ...l, ...patch } : l)));
+  return (
+    <div className="flex flex-col gap-3">
+      <input type="hidden" name="licenses" value={JSON.stringify(items)} />
+      {items.map((lic, i) => {
+        const personal = lic.id === "personal";
+        return (
+          <div key={lic.id} className={cn("flex flex-col gap-3 border border-line p-4", !lic.enabled && "opacity-60")}>
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-mono text-label text-ink-muted">
+                {personal ? "Default — always offered" : `Option ${i + 1}`}
+              </span>
+              {!personal && (
+                <label className="flex cursor-pointer items-center gap-2 text-body-sm text-ink">
+                  <input
+                    type="checkbox"
+                    checked={lic.enabled}
+                    onChange={(e) => update(i, { enabled: e.target.checked })}
+                    className="h-4 w-4 accent-[var(--color-accent)]"
+                  />
+                  Offer on this service
+                </label>
+              )}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-[1fr_8rem]">
+              <Mini label="Name">
+                <input className={fieldInputClasses} value={lic.name} onChange={(e) => update(i, { name: e.target.value })} required />
+              </Mini>
+              <Mini label="Surcharge (% of total)">
+                <input
+                  className={fieldInputClasses}
+                  type="number"
+                  min={0}
+                  max={500}
+                  step="1"
+                  value={lic.percent}
+                  onChange={(e) => update(i, { percent: Number(e.target.value) })}
+                />
+              </Mini>
+            </div>
+            <Mini label="What it covers">
+              <input className={fieldInputClasses} value={lic.description} onChange={(e) => update(i, { description: e.target.value })} />
+            </Mini>
+          </div>
+        );
+      })}
     </div>
   );
 }

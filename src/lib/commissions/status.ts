@@ -53,6 +53,7 @@ const RPC_ERRORS: Record<string, string> = {
   service_closed: "This service is closed for new requests right now.",
   package_not_found: "Please pick a package.",
   invalid_name: "Please enter your name.",
+  invalid_license: "That usage license isn't offered for this service. Please pick another.",
   invalid_characters: "That package doesn't allow that many characters. Please adjust and try again.",
   invalid_brief: "Please describe what you'd like (at least a sentence).",
   invalid_answers: "Some answers couldn't be read. Please try again.",
