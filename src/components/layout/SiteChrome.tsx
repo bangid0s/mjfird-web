@@ -10,7 +10,6 @@ import { SoundProvider } from "@/lib/sound";
 
 export default function SiteChrome({
   children,
-  availabilityStatus,
   socials,
   footerHeading,
   footerSubtext,
@@ -22,7 +21,6 @@ export default function SiteChrome({
   navLinks,
 }: {
   children: React.ReactNode;
-  availabilityStatus?: string;
   socials: { label: string; url: string }[];
   footerHeading: string;
   footerSubtext: string;
@@ -45,7 +43,6 @@ export default function SiteChrome({
         <Preloader />
         <CustomCursor />
         <Nav
-          availabilityStatus={availabilityStatus}
           logoUrl={logoUrl}
           logoUrlLight={logoUrlLight}
           logoType={logoType}

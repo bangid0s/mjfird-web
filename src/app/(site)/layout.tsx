@@ -9,7 +9,6 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   return (
     <>
       <SiteChrome
-        availabilityStatus={profile.availabilityStatus}
         socials={profile.socials}
         footerHeading={settings.footerHeading}
         footerSubtext={settings.footerSubtext}

@@ -34,7 +34,7 @@ export default async function AdminProfilePage() {
           <input name="tagline" defaultValue={profile?.tagline ?? ""} className={fieldInputClasses} />
         </Field>
 
-        <Field label="Availability status">
+        <Field label="Availability status" hint="Shown on the resume page.">
           <input
             name="availability_status"
             defaultValue={profile?.availability_status ?? ""}

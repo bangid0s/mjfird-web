@@ -29,12 +29,14 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
   if (!data) notFound();
   const req = data as CommissionRequestRow;
 
-  const [{ data: msgs }, refs, deliveries, { data: reviewRow }] = await Promise.all([
+  const [{ data: msgs }, refs, deliveries, { data: reviewRow }, { data: clientProfile }] = await Promise.all([
     supabase.from("commission_messages").select("*").eq("request_id", id).order("created_at"),
     signFiles(supabase, req.reference_paths),
     signFiles(supabase, req.delivery_paths),
     supabase.from("testimonials").select("*").eq("request_id", id).maybeSingle(),
+    supabase.from("client_profiles").select("region, discord, x_handle, social_url").eq("id", req.client_id).maybeSingle(),
   ]);
+  const client = clientProfile as { region: string; discord: string; x_handle: string; social_url: string } | null;
   const review = reviewRow as TestimonialRow | null;
   const deliveryFiles = req.delivery_paths.map((path) => {
     const signed = deliveries.find((d) => d.path === path);
@@ -133,6 +135,42 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
             <a href={`mailto:${req.contact_email}?subject=${encodeURIComponent(`Your request #${req.ref}`)}`} className="text-body-sm text-ink-muted hover:text-accent">
               {req.contact_email}
             </a>
+            {client && (client.region || client.discord || client.x_handle || client.social_url) && (
+              <dl className="flex flex-col gap-1.5 border-t border-line pt-3 text-body-sm">
+                {client.region && (
+                  <div className="flex gap-2">
+                    <dt className="w-16 shrink-0 text-ink-faint">Region</dt>
+                    <dd className="text-ink">{client.region}</dd>
+                  </div>
+                )}
+                {client.discord && (
+                  <div className="flex gap-2">
+                    <dt className="w-16 shrink-0 text-ink-faint">Discord</dt>
+                    <dd className="select-all text-ink">{client.discord}</dd>
+                  </div>
+                )}
+                {client.x_handle && (
+                  <div className="flex gap-2">
+                    <dt className="w-16 shrink-0 text-ink-faint">X</dt>
+                    <dd>
+                      <a href={`https://x.com/${client.x_handle}`} target="_blank" rel="noopener noreferrer" className="text-ink hover:text-accent">
+                        @{client.x_handle}
+                      </a>
+                    </dd>
+                  </div>
+                )}
+                {client.social_url && (
+                  <div className="flex gap-2">
+                    <dt className="w-16 shrink-0 text-ink-faint">Link</dt>
+                    <dd className="min-w-0">
+                      <a href={client.social_url} target="_blank" rel="noopener noreferrer nofollow" className="break-all text-ink hover:text-accent">
+                        {client.social_url.replace(/^https?:\/\//, "")}
+                      </a>
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            )}
           </Panel>
         </div>
       </div>

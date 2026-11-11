@@ -360,7 +360,7 @@ export default async function ResumePage() {
                     href="/services"
                     className="inline-flex h-12 flex-1 items-center justify-center whitespace-nowrap bg-accent px-4 text-body-sm sm:px-6 font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85 sm:flex-none"
                   >
-                    Start a project
+                    Commission me
                   </Link>
                 )}
                 {settings.resumePdfUrl && (
@@ -368,7 +368,7 @@ export default async function ResumePage() {
                     href="/services"
                     className="inline-flex h-12 flex-1 items-center justify-center whitespace-nowrap border border-line-strong px-4 text-body-sm sm:px-6 font-medium text-ink transition-colors duration-[var(--duration-fast)] hover:border-ink sm:flex-none"
                   >
-                    Start a project
+                    Commission me
                   </Link>
                 )}
               </div>
@@ -703,7 +703,7 @@ export default async function ResumePage() {
                 href="/services"
                 className="inline-flex h-12 items-center bg-accent px-6 text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
               >
-                Start a project
+                Commission me
               </Link>
               {email && (
                 <a

@@ -27,6 +27,9 @@ export default async function AccountPage() {
           <p className="text-body-sm text-ink-muted">{user.email}</p>
         </div>
         <div className="flex flex-wrap items-center gap-5">
+          <Link href="/account/profile" className="spec text-ink-muted hover:text-ink">
+            Edit profile
+          </Link>
           {!isGoogle && (
             <Link href="/account/password" className="spec text-ink-muted hover:text-ink">
               Change password
