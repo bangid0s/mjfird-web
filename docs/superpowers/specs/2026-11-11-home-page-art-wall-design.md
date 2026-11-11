@@ -21,8 +21,10 @@ Success looks like:
   answered on the home page.
 - Studios and brands still have a way in (projects, retainer, testimonials),
   grouped lower on the page.
-- The phone page is no taller than today's 9,586px while carrying one more
-  service, the process and the FAQ.
+- The phone page is about as tall as today's 9,586px while carrying every
+  service, the process and the FAQ. As built it measures 9,743px at 390px wide
+  with five published services (a fifth was published while this was being
+  built; each service row is about 520px on a phone).
 
 ### Decisions made with the owner
 
@@ -175,17 +177,20 @@ One row per published service, all of them, in service order. A row is an
 - **Samples.** Up to four images in 5:7 frames: the gallery images filed under
   the service, then the service's own manual samples. They open the `Lightbox`
   with `showServices={false}`. A service with fewer than two samples shows its
-  cover in a single 4:3 frame instead; with no cover either, the sample area is
-  omitted and the text spans the row.
+  cover instead, uncropped at the cover's own proportions and capped in height
+  (covers on the live site are 4:3, 16:9 and portrait, so a fixed frame cut
+  some of them); with no cover either, the sample area is omitted and the text
+  spans the row.
 - **Actions.** A filled button → `/services/[slug]`, reading "Order" while the
   service is open, "Join the waitlist" on waitlist and "See details" when
   closed; and "See works" → `/gallery?service=[slug]` when the service has
   gallery images.
 
-Layout: from `lg`, text on the left (5 of 12 columns) and samples on the right
-(7 of 12), rows separated by hairlines. Below `lg`, the samples become a
-horizontally scrollable strip under the text, and the Order button is full
-width.
+Layout: from `lg`, text on the left and samples on the right (5 and 7 of 12
+columns; 4 and 8 from `xl`, so the tiles are larger), rows separated by
+hairlines. Below `lg` a row reads title, then the samples as a horizontally
+scrollable strip, then the prices and the button. Below `sm` the description is
+hidden and the package prices run as one line instead of a list.
 
 The home page no longer uses `ServiceCard`; `/services` keeps it.
 
@@ -193,14 +198,16 @@ The home page no longer uses `ServiceCard`; `/services` keeps it.
 
 Heading: `settings.processSectionEyebrow` and `settings.processSectionTitle`.
 Body: the existing `ProcessSteps` with `settings.processSteps`, on the inverted
-band. The Services page keeps its own copy of this section.
+band, two across on phones (a new `dense` option; the Services page keeps its
+own copy of this section, unchanged).
 
 Under the steps, a row of up to three assurances:
 
 - "N revision rounds included": the lowest revision count across all packages,
   omitted when zero.
-- "Sketch approval before color": shown only when every published service has
-  a package feature that mentions a sketch.
+- "Sketch approval before color": shown only when every published service that
+  lists packages has a package feature that mentions a sketch. A quote-only
+  service lists none and is ignored.
 - "Work starts once the invoice is paid": fixed text. It describes how the
   site's request flow works and matches every service's terms.
 
@@ -208,7 +215,8 @@ Under the steps, a row of up to three assurances:
 
 - **Selected projects.** `settings.workSectionEyebrow` and
   `settings.workSectionTitle`, the "All work" link, and the first four featured
-  projects through the existing `ProjectsGrid` (two columns, no filter). Was six.
+  projects through the existing `ProjectsGrid` (two columns at every width on
+  the home page, no filter). Was six. `/work` is unchanged.
 - **Retainer.** Existing `RetainerBand`, unchanged.
 - **Testimonials.** Existing `Testimonials` component, showing the lead quote
   and two cards on the home page. Was the lead quote and four. `Testimonials`
@@ -263,6 +271,7 @@ existing motion tokens.
 | `components/home/SampleStrip.tsx` (new, client) | A service's samples and their lightbox | `TiltCard`, `SmartImage`, `Lightbox` |
 | `components/hero/Hero.tsx` | Unchanged; the slider hero | — |
 | `components/reviews/Testimonials.tsx` | Gains `limit` | — |
+| `components/work/ProjectsGrid.tsx`, `components/services/ProcessSteps.tsx` | Gain `dense` (two across on phones), off by default | — |
 | `app/(site)/page.tsx` | Loads data, picks the hero, lays out the sections | all of the above |
 
 `page.tsx` additionally loads `getGalleryItems()`. Sample lists per service are

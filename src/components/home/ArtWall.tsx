@@ -61,7 +61,10 @@ export default function ArtWall({ items, className }: { items: GalleryItem[]; cl
                     tabIndex={hidden ? -1 : undefined}
                     aria-label={`Enlarge: ${tile.item.title || (service ? `${service} sample` : "artwork")}`}
                     onClick={() => setOpen(tile.index)}
-                    className="art-wall-tile block"
+                    // No display utility here: utilities outrank the
+                    // component layer, and `.art-wall-tile[data-clone]` has to
+                    // be able to hide the copy under reduced motion.
+                    className="art-wall-tile"
                   >
                     <TiltCard className="aspect-[5/7] w-full overflow-hidden border border-line bg-bg-raised-2">
                       <SmartImage
