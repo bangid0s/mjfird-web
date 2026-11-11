@@ -11,6 +11,7 @@ import {
   InquiriesIcon,
   PlusIcon,
   ProjectsIcon,
+  RequestsIcon,
   SearchIcon,
   ServicesIcon,
   TestimonialsIcon,
@@ -20,10 +21,10 @@ import { ADMIN_CREATE_ACTIONS } from "@/components/admin/admin-nav";
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
 
-  const count = (table: string, filters?: Record<string, string>) => {
+  const count = (table: string, filters?: Record<string, string | string[]>) => {
     let query = supabase.from(table).select("id", { count: "exact", head: true });
     for (const [key, value] of Object.entries(filters ?? {})) {
-      query = query.eq(key, value);
+      query = Array.isArray(value) ? query.in(key, value) : query.eq(key, value);
     }
     return query;
   };
@@ -39,6 +40,10 @@ export default async function AdminDashboardPage() {
     newInquiries,
     recentInquiries,
     profile,
+    requests,
+    pendingRequests,
+    unpaidRequests,
+    activeRequests,
   ] = await Promise.all([
     count("projects"),
     count("projects", { status: "draft" }),
@@ -50,6 +55,10 @@ export default async function AdminDashboardPage() {
     count("inquiries", { status: "new" }),
     supabase.from("inquiries").select("*").order("created_at", { ascending: false }).limit(5),
     supabase.from("profile").select("name").limit(1).maybeSingle(),
+    count("commission_requests"),
+    count("commission_requests", { status: "pending" }),
+    count("commission_requests", { status: "awaiting_payment" }),
+    count("commission_requests", { status: ["in_progress", "delivered"] }),
   ]);
 
   const n = (r: { count: number | null }) => r.count ?? 0;
@@ -64,11 +73,23 @@ export default async function AdminDashboardPage() {
 
   // The few things that actually want a decision today, in priority order.
   const attention = [
+    n(pendingRequests) > 0 && {
+      href: "/admin/requests?status=pending",
+      title: plural(n(pendingRequests), "request to review", "requests to review"),
+      body: "Commission requests waiting for you to accept or decline.",
+      tone: "accent" as const,
+    },
     n(newInquiries) > 0 && {
       href: "/admin/inquiries?status=new",
       title: plural(n(newInquiries), "new inquiry", "new inquiries"),
       body: "Potential clients waiting on a reply. Fast answers win retainers.",
       tone: "accent" as const,
+    },
+    n(unpaidRequests) > 0 && {
+      href: "/admin/requests?status=awaiting_payment",
+      title: plural(n(unpaidRequests), "request awaiting payment", "requests awaiting payment"),
+      body: "Accepted but not paid yet. Check the payment link is in, or nudge the client.",
+      tone: "muted" as const,
     },
     n(projectDrafts) > 0 && {
       href: "/admin/projects",
@@ -90,6 +111,11 @@ export default async function AdminDashboardPage() {
     },
   ].filter(Boolean) as { href: string; title: string; body: string; tone: "accent" | "muted" }[];
 
+  const waiting = [
+    n(pendingRequests) > 0 && plural(n(pendingRequests), "request to review", "requests to review"),
+    n(newInquiries) > 0 && plural(n(newInquiries), "unread inquiry", "unread inquiries"),
+  ].filter(Boolean) as string[];
+
   const latest = (recentInquiries.data as InquiryRow[]) ?? [];
   const firstName = (profile.data?.name as string | undefined)?.split(/[\s.]+/)[0];
   const today = new Intl.DateTimeFormat("en-GB", {
@@ -110,8 +136,8 @@ export default async function AdminDashboardPage() {
             {firstName ? `, ${firstName}` : ""}.
           </h1>
           <p className="mt-3 max-w-lg text-body text-ink-muted">
-            {n(newInquiries) > 0
-              ? `You have ${plural(n(newInquiries), "unread inquiry", "unread inquiries")}. Everything else is below.`
+            {waiting.length > 0
+              ? `You have ${waiting.join(" and ")}. Everything else is below.`
               : "Inbox is clear. Here's how the studio looks today."}
           </p>
         </div>
@@ -135,31 +161,27 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Inbox hero stat + content stats */}
-      <div className="grid gap-px border border-line bg-line lg:grid-cols-[1.2fr_2fr]">
-        <Link
-          href="/admin/inquiries"
-          className={cn(
-            "group relative flex flex-col justify-between gap-8 p-6 transition-colors",
-            n(newInquiries) > 0 ? "bg-accent text-accent-ink" : "bg-bg-raised hover:bg-bg-raised-2",
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <span className={cn("flex items-center gap-2 text-body-sm font-medium", n(newInquiries) > 0 ? "" : "text-ink-muted")}>
-              <InquiriesIcon className="h-4 w-4" />
-              Inquiries
-            </span>
-            <ArrowRightIcon className="h-4 w-4 transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-1" />
-          </div>
-          <div>
-            <p className="font-display text-[clamp(3rem,2rem+3vw,4.5rem)] font-semibold leading-none tracking-[-0.04em]">
-              {n(newInquiries)}
-            </p>
-            <p className={cn("mt-2 text-body-sm", n(newInquiries) > 0 ? "opacity-85" : "text-ink-muted")}>
-              new · {n(inquiries)} total received
-            </p>
-          </div>
-        </Link>
+      {/* Inbox hero stats (requests + inquiries) + content stats */}
+      <div className="grid gap-px border border-line bg-line lg:grid-cols-2">
+        <div className="grid gap-px bg-line sm:grid-cols-2">
+          <HeroTile
+            href={n(pendingRequests) > 0 ? "/admin/requests?status=pending" : "/admin/requests"}
+            label="Requests"
+            icon={RequestsIcon}
+            value={n(pendingRequests)}
+            caption={`to review · ${n(requests)} total`}
+            detail={`${n(activeRequests)} in progress · ${n(unpaidRequests)} awaiting payment`}
+            hot={n(pendingRequests) > 0}
+          />
+          <HeroTile
+            href="/admin/inquiries"
+            label="Inquiries"
+            icon={InquiriesIcon}
+            value={n(newInquiries)}
+            caption={`new · ${n(inquiries)} total received`}
+            hot={n(newInquiries) > 0}
+          />
+        </div>
 
         <div className="grid grid-cols-2 gap-px bg-line">
           {stats.map((stat) => {
@@ -313,5 +335,46 @@ export default async function AdminDashboardPage() {
         </aside>
       </div>
     </div>
+  );
+}
+
+function HeroTile({
+  href,
+  label,
+  icon: Icon,
+  value,
+  caption,
+  detail,
+  hot,
+}: {
+  href: string;
+  label: string;
+  icon: (props: { className?: string }) => React.ReactNode;
+  value: number;
+  caption: string;
+  detail?: string;
+  hot: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "group relative flex flex-col justify-between gap-8 p-6 transition-colors",
+        hot ? "bg-accent text-accent-ink" : "bg-bg-raised hover:bg-bg-raised-2",
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <span className={cn("flex items-center gap-2 text-body-sm font-medium", hot ? "" : "text-ink-muted")}>
+          <Icon className="h-4 w-4" />
+          {label}
+        </span>
+        <ArrowRightIcon className="h-4 w-4 transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-1" />
+      </div>
+      <div>
+        <p className="font-display text-[clamp(3rem,2rem+3vw,4.5rem)] font-semibold leading-none tracking-[-0.04em]">{value}</p>
+        <p className={cn("mt-2 text-body-sm", hot ? "opacity-85" : "text-ink-muted")}>{caption}</p>
+        {detail && <p className={cn("mt-1 text-[12px]", hot ? "opacity-75" : "text-ink-faint")}>{detail}</p>}
+      </div>
+    </Link>
   );
 }

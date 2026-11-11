@@ -9,9 +9,7 @@ import ProofLine from "@/components/ui/ProofLine";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import type { HeroSlide } from "@/lib/data/site-settings";
 import { cn } from "@/lib/cn";
-
-// Where the primary button points when a slide doesn't name its own link.
-const DEFAULT_CTA_HREF = "/work";
+import { HERO_PRIMARY_HREF, HERO_SECONDARY_HREF } from "@/lib/hero-cta";
 
 /*
   A split sheet rather than a photo with text on top of it.
@@ -93,7 +91,7 @@ export default function Hero({
   const slideEyebrow = active?.eyebrow || eyebrow;
   const slideIntro = active?.intro || intro;
   const slideCtaLabel = active?.ctaLabel || ctaPrimary;
-  const slideCtaHref = active?.ctaUrl || DEFAULT_CTA_HREF;
+  const slideCtaHref = active?.ctaUrl || HERO_PRIMARY_HREF;
 
   const copyAnimation = hasChanged ? "motion-safe:animate-rise" : "";
   const hasMedia = mediaType !== "none" && (mediaUrl || count > 0);
@@ -138,7 +136,7 @@ export default function Hero({
               <MagneticButton href={slideCtaHref} size="lg" arrow cursorLabel="view">
                 {slideCtaLabel}
               </MagneticButton>
-              <MagneticButton href="/contact" size="lg" variant="secondary" cursorLabel="view">
+              <MagneticButton href={HERO_SECONDARY_HREF} size="lg" variant="secondary" cursorLabel="view">
                 {ctaSecondary}
               </MagneticButton>
             </div>

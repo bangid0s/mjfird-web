@@ -33,10 +33,10 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
             />
           </Field>
           <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="Main button" hint="Goes to /work unless a slide sets its own link.">
+            <Field label="Main button" hint="Goes to /services unless a slide sets its own link.">
               <input name="hero_cta_primary" defaultValue={settings?.hero_cta_primary ?? ""} className={fieldInputClasses} />
             </Field>
-            <Field label="Second button" hint="Always goes to /contact.">
+            <Field label="Second button" hint="Always goes to /work.">
               <input name="hero_cta_secondary" defaultValue={settings?.hero_cta_secondary ?? ""} className={fieldInputClasses} />
             </Field>
           </div>

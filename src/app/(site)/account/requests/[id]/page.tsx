@@ -11,6 +11,7 @@ import { PayPalCheckout } from "@/components/commissions/PayPalCheckout";
 import { RequestPayment } from "@/components/commissions/RequestPayment";
 import { requireUser } from "@/lib/auth/session";
 import { clientPaymentView } from "@/lib/commissions/payment-link";
+import { deliveryHost, safeDeliveryUrl } from "@/lib/commissions/delivery-link";
 import { paypalButtonAvailable, readPaypalSandboxConfig } from "@/lib/payments/config";
 import ReviewForm from "@/components/commissions/ReviewForm";
 import { postClientMessage, submitReview } from "@/lib/client/request-actions";
@@ -57,6 +58,7 @@ export default async function ClientRequestPage({
           .maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
+  const deliveryUrl = safeDeliveryUrl(req.delivery_url);
   const review = reviewRow as Pick<TestimonialRow, "quote" | "name" | "role" | "rating" | "public_consent" | "status"> | null;
 
   return (
@@ -96,10 +98,26 @@ export default async function ClientRequestPage({
             )}
           </section>
 
-          {deliveries.length > 0 && (
+          {(deliveries.length > 0 || deliveryUrl) && (
             <section className="flex flex-col gap-4 border-t border-line pt-8">
               <h2 className="eyebrow">Your files</h2>
-              <FileLinks files={deliveries} />
+              {deliveryUrl && (
+                <a
+                  href={deliveryUrl}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="group flex items-center justify-between gap-4 border border-accent/50 bg-bg-raised px-5 py-4 transition-colors hover:border-accent"
+                >
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="text-body font-medium text-ink">Open files</span>
+                    <span className="truncate text-body-sm text-ink-muted">{deliveryHost(deliveryUrl) || "Download folder"}</span>
+                  </span>
+                  <span aria-hidden="true" className="shrink-0 text-accent transition-transform group-hover:translate-x-0.5">
+                    ↗
+                  </span>
+                </a>
+              )}
+              {deliveries.length > 0 && <FileLinks files={deliveries} />}
             </section>
           )}
 

@@ -11,6 +11,7 @@ import {
   declineRequest,
   removeDeliveryFile,
   saveArtistNote,
+  setDeliveryUrl,
   setPaymentUrl,
 } from "@/lib/admin/requests-actions";
 import type { CommissionStatus } from "@/lib/supabase/types";
@@ -192,10 +193,12 @@ export function DeliveryUploader({
   id,
   clientId,
   files,
+  deliveryUrl,
 }: {
   id: string;
   clientId: string;
   files: { path: string; name: string; url: string }[];
+  deliveryUrl: string | null;
 }) {
   const { pending, error, run } = useRun();
   const [busy, setBusy] = useState(false);
@@ -252,6 +255,40 @@ export function DeliveryUploader({
         />
       </label>
       <p className="text-[13px] text-ink-faint">Only this client can download these (private links, valid for an hour at a time).</p>
+
+      <form
+        key={deliveryUrl ?? ""}
+        className="flex flex-col gap-2 border-t border-line pt-4"
+        action={(fd) => run(() => setDeliveryUrl(id, fd))}
+      >
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[13px] font-medium text-ink-muted">Drop link for final files</span>
+          <input
+            name="delivery_url"
+            type="url"
+            inputMode="url"
+            maxLength={2000}
+            spellCheck={false}
+            autoComplete="off"
+            defaultValue={deliveryUrl ?? ""}
+            placeholder="https://drive.google.com/… or https://www.dropbox.com/…"
+            className={fieldInputClasses}
+          />
+        </label>
+        <p className="text-[13px] text-ink-faint">
+          For big or many files: Google Drive, Dropbox, WeTransfer. The client gets an &ldquo;Open files&rdquo; button. Make sure the folder&apos;s sharing lets them in. Clear the field and save to remove it.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="submit" disabled={pending} className={ghost}>
+            {pending ? "Saving…" : "Save link"}
+          </button>
+          {deliveryUrl && (
+            <a href={deliveryUrl} target="_blank" rel="noopener noreferrer" className="text-[13px] text-ink-muted hover:text-accent">
+              Test link ↗
+            </a>
+          )}
+        </div>
+      </form>
     </div>
   );
 }

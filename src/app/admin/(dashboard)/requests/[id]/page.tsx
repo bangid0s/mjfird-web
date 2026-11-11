@@ -10,6 +10,7 @@ import { DeliveryUploader, StatusActions } from "@/components/admin/RequestActio
 import { postAdminMessage } from "@/lib/admin/requests-actions";
 import { formatDate } from "@/lib/admin/format";
 import { priceOf } from "@/lib/commissions/status";
+import { safeDeliveryUrl } from "@/lib/commissions/delivery-link";
 import Link from "next/link";
 import type { CommissionMessageRow, CommissionRequestRow, TestimonialRow } from "@/lib/supabase/types";
 
@@ -100,7 +101,7 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
           </Panel>
           {["in_progress", "delivered", "completed"].includes(req.status) && (
             <Panel title="Delivery">
-              <DeliveryUploader id={req.id} clientId={req.client_id} files={deliveryFiles} />
+              <DeliveryUploader id={req.id} clientId={req.client_id} files={deliveryFiles} deliveryUrl={safeDeliveryUrl(req.delivery_url)} />
             </Panel>
           )}
           {req.status === "completed" && (
