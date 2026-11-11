@@ -3,6 +3,7 @@ import { countMediaReferences } from "@/lib/admin/media-refs";
 import PageHeader from "@/components/admin/PageHeader";
 import EmptyState from "@/components/admin/EmptyState";
 import MediaGrid, { type MediaFile } from "@/components/admin/MediaGrid";
+import MediaTabs from "@/components/admin/MediaTabs";
 
 const BUCKET = "media";
 const LIMIT = 200;
@@ -43,6 +44,7 @@ export default async function AdminMediaPage({
         title="Files"
         description="Everything uploaded to the media library. Renaming a file also repoints every page that uses it, so links never break. Deleting is permanent — check the usage badge first."
       />
+      <MediaTabs active="/admin/media" />
 
       {renamed && (
         <p className="mb-8 border border-success px-4 py-3 font-mono text-label text-success">

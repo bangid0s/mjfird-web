@@ -71,7 +71,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: "Studio",
     items: [
-      { href: "/admin/media", label: "Files", icon: MediaIcon, keywords: "media uploads storage images" },
+      { href: "/admin/media", label: "Files", icon: MediaIcon, keywords: "media uploads storage images client files references deliveries commission" },
       { href: "/admin/profile", label: "Profile", icon: ProfileIcon, keywords: "bio socials availability portrait" },
       { href: "/admin/settings", label: "Site settings", icon: SettingsIcon, keywords: "brand logo colour seo link preview analytics menu navigation footer email" },
     ],
