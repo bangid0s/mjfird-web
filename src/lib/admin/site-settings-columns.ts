@@ -12,8 +12,14 @@ export const OVERHAUL_COLUMNS = [
   "retainer_cta_label",
 ] as const;
 
+/** Hero button destinations. Added by migration 0041. */
+export const HERO_LINK_COLUMNS = ["hero_cta_primary_url", "hero_cta_secondary_url"] as const;
+
+/** Every column a save can skip while its migration hasn't been run yet. */
+export const LATE_COLUMNS: readonly string[] = [...OVERHAUL_COLUMNS, ...HERO_LINK_COLUMNS];
+
 export function withoutOverhaulColumns<T extends Record<string, unknown>>(payload: T): Partial<T> {
-  const drop = new Set<string>(OVERHAUL_COLUMNS);
+  const drop = new Set<string>(LATE_COLUMNS);
   return Object.fromEntries(Object.entries(payload).filter(([key]) => !drop.has(key))) as Partial<T>;
 }
 

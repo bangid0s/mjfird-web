@@ -1,7 +1,7 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "./config";
 import type { SiteSettingsRow } from "@/lib/supabase/types";
-import { HERO_CTA_DEFAULTS, heroCtaLabels } from "@/lib/hero-cta";
+import { HERO_CTA_DEFAULTS, HERO_PRIMARY_HREF, HERO_SECONDARY_HREF, heroCtaHref, heroCtaLabels } from "@/lib/hero-cta";
 
 export type LinkBrand = { name: string; logoUrl: string; note: string; url: string };
 
@@ -72,6 +72,8 @@ export type SiteSettings = {
   heroIntro: string;
   heroCtaPrimary: string;
   heroCtaSecondary: string;
+  heroCtaPrimaryUrl: string;
+  heroCtaSecondaryUrl: string;
   stats: { value: number; suffix: string; label: string }[];
   workSectionEyebrow: string;
   workSectionTitle: string;
@@ -197,6 +199,8 @@ const placeholderSettings: SiteSettings = {
     "A decade in the cypher taught me rhythm and restraint. I bring both to brand, motion, and web work for people who don't want to look like a template.",
   heroCtaPrimary: HERO_CTA_DEFAULTS.primary,
   heroCtaSecondary: HERO_CTA_DEFAULTS.secondary,
+  heroCtaPrimaryUrl: HERO_PRIMARY_HREF,
+  heroCtaSecondaryUrl: HERO_SECONDARY_HREF,
   stats: [
     { value: 10, suffix: "+", label: "Years in the cypher" },
     { value: 38, suffix: "", label: "Projects shipped" },
@@ -355,6 +359,8 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     heroIntro: row.hero_intro,
     heroCtaPrimary: heroCtaLabels(row.hero_cta_primary, row.hero_cta_secondary).primary,
     heroCtaSecondary: heroCtaLabels(row.hero_cta_primary, row.hero_cta_secondary).secondary,
+    heroCtaPrimaryUrl: heroCtaHref(row.hero_cta_primary_url, HERO_PRIMARY_HREF),
+    heroCtaSecondaryUrl: heroCtaHref(row.hero_cta_secondary_url, HERO_SECONDARY_HREF),
     stats: row.stats?.length ? row.stats : placeholderSettings.stats,
     workSectionEyebrow: row.work_section_eyebrow || placeholderSettings.workSectionEyebrow,
     workSectionTitle: row.work_section_title || placeholderSettings.workSectionTitle,

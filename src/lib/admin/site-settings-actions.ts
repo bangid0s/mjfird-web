@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { OVERHAUL_COLUMNS, withoutOverhaulColumns } from "@/lib/admin/site-settings-columns";
+import { LATE_COLUMNS, withoutOverhaulColumns } from "@/lib/admin/site-settings-columns";
 import {
   SETTINGS_SECTIONS,
   isSettingsSection,
@@ -34,7 +34,7 @@ export async function saveSiteSettings(section: SettingsSection, formData: FormD
   let pendingMigration = false;
   // PGRST204: a column in the payload does not exist yet, i.e. 0034 has not
   // been applied. Save everything else rather than losing the whole form.
-  const missingColumn = error?.code === "PGRST204" || OVERHAUL_COLUMNS.some((c) => error?.message.includes(c));
+  const missingColumn = error?.code === "PGRST204" || LATE_COLUMNS.some((c) => error?.message.includes(c));
   if (error && missingColumn) {
     const rest = withoutOverhaulColumns(payload);
     ({ error } = Object.keys(rest).length > 0 ? await write(rest) : { error: null });

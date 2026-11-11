@@ -75,6 +75,8 @@ export default async function Home() {
         intro={settings.heroIntro}
         ctaPrimary={settings.heroCtaPrimary}
         ctaSecondary={settings.heroCtaSecondary}
+        ctaPrimaryHref={settings.heroCtaPrimaryUrl}
+        ctaSecondaryHref={settings.heroCtaSecondaryUrl}
         edgeLabel={settings.siteTitle}
         headline={settings.heroHeadline}
         stats={settings.stats}
