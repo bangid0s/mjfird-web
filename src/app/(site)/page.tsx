@@ -1,10 +1,10 @@
 import Link from "next/link";
 import Hero from "@/components/hero/Hero";
+import CommissionMenu from "@/components/home/CommissionMenu";
 import HomeHero from "@/components/home/HomeHero";
 import SectionHeader from "@/components/ui/SectionHeader";
 import FeaturedWork from "@/components/work/FeaturedWork";
-import Reveal from "@/components/motion/Reveal";
-import SectionBand, { type SectionTone } from "@/components/layout/SectionBand";
+import SectionBand from "@/components/layout/SectionBand";
 import { getGalleryItems } from "@/lib/data/gallery";
 import { getProjects } from "@/lib/data/projects";
 import { getStorefrontServices } from "@/lib/data/services";
@@ -13,18 +13,9 @@ import { getProfile } from "@/lib/data/profile";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import JsonLd from "@/components/seo/JsonLd";
 import Testimonials from "@/components/reviews/Testimonials";
-import ServiceCard from "@/components/services/ServiceCard";
 import RetainerBand from "@/components/services/RetainerBand";
 import { DEFAULT_HERO_HEADLINE, commissionStatus, heroFacts, heroMode, pickWallItems } from "@/lib/home";
 import { SITE_URL } from "@/lib/site-url";
-import { cn } from "@/lib/cn";
-
-/*
-  Which band carries what. A band that wants to stand apart without colour
-  flips the sheet; the accent fill is spent once, on the retainer band. One
-  line, because this is the kind of decision that gets revisited.
-*/
-const SERVICES_TONE: SectionTone = "invert";
 
 // Small shared link, used as the trailing control on two section headers.
 function MoreLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -57,7 +48,6 @@ export default async function Home() {
   const wall = pickWallItems(gallery, services.map((service) => service.slug));
   const hero = heroMode(settings.heroStyle, wall.length);
   const featured = projects.filter((p) => p.featured);
-  const homeServices = services.slice(0, 3);
 
   return (
     <>
@@ -106,6 +96,19 @@ export default async function Home() {
         />
       )}
 
+      {/* The menu: every commission with its price, its samples and its order button. */}
+      {services.length > 0 && (
+        <SectionBand id="commissions">
+          <SectionHeader
+            index={1}
+            eyebrow={settings.servicesSectionEyebrow}
+            title={settings.servicesSectionTitle}
+            action={<MoreLink href="/services">All services</MoreLink>}
+          />
+          <CommissionMenu services={services} gallery={gallery} />
+        </SectionBand>
+      )}
+
       {/* Featured work — deliberately untinted: the artwork supplies the colour. */}
       {featured.length > 0 && (
         <SectionBand id="work">
@@ -116,31 +119,6 @@ export default async function Home() {
             action={<MoreLink href="/work">All work</MoreLink>}
           />
           <FeaturedWork projects={featured} />
-        </SectionBand>
-      )}
-
-      {/* Services — the real storefront cards: image, price, turnaround. */}
-      {homeServices.length > 0 && (
-        <SectionBand tone={SERVICES_TONE}>
-          <SectionHeader
-            index={2}
-            eyebrow={settings.servicesSectionEyebrow}
-            title={settings.servicesSectionTitle}
-            action={<MoreLink href="/services">All services</MoreLink>}
-          />
-          {/* Two services fill the row as a pair rather than leaving a third column empty. */}
-          <div
-            className={cn(
-              "grid gap-x-8 gap-y-14 sm:grid-cols-2",
-              homeServices.length >= 3 && "lg:grid-cols-3",
-            )}
-          >
-            {homeServices.map((service, i) => (
-              <Reveal key={service.id} delay={i * 70}>
-                <ServiceCard service={service} headingLevel="h3" />
-              </Reveal>
-            ))}
-          </div>
         </SectionBand>
       )}
 
