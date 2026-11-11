@@ -1,9 +1,11 @@
 import Link from "next/link";
 import Hero from "@/components/hero/Hero";
+import HomeHero from "@/components/home/HomeHero";
 import SectionHeader from "@/components/ui/SectionHeader";
 import FeaturedWork from "@/components/work/FeaturedWork";
 import Reveal from "@/components/motion/Reveal";
 import SectionBand, { type SectionTone } from "@/components/layout/SectionBand";
+import { getGalleryItems } from "@/lib/data/gallery";
 import { getProjects } from "@/lib/data/projects";
 import { getStorefrontServices } from "@/lib/data/services";
 import { getTestimonials } from "@/lib/data/testimonials";
@@ -13,6 +15,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import Testimonials from "@/components/reviews/Testimonials";
 import ServiceCard from "@/components/services/ServiceCard";
 import RetainerBand from "@/components/services/RetainerBand";
+import { DEFAULT_HERO_HEADLINE, commissionStatus, heroFacts, heroMode, pickWallItems } from "@/lib/home";
 import { SITE_URL } from "@/lib/site-url";
 import { cn } from "@/lib/cn";
 
@@ -43,13 +46,16 @@ function MoreLink({ href, children }: { href: string; children: React.ReactNode 
 }
 
 export default async function Home() {
-  const [projects, services, testimonials, profile, settings] = await Promise.all([
+  const [projects, services, testimonials, profile, settings, gallery] = await Promise.all([
     getProjects(),
     getStorefrontServices(),
     getTestimonials(),
     getProfile(),
     getSiteSettings(),
+    getGalleryItems(),
   ]);
+  const wall = pickWallItems(gallery, services.map((service) => service.slug));
+  const hero = heroMode(settings.heroStyle, wall.length);
   const featured = projects.filter((p) => p.featured);
   const homeServices = services.slice(0, 3);
 
@@ -65,23 +71,40 @@ export default async function Home() {
           sameAs: profile.socials.map((s) => s.url),
         }}
       />
-      <Hero
-        mediaType={settings.heroMediaType}
-        mediaUrl={settings.heroMediaUrl ?? ""}
-        slides={settings.heroSlides}
-        animation={settings.heroAnimation}
-        slideDuration={settings.heroSlideDuration}
-        eyebrow={settings.heroEyebrow}
-        intro={settings.heroIntro}
-        ctaPrimary={settings.heroCtaPrimary}
-        ctaSecondary={settings.heroCtaSecondary}
-        ctaPrimaryHref={settings.heroCtaPrimaryUrl}
-        ctaSecondaryHref={settings.heroCtaSecondaryUrl}
-        edgeLabel={settings.siteTitle}
-        headline={settings.heroHeadline}
-        stats={settings.stats}
-        proofNote={settings.heroProofNote}
-      />
+      {hero === "wall" ? (
+        <HomeHero
+          eyebrow={settings.heroEyebrow}
+          headline={settings.heroHeadline || DEFAULT_HERO_HEADLINE}
+          intro={settings.heroIntro}
+          ctaPrimary={settings.heroCtaPrimary}
+          ctaSecondary={settings.heroCtaSecondary}
+          ctaPrimaryHref={settings.heroCtaPrimaryUrl}
+          ctaSecondaryHref={settings.heroCtaSecondaryUrl}
+          status={commissionStatus(services)}
+          facts={heroFacts(services)}
+          stats={settings.stats}
+          proofNote={settings.heroProofNote}
+          wall={wall}
+        />
+      ) : (
+        <Hero
+          mediaType={settings.heroMediaType}
+          mediaUrl={settings.heroMediaUrl ?? ""}
+          slides={settings.heroSlides}
+          animation={settings.heroAnimation}
+          slideDuration={settings.heroSlideDuration}
+          eyebrow={settings.heroEyebrow}
+          intro={settings.heroIntro}
+          ctaPrimary={settings.heroCtaPrimary}
+          ctaSecondary={settings.heroCtaSecondary}
+          ctaPrimaryHref={settings.heroCtaPrimaryUrl}
+          ctaSecondaryHref={settings.heroCtaSecondaryUrl}
+          edgeLabel={settings.siteTitle}
+          headline={settings.heroHeadline}
+          stats={settings.stats}
+          proofNote={settings.heroProofNote}
+        />
+      )}
 
       {/* Featured work — deliberately untinted: the artwork supplies the colour. */}
       {featured.length > 0 && (

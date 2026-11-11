@@ -292,6 +292,24 @@
   }
 }
 
+@keyframes wall-x {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes wall-y {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes word-rise {
+  from {
+    transform: translateY(112%);
+  }
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -576,6 +594,166 @@ html[data-cursor="custom"] [contenteditable="true"] {
     --color-line: var(--color-inverse-line);
     --color-line-strong: var(--color-inverse-line-strong);
     --color-accent-strong: var(--color-accent-strong-inverse);
+  }
+
+  /*
+    Card tilt — the site's one signature gesture. A piece leans toward the
+    pointer and a light moves across it, the way a foil card catches the lamp
+    when you tilt it. `TiltCard` only sets these properties for a mouse and
+    when motion is allowed, so touch and reduced-motion visitors get a still
+    card with nothing to undo here.
+  */
+  .tilt-card {
+    position: relative;
+    transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform var(--duration-expressive) var(--ease-freeze);
+  }
+
+  .tilt-card[data-tilting="true"] {
+    transition-duration: var(--duration-fast);
+  }
+
+  .tilt-sheen {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: radial-gradient(
+      circle at var(--sheen-x, 50%) var(--sheen-y, 50%),
+      rgb(255 255 255 / 0.34),
+      transparent 58%
+    );
+    mix-blend-mode: soft-light;
+    transition: opacity var(--duration-base) var(--ease-swing);
+  }
+
+  .tilt-card[data-tilting="true"] .tilt-sheen {
+    opacity: 1;
+  }
+
+  /*
+    Art wall. One set of tiles, two layouts.
+
+    Narrow: the three tracks dissolve (`display: contents`) and every tile
+    sits in one row that drifts left. The second copy of each tile is ordered
+    after all the first copies, so the row is two identical halves and a
+    -50% shift loops without a seam.
+
+    Wide: the tracks are three columns, each its own vertical loop, the middle
+    one running the other way. Tiles carry their spacing as a margin rather
+    than a gap so that half a track is exactly one set of tiles.
+  */
+  .art-wall {
+    overflow: hidden;
+  }
+
+  .art-wall-row {
+    display: flex;
+    width: max-content;
+    animation: wall-x 110s linear infinite;
+  }
+
+  .art-wall-track {
+    display: contents;
+  }
+
+  .art-wall-tile {
+    flex: none;
+    width: min(42vw, 13.5rem);
+    margin-right: 0.75rem;
+  }
+
+  .art-wall-tile[data-clone] {
+    order: 1;
+  }
+
+  .art-wall[data-paused="true"] .art-wall-row,
+  .art-wall[data-paused="true"] .art-wall-track,
+  .art-wall:focus-within .art-wall-row,
+  .art-wall:focus-within .art-wall-track {
+    animation-play-state: paused;
+  }
+
+  @media (hover: hover) {
+    .art-wall:hover .art-wall-row,
+    .art-wall:hover .art-wall-track {
+      animation-play-state: paused;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .art-wall {
+      /* Fades the panel's own edges; nothing is painted over the artwork. */
+      mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+    }
+
+    .art-wall-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: 1rem;
+      width: auto;
+      height: 100%;
+      animation: none;
+    }
+
+    .art-wall-track {
+      display: flex;
+      flex-direction: column;
+      animation: wall-y var(--wall-duration, 84s) linear infinite;
+    }
+
+    .art-wall-track[data-dir="down"] {
+      animation-direction: reverse;
+    }
+
+    .art-wall-tile {
+      width: 100%;
+      margin-right: 0;
+      margin-bottom: 1rem;
+    }
+
+    .art-wall-tile[data-clone] {
+      order: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .art-wall-row,
+    .art-wall-track {
+      animation: none;
+    }
+
+    .art-wall-tile[data-clone] {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) and (max-width: 1023.98px) {
+    /* No drift, so the row is scrolled by hand instead. */
+    .art-wall {
+      overflow-x: auto;
+    }
+  }
+
+  /* Headline entrance: each word rises out of its own clipped box. */
+  .word-rise {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    padding-bottom: 0.12em;
+    margin-bottom: -0.12em;
+  }
+
+  .word-rise > span {
+    display: inline-block;
+    animation: word-rise 0.7s var(--ease-freeze) both;
+    animation-delay: calc(var(--word, 0) * 34ms + 80ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .word-rise > span {
+      animation: none;
+    }
   }
 }
 

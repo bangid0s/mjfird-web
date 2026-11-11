@@ -11,6 +11,7 @@ export default function SmartImage({
   className = "object-cover",
   style,
   priority,
+  lazy = false,
 }: {
   src: string;
   alt?: string;
@@ -19,6 +20,8 @@ export default function SmartImage({
   /** Mostly for `objectPosition` — see `CoverMedia`'s focal point. */
   style?: React.CSSProperties;
   priority?: boolean;
+  /** Plain images only: defer loading until the image nears the viewport. */
+  lazy?: boolean;
 }) {
   const resolved = mediaThumbnail(src);
 
@@ -42,6 +45,8 @@ export default function SmartImage({
       src={resolved}
       alt={alt}
       style={style}
+      loading={lazy && !priority ? "lazy" : undefined}
+      decoding={lazy ? "async" : undefined}
       className={`absolute inset-0 h-full w-full ${className}`}
     />
   );
