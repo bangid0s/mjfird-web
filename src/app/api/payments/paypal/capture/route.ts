@@ -6,6 +6,7 @@ import { readPaypalSandboxConfig } from "@/lib/payments/config";
 import { createPaypalSandboxClient, PaypalRequestError } from "@/lib/payments/paypal-client";
 import { createServiceRoleClient } from "@/lib/payments/service-role";
 import { createSupabaseCheckoutDb } from "@/lib/payments/supabase-checkout";
+import { isFreshCapture, notifyPaymentReceived } from "@/lib/notifications/payment";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,17 +35,17 @@ export async function POST(request: Request) {
 
   const body: unknown = await request.json().catch(() => null);
   try {
+    const admin = createServiceRoleClient(config.supabaseUrl, config.serviceRoleKey);
     const result = await captureSandboxOrder(
       {
-        db: createSupabaseCheckoutDb({
-          user: supabase,
-          admin: createServiceRoleClient(config.supabaseUrl, config.serviceRoleKey),
-        }),
+        db: createSupabaseCheckoutDb({ user: supabase, admin }),
         paypal: createPaypalSandboxClient(config),
         userId: user.id,
       },
       body,
     );
+    const orderId = (body as { orderId?: unknown } | null)?.orderId;
+    if (isFreshCapture(result) && typeof orderId === "string") await notifyPaymentReceived(admin, orderId.trim());
     return NextResponse.json(result.body, { status: result.status });
   } catch (err) {
     console.error("[paypal] capture failed", failureCode(err));
