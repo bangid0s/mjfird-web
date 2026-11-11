@@ -28,7 +28,9 @@ async function servicePrefill(params: { [key: string]: string | string[] | undef
   const addonIds = typeof params.addons === "string" ? params.addons.split(",").filter(Boolean) : [];
   const characters = typeof params.characters === "string" ? Number.parseInt(params.characters, 10) || 0 : 0;
   const licenseId = typeof params.license === "string" ? params.license : "personal";
-  const priced = quote(service.packages, service.addons, pkgId, addonIds, characters, service.licenses, licenseId);
+  const backgroundId = typeof params.background === "string" ? params.background : "";
+  const priced = quote(service.packages, service.addons, pkgId, addonIds, characters, service.licenses, licenseId, service.backgrounds, backgroundId);
+  const background = service.backgrounds.find((b) => b.id === priced?.backgroundId);
   if (!priced) return `Service: ${service.title}\n\n`;
   const pkg = service.packages.find((p) => p.id === priced.packageId)!;
   const addons = service.addons.filter((a) => priced.addonIds.includes(a.id));
@@ -36,6 +38,9 @@ async function servicePrefill(params: { [key: string]: string | string[] | undef
     `Service: ${service.title} — ${pkg.name} (${formatUSD(pkg.price)})`,
     ...(priced.extraCharacters
       ? [`Extra characters: ${priced.extraCharacters} (+${formatUSD(pkg.price * priced.extraCharacters)})`]
+      : []),
+    ...(background
+      ? [`Background: ${background.name}${background.price ? ` (+${formatUSD(background.price)})` : ""}`]
       : []),
     ...(addons.length ? [`Add-ons: ${addons.map((a) => `${a.name} (+${formatUSD(a.price)})`).join(", ")}`] : []),
     ...(priced.licenseFee

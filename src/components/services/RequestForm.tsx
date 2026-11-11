@@ -8,6 +8,7 @@ import type { StorefrontService } from "@/lib/data/services";
 import { clampExtraCharacters, effectiveAvailability, formatUSD, quote, type LicenseId, type ServiceQuestion } from "@/lib/services/storefront";
 import CharacterStepper from "@/components/services/CharacterStepper";
 import LicensePicker from "@/components/services/LicensePicker";
+import BackgroundPicker from "@/components/services/BackgroundPicker";
 import { choiceBox, choiceRadio, choiceTitle } from "@/components/services/choice";
 import type { CommissionAnswer } from "@/lib/supabase/types";
 import { authInput } from "@/components/auth/AuthForms";
@@ -225,6 +226,7 @@ export default function RequestForm({
   initialAddons,
   initialCharacters = 0,
   initialLicense = "personal",
+  initialBackground,
 }: {
   service: StorefrontService;
   userId: string;
@@ -234,6 +236,7 @@ export default function RequestForm({
   initialAddons: string[];
   initialCharacters?: number;
   initialLicense?: string;
+  initialBackground?: string;
 }) {
   const [state, action] = useActionState(submitRequest, undefined);
   const [packageId, setPackageId] = useState(
@@ -244,13 +247,16 @@ export default function RequestForm({
   const [licenseId, setLicenseId] = useState<LicenseId>(
     service.licenses.some((l) => l.enabled && l.id === initialLicense) ? (initialLicense as LicenseId) : "personal",
   );
+  const [backgroundId, setBackgroundId] = useState(
+    service.backgrounds.some((b) => b.id === initialBackground) ? initialBackground! : (service.backgrounds[0]?.id ?? ""),
+  );
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [questionFiles, setQuestionFiles] = useState<Record<string, Uploaded[]>>({});
   const [refs, setRefs] = useState<Uploaded[]>([]);
 
   const selected = service.packages.find((p) => p.id === packageId);
   const extra = clampExtraCharacters(selected, extraCharacters);
-  const priced = quote(service.packages, service.addons, packageId, addonIds, extra, service.licenses, licenseId);
+  const priced = quote(service.packages, service.addons, packageId, addonIds, extra, service.licenses, licenseId, service.backgrounds, backgroundId);
   const waitlist = effectiveAvailability(service.availability, service.slotsTotal, service.slotsTaken) === "waitlist";
   const hasFileQuestion = service.questions.some((q) => q.type === "file");
 
@@ -282,6 +288,7 @@ export default function RequestForm({
         <input key={id} type="hidden" name="addon_ids" value={id} />
       ))}
       <input type="hidden" name="extra_characters" value={extra} />
+      <input type="hidden" name="background_id" value={priced?.backgroundId ?? ""} />
       <input type="hidden" name="license_id" value={priced?.licenseId ?? "personal"} />
       <input type="hidden" name="answers" value={JSON.stringify(answerList)} />
       <input type="hidden" name="reference_paths" value={JSON.stringify(allPaths)} />
@@ -367,6 +374,13 @@ export default function RequestForm({
 
           <CharacterStepper pkg={selected} value={extra} onChange={setExtraCharacters} />
 
+          <BackgroundPicker
+            backgrounds={service.backgrounds}
+            value={priced?.backgroundId ?? null}
+            onChange={setBackgroundId}
+            name="background_choice"
+          />
+
           {service.addons.length > 0 && (
             <fieldset className="flex flex-col gap-2">
               <legend className="mb-2.5 text-body-sm font-medium text-ink">Add-ons</legend>
@@ -393,7 +407,7 @@ export default function RequestForm({
             licenses={service.licenses}
             value={priced?.licenseId ?? "personal"}
             onChange={setLicenseId}
-            base={priced ? priced.subtotal + priced.addonsTotal : undefined}
+            base={priced ? priced.subtotal + priced.addonsTotal + priced.backgroundPrice : undefined}
             name="license_choice"
           />
 

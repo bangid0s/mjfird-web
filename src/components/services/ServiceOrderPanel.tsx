@@ -6,6 +6,7 @@ import AvailabilityBadge from "@/components/services/AvailabilityBadge";
 import Stars from "@/components/reviews/Stars";
 import CharacterStepper from "@/components/services/CharacterStepper";
 import LicensePicker from "@/components/services/LicensePicker";
+import BackgroundPicker from "@/components/services/BackgroundPicker";
 import { choiceBox, choiceMuted, choiceRadio, choiceTitle } from "@/components/services/choice";
 import type { StorefrontService } from "@/lib/data/services";
 import { clampExtraCharacters, effectiveAvailability, formatUSD, quote, type LicenseId } from "@/lib/services/storefront";
@@ -27,6 +28,7 @@ export default function ServiceOrderPanel({
   const [addonIds, setAddonIds] = useState<string[]>([]);
   const [extraCharacters, setExtraCharacters] = useState(0);
   const [licenseId, setLicenseId] = useState<LicenseId>("personal");
+  const [backgroundId, setBackgroundId] = useState(service.backgrounds[0]?.id ?? "");
   // The panel renders twice (mobile + desktop): each copy needs its own radio group.
   const group = useId();
 
@@ -34,7 +36,7 @@ export default function ServiceOrderPanel({
   const selected = service.packages.find((p) => p.id === packageId);
   // Switching to a package with a lower limit (or none) trims the count.
   const extra = clampExtraCharacters(selected, extraCharacters);
-  const priced = quote(service.packages, service.addons, packageId, addonIds, extra, service.licenses, licenseId);
+  const priced = quote(service.packages, service.addons, packageId, addonIds, extra, service.licenses, licenseId, service.backgrounds, backgroundId);
 
   const toggleAddon = (id: string) =>
     setAddonIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -43,6 +45,8 @@ export default function ServiceOrderPanel({
   if (packageId) params.set("package", packageId);
   if (addonIds.length) params.set("addons", addonIds.join(","));
   if (extra) params.set("characters", String(extra));
+  // The first background is the default, so only a different pick goes in the link.
+  if (priced?.backgroundId && priced.backgroundId !== service.backgrounds[0]?.id) params.set("background", priced.backgroundId);
   if (priced && priced.licenseId !== "personal") params.set("license", priced.licenseId);
   // No packages yet → nothing to price, so fall back to a plain inquiry.
   const requestHref = service.packages.length
@@ -127,6 +131,8 @@ export default function ServiceOrderPanel({
 
       <CharacterStepper pkg={selected} value={extra} onChange={setExtraCharacters} />
 
+      <BackgroundPicker backgrounds={service.backgrounds} value={priced?.backgroundId ?? null} onChange={setBackgroundId} />
+
       {service.addons.length > 0 && (
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2.5 text-body-sm font-medium text-ink">Add-ons</legend>
@@ -154,7 +160,7 @@ export default function ServiceOrderPanel({
         licenses={service.licenses}
         value={priced?.licenseId ?? "personal"}
         onChange={setLicenseId}
-        base={priced ? priced.subtotal + priced.addonsTotal : undefined}
+        base={priced ? priced.subtotal + priced.addonsTotal + priced.backgroundPrice : undefined}
       />
 
       {priced && priced.licenseFee > 0 && (
