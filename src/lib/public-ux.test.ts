@@ -10,12 +10,12 @@ import { BUDGETS, PROJECT_TYPES, inquiryPreselect, validateInquiry } from "@/lib
 
 const link = (label: string, href: string) => ({ label, href });
 
-test("nav: first five non-contact links go in the bar, the rest overflow", () => {
-  const links = ["a", "b", "c", "d", "e", "f"].map((x) => link(x, `/${x}`));
+test("nav: first five links go in the bar (Contact included), the rest overflow", () => {
+  const links = ["a", "b", "c", "d", "e"].map((x) => link(x, `/${x}`));
   links.splice(2, 0, link("Contact", "/contact"));
   const { primary, overflow } = partitionNavLinks(links);
-  assert.deepEqual(primary.map((l) => l.href), ["/a", "/b", "/c", "/d", "/e"]);
-  assert.deepEqual(overflow.map((l) => l.href), ["/f"]);
+  assert.deepEqual(primary.map((l) => l.href), ["/a", "/b", "/contact", "/c", "/d"]);
+  assert.deepEqual(overflow.map((l) => l.href), ["/e"]);
 });
 
 test("nav: short lists, duplicates and a missing contact link are all fine", () => {

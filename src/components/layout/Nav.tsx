@@ -44,7 +44,7 @@ export default function Nav({
   const progressRef = useRef<HTMLSpanElement>(null);
   const pathname = usePathname();
   // The bar carries up to six links and one button; the rest live in the sheet
-  // and the footer. /contact is the button, so it never appears as a plain link.
+  // and the footer.
   const { primary, overflow } = partitionNavLinks(links, 6);
   const sheetLinks = [...primary, ...overflow];
 
