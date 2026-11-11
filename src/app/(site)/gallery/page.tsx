@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import SectionHeader from "@/components/ui/SectionHeader";
 import GalleryBrowser from "@/components/gallery/GalleryBrowser";
+import GalleryFromQuery from "@/components/gallery/GalleryFromQuery";
 import { getGalleryItems } from "@/lib/data/gallery";
 import { getSiteSettings } from "@/lib/data/site-settings";
 
@@ -14,13 +16,8 @@ export const metadata: Metadata = {
   /links and /resume pages wear, so it carries the same nav and footer as every
   other page. The route is unchanged: (site) is a group, not a URL segment.
 */
-export default async function GalleryPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ service?: string | string[] }>;
-}) {
-  const [items, settings, { service }] = await Promise.all([getGalleryItems(), getSiteSettings(), searchParams]);
-  const initialService = Array.isArray(service) ? service[0] : service;
+export default async function GalleryPage() {
+  const [items, settings] = await Promise.all([getGalleryItems(), getSiteSettings()]);
 
   return (
     <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
@@ -43,7 +40,9 @@ export default async function GalleryPage({
           Nothing in the gallery yet.
         </p>
       ) : (
-        <GalleryBrowser items={items} initialService={initialService} />
+        <Suspense fallback={<GalleryBrowser items={items} />}>
+          <GalleryFromQuery items={items} />
+        </Suspense>
       )}
     </div>
   );

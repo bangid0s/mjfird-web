@@ -1,5 +1,6 @@
 import { isVideoFile, isYouTubeUrl, mediaThumbnail } from "@/lib/media";
 import type { GalleryItem } from "@/lib/data/gallery";
+import FlowImage from "@/components/media/FlowImage";
 
 // True masonry via CSS columns: tiles keep their image's own aspect ratio and
 // the browser balances the columns, which is what gives the Pinterest stagger.
@@ -35,13 +36,12 @@ export default function MasonryGrid({
               className="w-full transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.03]"
             />
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <FlowImage
               src={mediaThumbnail(item.imageUrl)}
               alt={item.title || ""}
-              loading={i < 6 ? "eager" : "lazy"}
-              decoding="async"
-              className="w-full transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.03]"
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              priority={i < 4}
+              className="h-auto w-full transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.03]"
             />
           )}
 

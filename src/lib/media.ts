@@ -17,12 +17,6 @@ export function isMediaUrl(url: string) {
   return isImageFile(url) || isVideoFile(url) || isYouTubeUrl(url);
 }
 
-// Only Supabase-hosted images go through next/image (it requires allowlisted
-// hosts); arbitrary pasted URLs render as plain <img>.
-export function isSupabaseHosted(url: string) {
-  return /^https:\/\/[^/]+\.supabase\.co\//.test(url);
-}
-
 // Something safe to put in an <img> for any media URL: YouTube links resolve
 // to their thumbnail, everything else is returned as-is.
 export function mediaThumbnail(url: string) {
