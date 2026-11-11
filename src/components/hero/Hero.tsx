@@ -39,6 +39,8 @@ export default function Hero({
   intro,
   ctaPrimary,
   ctaSecondary,
+  ctaPrimaryHref = HERO_PRIMARY_HREF,
+  ctaSecondaryHref = HERO_SECONDARY_HREF,
   edgeLabel,
   headline,
   stats,
@@ -53,6 +55,9 @@ export default function Hero({
   intro: string;
   ctaPrimary: string;
   ctaSecondary: string;
+  /** Where each button goes, set in /admin/pages/home. A slide's own link still wins for the main button. */
+  ctaPrimaryHref?: string;
+  ctaSecondaryHref?: string;
   /** Rotated label up the left gutter, on the widest screens only. */
   edgeLabel?: string;
   /** The offer, as the page's h1. Blank shows the wordmark instead. */
@@ -91,7 +96,7 @@ export default function Hero({
   const slideEyebrow = active?.eyebrow || eyebrow;
   const slideIntro = active?.intro || intro;
   const slideCtaLabel = active?.ctaLabel || ctaPrimary;
-  const slideCtaHref = active?.ctaUrl || HERO_PRIMARY_HREF;
+  const slideCtaHref = active?.ctaUrl || ctaPrimaryHref;
 
   const copyAnimation = hasChanged ? "motion-safe:animate-rise" : "";
   const hasMedia = mediaType !== "none" && (mediaUrl || count > 0);
@@ -136,7 +141,7 @@ export default function Hero({
               <MagneticButton href={slideCtaHref} size="lg" arrow cursorLabel="view">
                 {slideCtaLabel}
               </MagneticButton>
-              <MagneticButton href={HERO_SECONDARY_HREF} size="lg" variant="secondary" cursorLabel="view">
+              <MagneticButton href={ctaSecondaryHref} size="lg" variant="secondary" cursorLabel="view">
                 {ctaSecondary}
               </MagneticButton>
             </div>

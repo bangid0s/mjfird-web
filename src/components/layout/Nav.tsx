@@ -15,9 +15,8 @@ type NavLink = { label: string; href: string };
 
 /*
   No pill, no card, no chrome — plain links sitting on the page with a
-  hairline under them, and one filled button for the thing a visitor came to
-  do. That button is the one thing on the bar shown at every width, so the way
-  to commission is never more than a tap away. The active route is marked with a short accent rule rather than a filled
+  hairline under them. The "commission me" call to action lives in the hero
+  (set in /admin/pages/home), not on the bar. The active route is marked with a short accent rule rather than a filled
   background.
 */
 
@@ -44,7 +43,7 @@ export default function Nav({
   const lastY = useRef(0);
   const progressRef = useRef<HTMLSpanElement>(null);
   const pathname = usePathname();
-  // The bar carries up to six links and one button; the rest live in the sheet
+  // The bar carries up to six links; the rest live in the sheet
   // and the footer.
   const { primary, overflow } = partitionNavLinks(links, 6);
   const sheetLinks = [...primary, ...overflow];
@@ -157,23 +156,8 @@ export default function Nav({
             })}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-3 sm:gap-4 lg:gap-5">
+          <div className="flex shrink-0 items-center gap-4 lg:gap-5">
             <AccountLink className="hidden lg:inline" />
-
-            <Link
-              href="/services"
-              data-cursor="view"
-              aria-current={pathname === "/services" ? "page" : undefined}
-              className="group inline-flex items-center gap-2 bg-accent px-3 py-2 font-body text-body-sm font-semibold text-accent-ink transition-[filter,box-shadow] duration-[var(--duration-base)] ease-[var(--ease-freeze)] hover:shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-accent)_28%,transparent)] hover:brightness-110 focus-visible:shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-accent)_28%,transparent)] sm:px-5 sm:py-2.5"
-            >
-              Commission me
-              <span
-                aria-hidden="true"
-                className="hidden transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-0.5 sm:inline"
-              >
-                →
-              </span>
-            </Link>
 
             <ThemeToggle />
 
@@ -253,13 +237,6 @@ export default function Nav({
                 transition={{ duration: 0.4, delay: 0.1 + sheetLinks.length * 0.035 }}
                 className="mt-auto flex flex-col gap-6 pb-8 pt-10"
               >
-                <Link
-                  href="/services"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center bg-accent px-5 py-4 font-body text-body font-medium text-accent-ink"
-                >
-                  Commission me
-                </Link>
                 <AccountLink className="text-ink" onNavigate={() => setOpen(false)} />
                 {contactEmail && (
                   <a

@@ -4,6 +4,7 @@ import PageHeader from "@/components/admin/PageHeader";
 import RowsField from "@/components/admin/RowsField";
 import SettingsForm, { ViewPageLink } from "@/components/admin/SettingsForm";
 import { loadSettingsRow, type SettingsSearchParams } from "@/lib/admin/settings-row";
+import { HERO_CTA_DEFAULTS, HERO_PRIMARY_HREF, HERO_SECONDARY_HREF } from "@/lib/hero-cta";
 
 export default async function AdminHomePage({ searchParams }: { searchParams: SettingsSearchParams }) {
   const [status, settings] = await Promise.all([searchParams, loadSettingsRow()]);
@@ -33,11 +34,41 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
             />
           </Field>
           <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="Main button" hint="Goes to /services unless a slide sets its own link.">
-              <input name="hero_cta_primary" defaultValue={settings?.hero_cta_primary ?? ""} className={fieldInputClasses} />
+            <Field label="Main button text" hint="The filled button.">
+              <input
+                name="hero_cta_primary"
+                defaultValue={settings?.hero_cta_primary ?? ""}
+                placeholder={HERO_CTA_DEFAULTS.primary}
+                className={fieldInputClasses}
+              />
             </Field>
-            <Field label="Second button" hint="Always goes to /work.">
-              <input name="hero_cta_secondary" defaultValue={settings?.hero_cta_secondary ?? ""} className={fieldInputClasses} />
+            <Field label="Main button link" hint="A page like /services, or a full https:// link. A slide's own link still wins. Blank = /services.">
+              <input
+                name="hero_cta_primary_url"
+                defaultValue={settings?.hero_cta_primary_url ?? ""}
+                placeholder={HERO_PRIMARY_HREF}
+                spellCheck={false}
+                autoComplete="off"
+                className={fieldInputClasses}
+              />
+            </Field>
+            <Field label="Second button text" hint="The outlined button.">
+              <input
+                name="hero_cta_secondary"
+                defaultValue={settings?.hero_cta_secondary ?? ""}
+                placeholder={HERO_CTA_DEFAULTS.secondary}
+                className={fieldInputClasses}
+              />
+            </Field>
+            <Field label="Second button link" hint="A page like /work or /contact, or a full https:// link. Blank = /work.">
+              <input
+                name="hero_cta_secondary_url"
+                defaultValue={settings?.hero_cta_secondary_url ?? ""}
+                placeholder={HERO_SECONDARY_HREF}
+                spellCheck={false}
+                autoComplete="off"
+                className={fieldInputClasses}
+              />
             </Field>
           </div>
         </FieldSection>

@@ -1,4 +1,5 @@
 import { normalizeMediaUrl } from "@/lib/media";
+import { normalizeHeroHref } from "@/lib/hero-cta";
 import { normalizeGaId } from "@/lib/analytics";
 import { parseFaq } from "@/lib/admin/site-settings-columns";
 
@@ -138,6 +139,9 @@ export function buildSettingsPayload(formData: FormData) {
     hero_intro: String(formData.get("hero_intro") ?? ""),
     hero_cta_primary: String(formData.get("hero_cta_primary") ?? ""),
     hero_cta_secondary: String(formData.get("hero_cta_secondary") ?? ""),
+    // Migration 0041 — skipped on save until it is applied (see LATE_COLUMNS).
+    hero_cta_primary_url: normalizeHeroHref(String(formData.get("hero_cta_primary_url") ?? "")),
+    hero_cta_secondary_url: normalizeHeroHref(String(formData.get("hero_cta_secondary_url") ?? "")),
     stats: parseStats(String(formData.get("stats") ?? "")),
     work_section_eyebrow: String(formData.get("work_section_eyebrow") ?? ""),
     work_section_title: String(formData.get("work_section_title") ?? ""),
@@ -196,7 +200,7 @@ export const SETTINGS_SECTIONS: Record<SettingsSection, { path: string; columns:
       "hero_headline", "hero_proof_note", "hero_eyebrow", "hero_intro",
       "hero_media_type", "hero_media_url", "hero_media_urls",
       "hero_animation", "hero_slide_duration", "hero_overlay_opacity",
-      "hero_cta_primary", "hero_cta_secondary", "stats",
+      "hero_cta_primary", "hero_cta_secondary", "hero_cta_primary_url", "hero_cta_secondary_url", "stats",
       "work_section_eyebrow", "work_section_title",
       "services_section_eyebrow", "services_section_title",
       "testimonials_section_eyebrow", "testimonials_section_title",

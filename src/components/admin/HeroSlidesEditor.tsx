@@ -171,7 +171,7 @@ export default function HeroSlidesEditor({
               <input
                 value={slide.ctaUrl ?? ""}
                 onChange={(e) => update(i, { ctaUrl: e.target.value })}
-                placeholder="/services (the default)"
+                placeholder="Same as the main button"
                 className={fieldInputClasses}
               />
             </Field>
