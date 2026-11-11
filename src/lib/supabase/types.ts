@@ -177,6 +177,12 @@ export type GalleryItemRow = {
   caption: string | null;
   link_url: string | null;
   tags: string[];
+  /** Services this image is a sample of (migration 0039). */
+  service_ids?: string[];
+  /** "Made for …" credit. */
+  client_name?: string | null;
+  /** Review shown with the image; verified when the review itself is. */
+  testimonial_id?: string | null;
   sort_order: number;
   status: ContentStatus;
   created_at: string;

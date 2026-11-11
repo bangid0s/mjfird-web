@@ -99,13 +99,16 @@ export default function ServiceForm({
         <p className="text-[13px] text-ink-faint">When every slot is taken, an open service shows as Waitlist automatically.</p>
       </FieldSection>
 
-      <FieldSection title="Images" description="A cover for the card, and a gallery of past work for the service page.">
+      <FieldSection
+        title="Images"
+        description="Samples come from the Gallery: open an image there and tick this service under “Sample of”. It then shows here with its client name and review. Use the field below only for extras that aren't in the gallery (process videos, YouTube timelapses)."
+      >
         <ImageUploader
           name="image_url"
-          label="Cover image — blank uses the first sample"
+          label="Cover image — blank uses the first gallery sample"
           initialUrl={service?.image_url}
         />
-        <GalleryUploader name="samples" label="Samples — examples of this service" initial={store?.samples} />
+        <GalleryUploader name="samples" label="Extra samples — shown after the gallery ones" initial={store?.samples} />
       </FieldSection>
 
       <FieldSection title="Packages" description="The tiers a client chooses between. All prices in USD.">
