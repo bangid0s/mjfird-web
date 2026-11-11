@@ -7,6 +7,8 @@ export default function OrderSummary({ req }: { req: CommissionRequestRow }) {
   const estimate = toNumber(req.estimated_total) ?? 0;
   const unit = toNumber(req.package_price) ?? 0;
   const extra = req.extra_characters ?? 0;
+  const licensePercent = toNumber(req.license_percent) ?? 0;
+  const licenseFee = toNumber(req.license_fee) ?? 0;
   return (
     <dl className="flex flex-col gap-3 text-body-sm">
       <div className="flex justify-between gap-3">
@@ -27,6 +29,13 @@ export default function OrderSummary({ req }: { req: CommissionRequestRow }) {
           <dd className="text-ink">{formatUSD(toNumber(a.price) ?? 0)}</dd>
         </div>
       ))}
+      <div className="flex justify-between gap-3">
+        <dt className="text-ink-muted">
+          License: {req.license_name ?? "Personal use"}
+          {licensePercent > 0 && ` (+${licensePercent}%)`}
+        </dt>
+        <dd className="text-ink">{licenseFee > 0 ? formatUSD(licenseFee) : "Included"}</dd>
+      </div>
       <div className="flex justify-between gap-3 border-t border-line pt-3">
         <dt className="text-ink-muted">Estimate</dt>
         <dd className={finalPrice !== null && finalPrice !== estimate ? "text-ink-faint line-through" : "text-ink"}>

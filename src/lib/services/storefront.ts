@@ -57,6 +57,50 @@ export const questionSchema = z.object({
   help: z.string().trim().max(300).default(""),
 });
 
+/*
+  Usage licenses (like VGen's request form). Every service has the same three
+  tiers in a fixed order; the admin can rename them, change the surcharge or
+  switch the paid ones off. Personal use is the default and is always offered.
+  The surcharge is a percentage of the order total (package × characters +
+  add-ons): monetized +50%, commercial +100% unless the service says otherwise.
+*/
+export const LICENSE_IDS = ["personal", "monetized", "commercial"] as const;
+export type LicenseId = (typeof LICENSE_IDS)[number];
+
+export const licenseSchema = z.object({
+  id: z.enum(LICENSE_IDS),
+  name: shortText.min(1),
+  description: z.string().trim().max(500).default(""),
+  percent: z.coerce.number().finite().min(0).max(500).transform((n) => Math.round(n * 100) / 100),
+  enabled: z.boolean().default(true),
+});
+export type ServiceLicense = z.infer<typeof licenseSchema>;
+
+export const DEFAULT_LICENSES: ServiceLicense[] = [
+  { id: "personal", name: "Personal use", description: "Profile pictures, personal posts, gifts. No income from the art.", percent: 0, enabled: true },
+  { id: "monetized", name: "Monetized content", description: "Streams, YouTube, Patreon, emotes, alerts — content that earns you money.", percent: 50, enabled: true },
+  { id: "commercial", name: "Commercial merchandising", description: "Printed or sold products: merch, prints, packaging, ads.", percent: 100, enabled: true },
+];
+
+/**
+ * The service's three licenses, stored values laid over the defaults (so a
+ * service saved before licenses existed gets the defaults). Personal use is
+ * always enabled.
+ */
+export function parseLicenses(raw: unknown): ServiceLicense[] {
+  const stored = parseList(licenseSchema, raw);
+  return DEFAULT_LICENSES.map((d) => {
+    const own = stored.find((l) => l.id === d.id);
+    const merged = own ? { ...d, ...own } : { ...d };
+    return d.id === "personal" ? { ...merged, enabled: true } : merged;
+  });
+}
+
+/** The licenses a client can pick from. */
+export function offeredLicenses(licenses: ServiceLicense[]) {
+  return licenses.filter((l) => l.enabled);
+}
+
 export const AVAILABILITY = ["open", "waitlist", "closed"] as const;
 export type Availability = (typeof AVAILABILITY)[number];
 
@@ -135,6 +179,10 @@ export type PriceQuote = {
   /** Package price × every character (1 + extraCharacters). */
   subtotal: number;
   addonsTotal: number;
+  licenseId: LicenseId;
+  licensePercent: number;
+  /** licensePercent of (subtotal + addonsTotal). */
+  licenseFee: number;
   total: number;
 };
 
@@ -148,7 +196,7 @@ export function clampExtraCharacters(pkg: ServicePackage | undefined, requested:
 /**
  * Price a selection against the stored service. Unknown package → null;
  * unknown add-on ids are ignored; extra characters are clamped to the
- * package's limit. Use this on the server for anything that moves money.
+ * package's limit; an unknown or disabled license falls back to personal use. Use this on the server for anything that moves money.
  */
 export function quote(
   packages: ServicePackage[],
@@ -156,6 +204,8 @@ export function quote(
   packageId: string,
   addonIds: string[],
   extraCharacters = 0,
+  licenses: ServiceLicense[] = DEFAULT_LICENSES,
+  licenseId: string = "personal",
 ): PriceQuote | null {
   const pkg = packages.find((p) => p.id === packageId);
   if (!pkg) return null;
@@ -163,13 +213,23 @@ export function quote(
   const chosen = addons.filter((a) => addonIds.includes(a.id));
   const addonsTotal = Math.round(chosen.reduce((sum, a) => sum + a.price, 0) * 100) / 100;
   const subtotal = Math.round(pkg.price * (1 + extra) * 100) / 100;
+  // Unknown or switched-off license → personal use.
+  const license =
+    offeredLicenses(licenses).find((l) => l.id === licenseId) ??
+    licenses.find((l) => l.id === "personal") ??
+    DEFAULT_LICENSES[0];
+  const base = Math.round((subtotal + addonsTotal) * 100) / 100;
+  const licenseFee = Math.round(base * license.percent) / 100;
   return {
     packageId: pkg.id,
     addonIds: chosen.map((a) => a.id),
     extraCharacters: extra,
     subtotal,
     addonsTotal,
-    total: Math.round((subtotal + addonsTotal) * 100) / 100,
+    licenseId: license.id,
+    licensePercent: license.percent,
+    licenseFee,
+    total: Math.round((base + licenseFee) * 100) / 100,
   };
 }
 

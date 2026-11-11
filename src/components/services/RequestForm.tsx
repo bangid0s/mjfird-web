@@ -5,8 +5,10 @@ import { useFormStatus } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { submitRequest } from "@/lib/client/request-actions";
 import type { StorefrontService } from "@/lib/data/services";
-import { clampExtraCharacters, effectiveAvailability, formatUSD, quote, type ServiceQuestion } from "@/lib/services/storefront";
+import { clampExtraCharacters, effectiveAvailability, formatUSD, quote, type LicenseId, type ServiceQuestion } from "@/lib/services/storefront";
 import CharacterStepper from "@/components/services/CharacterStepper";
+import LicensePicker from "@/components/services/LicensePicker";
+import { choiceBox, choiceRadio, choiceTitle } from "@/components/services/choice";
 import type { CommissionAnswer } from "@/lib/supabase/types";
 import { authInput } from "@/components/auth/AuthForms";
 import { cn } from "@/lib/cn";
@@ -222,6 +224,7 @@ export default function RequestForm({
   initialPackage,
   initialAddons,
   initialCharacters = 0,
+  initialLicense = "personal",
 }: {
   service: StorefrontService;
   userId: string;
@@ -230,6 +233,7 @@ export default function RequestForm({
   initialPackage?: string;
   initialAddons: string[];
   initialCharacters?: number;
+  initialLicense?: string;
 }) {
   const [state, action] = useActionState(submitRequest, undefined);
   const [packageId, setPackageId] = useState(
@@ -237,13 +241,16 @@ export default function RequestForm({
   );
   const [addonIds, setAddonIds] = useState(initialAddons.filter((id) => service.addons.some((a) => a.id === id)));
   const [extraCharacters, setExtraCharacters] = useState(initialCharacters);
+  const [licenseId, setLicenseId] = useState<LicenseId>(
+    service.licenses.some((l) => l.enabled && l.id === initialLicense) ? (initialLicense as LicenseId) : "personal",
+  );
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [questionFiles, setQuestionFiles] = useState<Record<string, Uploaded[]>>({});
   const [refs, setRefs] = useState<Uploaded[]>([]);
 
   const selected = service.packages.find((p) => p.id === packageId);
   const extra = clampExtraCharacters(selected, extraCharacters);
-  const priced = quote(service.packages, service.addons, packageId, addonIds, extra);
+  const priced = quote(service.packages, service.addons, packageId, addonIds, extra, service.licenses, licenseId);
   const waitlist = effectiveAvailability(service.availability, service.slotsTotal, service.slotsTaken) === "waitlist";
   const hasFileQuestion = service.questions.some((q) => q.type === "file");
 
@@ -275,6 +282,7 @@ export default function RequestForm({
         <input key={id} type="hidden" name="addon_ids" value={id} />
       ))}
       <input type="hidden" name="extra_characters" value={extra} />
+      <input type="hidden" name="license_id" value={priced?.licenseId ?? "personal"} />
       <input type="hidden" name="answers" value={JSON.stringify(answerList)} />
       <input type="hidden" name="reference_paths" value={JSON.stringify(allPaths)} />
 
@@ -342,23 +350,17 @@ export default function RequestForm({
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-2.5 text-body-sm font-medium text-ink">Package</legend>
             {service.packages.map((pkg) => (
-              <label
-                key={pkg.id}
-                className={cn(
-                  "flex cursor-pointer items-center justify-between gap-3 border px-3.5 py-2.5",
-                  pkg.id === packageId ? "border-accent bg-bg" : "border-line hover:border-line-strong",
-                )}
-              >
+              <label key={pkg.id} className={choiceBox(pkg.id === packageId, "items-center justify-between gap-3 px-3.5 py-2.5")}>
                 <span className="flex items-center gap-2.5">
                   <input
                     type="radio"
                     checked={pkg.id === packageId}
                     onChange={() => setPackageId(pkg.id)}
-                    className="h-4 w-4 accent-[var(--color-accent)]"
+                    className={choiceRadio(pkg.id === packageId)}
                   />
-                  <span className="text-body-sm text-ink">{pkg.name}</span>
+                  <span className={`text-body-sm ${choiceTitle(pkg.id === packageId)}`}>{pkg.name}</span>
                 </span>
-                <span className="text-body-sm text-ink">{formatUSD(pkg.price)}</span>
+                <span className={`text-body-sm ${choiceTitle(pkg.id === packageId)}`}>{formatUSD(pkg.price)}</span>
               </label>
             ))}
           </fieldset>
@@ -385,6 +387,21 @@ export default function RequestForm({
                 </label>
               ))}
             </fieldset>
+          )}
+
+          <LicensePicker
+            licenses={service.licenses}
+            value={priced?.licenseId ?? "personal"}
+            onChange={setLicenseId}
+            base={priced ? priced.subtotal + priced.addonsTotal : undefined}
+            name="license_choice"
+          />
+
+          {priced && priced.licenseFee > 0 && (
+            <div className="-mb-3 flex items-baseline justify-between border-t border-line pt-4 text-body-sm text-ink-muted">
+              <span>License (+{priced.licensePercent}%)</span>
+              <span>+{formatUSD(priced.licenseFee)}</span>
+            </div>
           )}
 
           {priced && (

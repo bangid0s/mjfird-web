@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import MagneticButton from "@/components/ui/MagneticButton";
 import AvailabilityBadge from "@/components/services/AvailabilityBadge";
 import Stars from "@/components/reviews/Stars";
 import CharacterStepper from "@/components/services/CharacterStepper";
+import LicensePicker from "@/components/services/LicensePicker";
+import { choiceBox, choiceMuted, choiceRadio, choiceTitle } from "@/components/services/choice";
 import type { StorefrontService } from "@/lib/data/services";
-import { clampExtraCharacters, effectiveAvailability, formatUSD, quote } from "@/lib/services/storefront";
-import { cn } from "@/lib/cn";
+import { clampExtraCharacters, effectiveAvailability, formatUSD, quote, type LicenseId } from "@/lib/services/storefront";
 
 /*
   Package + add-on picker with a live total. The total here is only a preview:
@@ -25,12 +26,15 @@ export default function ServiceOrderPanel({
   const [packageId, setPackageId] = useState(service.packages[0]?.id ?? "");
   const [addonIds, setAddonIds] = useState<string[]>([]);
   const [extraCharacters, setExtraCharacters] = useState(0);
+  const [licenseId, setLicenseId] = useState<LicenseId>("personal");
+  // The panel renders twice (mobile + desktop): each copy needs its own radio group.
+  const group = useId();
 
   const status = effectiveAvailability(service.availability, service.slotsTotal, service.slotsTaken);
   const selected = service.packages.find((p) => p.id === packageId);
   // Switching to a package with a lower limit (or none) trims the count.
   const extra = clampExtraCharacters(selected, extraCharacters);
-  const priced = quote(service.packages, service.addons, packageId, addonIds, extra);
+  const priced = quote(service.packages, service.addons, packageId, addonIds, extra, service.licenses, licenseId);
 
   const toggleAddon = (id: string) =>
     setAddonIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -39,6 +43,7 @@ export default function ServiceOrderPanel({
   if (packageId) params.set("package", packageId);
   if (addonIds.length) params.set("addons", addonIds.join(","));
   if (extra) params.set("characters", String(extra));
+  if (priced && priced.licenseId !== "personal") params.set("license", priced.licenseId);
   // No packages yet → nothing to price, so fall back to a plain inquiry.
   const requestHref = service.packages.length
     ? `/services/${service.slug}/request${params.size ? `?${params.toString()}` : ""}`
@@ -70,28 +75,22 @@ export default function ServiceOrderPanel({
           {service.packages.map((pkg) => {
             const checked = pkg.id === packageId;
             return (
-              <label
-                key={pkg.id}
-                className={cn(
-                  "flex cursor-pointer flex-col gap-1 border px-4 py-3 transition-colors duration-[var(--duration-fast)]",
-                  checked ? "border-accent bg-bg" : "border-line hover:border-line-strong",
-                )}
-              >
+              <label key={pkg.id} className={choiceBox(checked, "flex-col gap-1 px-4 py-3")}>
                 <span className="flex items-baseline justify-between gap-3">
                   <span className="flex items-center gap-2.5">
                     <input
                       type="radio"
-                      name="package"
+                      name={`package-${group}`}
                       value={pkg.id}
                       checked={checked}
                       onChange={() => setPackageId(pkg.id)}
-                      className="h-4 w-4 accent-[var(--color-accent)]"
+                      className={choiceRadio(checked)}
                     />
-                    <span className="text-body font-medium text-ink">{pkg.name}</span>
+                    <span className={`text-body font-medium ${choiceTitle(checked)}`}>{pkg.name}</span>
                   </span>
-                  <span className="text-body text-ink">{formatUSD(pkg.price)}</span>
+                  <span className={`text-body ${choiceTitle(checked)}`}>{formatUSD(pkg.price)}</span>
                 </span>
-                {pkg.description && <span className="pl-[1.6rem] text-body-sm text-ink-muted">{pkg.description}</span>}
+                {pkg.description && <span className={`pl-[1.6rem] text-body-sm ${choiceMuted(checked)}`}>{pkg.description}</span>}
               </label>
             );
           })}
@@ -149,6 +148,20 @@ export default function ServiceOrderPanel({
             </label>
           ))}
         </fieldset>
+      )}
+
+      <LicensePicker
+        licenses={service.licenses}
+        value={priced?.licenseId ?? "personal"}
+        onChange={setLicenseId}
+        base={priced ? priced.subtotal + priced.addonsTotal : undefined}
+      />
+
+      {priced && priced.licenseFee > 0 && (
+        <div className="-mb-3 flex items-baseline justify-between border-t border-line pt-4 text-body-sm text-ink-muted">
+          <span>License (+{priced.licensePercent}%)</span>
+          <span>+{formatUSD(priced.licenseFee)}</span>
+        </div>
       )}
 
       {priced && (

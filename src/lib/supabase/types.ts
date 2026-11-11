@@ -54,6 +54,8 @@ export type ServiceRow = {
   faq: unknown;
   terms: string;
   questions: unknown;
+  /** [{ id: personal|monetized|commercial, name, description, percent, enabled }] */
+  licenses?: unknown;
 };
 
 export type TestimonialRow = {
@@ -336,6 +338,11 @@ export type CommissionRequestRow = {
   delivery_days: number | null;
   revisions: number | null;
   addons: { id: string; name: string; price: number | string }[];
+  license_id: "personal" | "monetized" | "commercial";
+  license_name: string;
+  license_percent: number | string;
+  /** license_percent of (package × characters + add-ons). */
+  license_fee: number | string;
   estimated_total: number | string;
   final_price: number | string | null;
   currency: string;
