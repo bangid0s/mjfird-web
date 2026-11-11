@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import JsonLd from "@/components/seo/JsonLd";
-import ProjectGallery from "@/components/media/ProjectGallery";
 import SmartImage from "@/components/media/SmartImage";
 import Reveal from "@/components/motion/Reveal";
 import ServiceOrderPanel from "@/components/services/ServiceOrderPanel";
+import ServiceSamples from "@/components/services/ServiceSamples";
+import { getServiceSamples, samplesAsGalleryItems } from "@/lib/data/gallery";
 import { ReviewBody } from "@/components/reviews/ReviewCard";
 import Stars from "@/components/reviews/Stars";
 import { getStorefrontService, getStorefrontServices } from "@/lib/data/services";
@@ -63,9 +64,15 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
   const service = await getStorefrontService(slug);
   if (!service) notFound();
 
-  const reviews = await getServiceReviews(service.id);
+  const [reviews, gallerySamples] = await Promise.all([
+    getServiceReviews(service.id),
+    getServiceSamples(service.id),
+  ]);
   const from = startingPrice(service.packages);
-  const hasSamples = service.samples.length > 0;
+  // Gallery images filed under this service lead; samples typed on the service
+  // itself (videos, process shots that aren't in the gallery) follow.
+  const samples = [...gallerySamples, ...samplesAsGalleryItems(service.samples, "sample")];
+  const hasSamples = samples.length > 0;
 
   return (
     <div className="container-page pb-[var(--space-section)] pt-10 sm:pt-14">
@@ -115,7 +122,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
 
           {hasSamples ? (
             <Reveal>
-              <ProjectGallery images={service.samples} />
+              <ServiceSamples items={samples} />
             </Reveal>
           ) : (
             service.coverUrl && (

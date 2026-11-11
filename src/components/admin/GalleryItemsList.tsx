@@ -9,12 +9,21 @@ import { fieldInputClasses } from "@/components/admin/Field";
 import ReorderableList from "@/components/admin/ReorderableList";
 import DeleteButton from "@/components/admin/DeleteButton";
 import UploadInput from "@/components/admin/UploadInput";
+import GalleryLinkFields, { type ReviewOption, type ServiceOption } from "@/components/admin/GalleryLinkFields";
 import { mediaThumbnail } from "@/lib/media";
 import type { GalleryItemRow } from "@/lib/supabase/types";
 
 export const TAG_LIST_ID = "gallery-tags";
 
-export default function GalleryItemsList({ items }: { items: GalleryItemRow[] }) {
+export default function GalleryItemsList({
+  items,
+  services,
+  reviews,
+}: {
+  items: GalleryItemRow[];
+  services: ServiceOption[];
+  reviews: ReviewOption[];
+}) {
   return (
     <ReorderableList
       items={items}
@@ -83,6 +92,13 @@ export default function GalleryItemsList({ items }: { items: GalleryItemRow[] })
               >
                 Save
               </button>
+              <GalleryLinkFields
+                services={services}
+                reviews={reviews}
+                serviceIds={item.service_ids ?? []}
+                clientName={item.client_name ?? ""}
+                testimonialId={item.testimonial_id ?? ""}
+              />
             </div>
           </form>
           <DeleteButton action={deleteGalleryItem.bind(null, item.id)} />

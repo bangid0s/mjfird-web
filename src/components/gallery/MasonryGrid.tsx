@@ -1,4 +1,4 @@
-import { mediaThumbnail } from "@/lib/media";
+import { isVideoFile, isYouTubeUrl, mediaThumbnail } from "@/lib/media";
 import type { GalleryItem } from "@/lib/data/gallery";
 
 // True masonry via CSS columns: tiles keep their image's own aspect ratio and
@@ -26,16 +26,34 @@ export default function MasonryGrid({
         >
           {/* Pasted addresses have unknown dimensions, so the image sets its
               own height — that is what the masonry column needs. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={mediaThumbnail(item.imageUrl)}
-            alt={item.title || ""}
-            loading={i < 6 ? "eager" : "lazy"}
-            decoding="async"
-            className="w-full transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.03]"
-          />
+          {isVideoFile(item.imageUrl) ? (
+            <video
+              src={item.imageUrl}
+              muted
+              playsInline
+              preload="metadata"
+              className="w-full transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.03]"
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={mediaThumbnail(item.imageUrl)}
+              alt={item.title || ""}
+              loading={i < 6 ? "eager" : "lazy"}
+              decoding="async"
+              className="w-full transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.03]"
+            />
+          )}
 
-          {(item.title || item.caption) && (
+          {(isVideoFile(item.imageUrl) || isYouTubeUrl(item.imageUrl)) && (
+            <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-accent pl-1 text-accent-ink">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </span>
+          )}
+
+          {(item.title || item.caption || item.clientName || item.review) && (
             <span
               className={
                 // Hover/focus only — at rest nothing is painted over the
@@ -55,6 +73,13 @@ export default function MasonryGrid({
               {item.caption && (
                 <span className="line-clamp-2 font-body text-label text-white/70">
                   {item.caption}
+                </span>
+              )}
+              {(item.clientName || item.review) && (
+                <span className="mt-1 flex flex-wrap items-center gap-x-2 font-mono text-[11px] uppercase tracking-[0.12em] text-white/80">
+                  {item.clientName && <span>For {item.clientName}</span>}
+                  {item.review?.rating ? <span aria-hidden="true">★ {item.review.rating}</span> : null}
+                  {item.review?.verified && <span className="text-accent">✓ Verified</span>}
                 </span>
               )}
             </span>

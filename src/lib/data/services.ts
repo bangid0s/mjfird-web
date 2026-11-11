@@ -3,6 +3,7 @@ import { services as placeholderServices, type Service } from "@/lib/placeholder
 import { isSupabaseConfigured } from "./config";
 import type { ServiceRow } from "@/lib/supabase/types";
 import { parseGallery } from "@/lib/admin/form-parse";
+import { getServiceCovers } from "./gallery";
 import {
   addonSchema,
   backgroundSchema,
@@ -72,7 +73,12 @@ export type StorefrontService = {
   questions: ServiceQuestion[];
 };
 
-export function mapStorefrontRow(row: ServiceRow): StorefrontService {
+/**
+ * `galleryCover` is the first gallery image filed under this service. It wins
+ * over the manual samples, so a service with no cover of its own still shows
+ * the artwork its gallery samples lead with.
+ */
+export function mapStorefrontRow(row: ServiceRow, galleryCover?: string): StorefrontService {
   const samples = parseGallery(JSON.stringify(row.samples ?? []));
   return {
     id: row.id,
@@ -81,7 +87,7 @@ export function mapStorefrontRow(row: ServiceRow): StorefrontService {
     category: row.category ?? "",
     description: row.description ?? "",
     details: row.details ?? "",
-    coverUrl: row.image_url ?? samples[0]?.url,
+    coverUrl: row.image_url ?? galleryCover ?? samples[0]?.url,
     availability: row.availability ?? "open",
     slotsTotal: row.slots_total ?? null,
     slotsTaken: row.slots_taken ?? 0,
@@ -102,13 +108,12 @@ export async function getStorefrontServices(): Promise<StorefrontService[]> {
   if (!isSupabaseConfigured) return placeholderStorefront;
   try {
     const supabase = createPublicClient();
-    const { data, error } = await supabase
-      .from("services")
-      .select("*")
-      .eq("status", "published")
-      .order("sort_order", { ascending: true });
+    const [{ data, error }, covers] = await Promise.all([
+      supabase.from("services").select("*").eq("status", "published").order("sort_order", { ascending: true }),
+      getServiceCovers(),
+    ]);
     if (error || !data) return [];
-    return (data as ServiceRow[]).map(mapStorefrontRow);
+    return (data as ServiceRow[]).map((row) => mapStorefrontRow(row, covers.get(row.id)));
   } catch {
     return [];
   }
@@ -125,7 +130,9 @@ export async function getStorefrontService(slug: string): Promise<StorefrontServ
       .eq("slug", slug)
       .maybeSingle();
     if (error || !data) return null;
-    return mapStorefrontRow(data as ServiceRow);
+    const row = data as ServiceRow;
+    const cover = row.image_url ? undefined : (await getServiceCovers()).get(row.id);
+    return mapStorefrontRow(row, cover);
   } catch {
     return null;
   }

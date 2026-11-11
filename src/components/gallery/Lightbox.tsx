@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { mediaThumbnail } from "@/lib/media";
+import Stars from "@/components/reviews/Stars";
+import VerifiedBadge from "@/components/reviews/VerifiedBadge";
+import { isVideoFile, isYouTubeUrl, mediaThumbnail } from "@/lib/media";
+import { getYouTubeId, youTubeEmbedUrl } from "@/lib/youtube";
 import type { GalleryItem } from "@/lib/data/gallery";
 
 function isExternal(url: string) {
@@ -25,11 +28,14 @@ export default function Lightbox({
   index,
   onClose,
   onIndexChange,
+  showServices = true,
 }: {
   items: GalleryItem[];
   index: number;
   onClose: () => void;
   onIndexChange: (next: number) => void;
+  /** Off on a service page, where "commission this" would link to itself. */
+  showServices?: boolean;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -65,6 +71,10 @@ export default function Lightbox({
   const item = items[index];
   // Only ever rendered after a click, so `document` is always there.
   if (!item) return null;
+
+  const services = showServices ? item.services : [];
+  // Who it was for, what they said, and where to order the same thing.
+  const hasStory = Boolean(item.clientName || item.review || services.length > 0);
 
   return createPortal(
     <div
@@ -112,18 +122,33 @@ export default function Lightbox({
       )}
 
       <figure
-        className="flex max-h-full w-full max-w-5xl flex-col items-center gap-4"
+        className="flex max-h-full w-full max-w-5xl flex-col items-center gap-4 overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={mediaThumbnail(item.imageUrl)}
-          alt={item.title || ""}
-          className="max-h-[78svh] w-auto object-contain"
-        />
+        {isYouTubeUrl(item.imageUrl) && getYouTubeId(item.imageUrl) ? (
+          <div className="relative aspect-video w-full">
+            <iframe
+              key={item.id}
+              src={youTubeEmbedUrl(getYouTubeId(item.imageUrl)!, { autoplay: true })}
+              title={item.title || "Video"}
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+              className="absolute inset-0 h-full w-full border-0"
+            />
+          </div>
+        ) : isVideoFile(item.imageUrl) ? (
+          <video key={item.id} src={item.imageUrl} controls autoPlay playsInline className="max-h-[70svh] w-auto" />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={mediaThumbnail(item.imageUrl)}
+            alt={item.title || ""}
+            className={`${hasStory ? "max-h-[62svh]" : "max-h-[78svh]"} w-auto object-contain`}
+          />
+        )}
 
-        {(item.title || item.caption || item.linkUrl || item.tags.length > 0) && (
-          <figcaption className="flex flex-col items-center gap-2 text-center">
+        {(item.title || item.caption || item.linkUrl || item.tags.length > 0 || hasStory) && (
+          <figcaption className="flex w-full flex-col items-center gap-2 text-center">
             {item.title && (
               <span className="font-body text-body font-medium text-ink">{item.title}</span>
             )}
@@ -155,6 +180,42 @@ export default function Lightbox({
                   Visit link →
                 </Link>
               ))}
+
+            {hasStory && (
+              <div className="mt-2 flex w-full max-w-xl flex-col items-center gap-3 border-t border-line pt-4">
+                {item.clientName && (
+                  <span className="mono-meta text-ink-muted">Made for {item.clientName}</span>
+                )}
+                {item.review && (
+                  <blockquote className="flex max-h-[18svh] flex-col items-center gap-2 overflow-y-auto">
+                    {item.review.rating ? <Stars rating={item.review.rating} /> : null}
+                    <p className="whitespace-pre-line font-body text-body-sm text-pretty text-ink">
+                      &ldquo;{item.review.quote}&rdquo;
+                    </p>
+                    <footer className="flex flex-col items-center gap-1">
+                      <span className="text-body-sm text-ink-muted">
+                        — {item.review.name}
+                        {item.review.role ? `, ${item.review.role}` : ""}
+                      </span>
+                      {item.review.verified && <VerifiedBadge />}
+                    </footer>
+                  </blockquote>
+                )}
+                {services.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {services.map((service) => (
+                      <Link
+                        key={service.id}
+                        href={`/services/${service.slug}`}
+                        className="bg-accent px-5 py-2.5 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
+                      >
+                        Commission this · {service.title} →
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </figcaption>
         )}
       </figure>
