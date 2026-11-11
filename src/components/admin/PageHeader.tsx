@@ -10,7 +10,7 @@ export default function PageHeader({
   eyebrow,
 }: {
   title: string;
-  description?: string;
+  description?: React.ReactNode;
   backHref?: string;
   backLabel?: string;
   action?: React.ReactNode;

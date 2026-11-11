@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createMedia, createBattle } from "@/lib/admin/dance-actions";
 import { fieldInputClasses } from "@/components/admin/Field";
@@ -18,8 +19,17 @@ export default async function AdminDancePage() {
     <div className="flex max-w-3xl flex-col gap-16">
       <section>
         <PageHeader
-          title="Dance"
-          description="The reel, stills, and battle record shown on /dance. Add rows below, edit inline, drag to reorder."
+          title="Dance media"
+          description={
+            <>
+              The reel, stills and battle record shown on /dance. Add rows below, edit inline, drag to reorder.
+              The page&rsquo;s heading and intro are under{" "}
+              <Link href="/admin/pages/dance" className="font-medium text-ink underline underline-offset-4">
+                Dance page
+              </Link>
+              .
+            </>
+          }
         />
         <h2 className="mb-6 text-body font-semibold text-ink">Media</h2>
 

@@ -14,6 +14,9 @@ import {
   GalleryIcon,
   PlusIcon,
   RequestsIcon,
+  HomeIcon,
+  AboutIcon,
+  PageTextIcon,
 } from "@/components/admin/AdminIcons";
 
 export type AdminNavItem = {
@@ -45,17 +48,23 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: "Content",
     items: [
       { href: "/admin/projects", label: "Projects", icon: ProjectsIcon, keywords: "work case study portfolio" },
-      { href: "/admin/services", label: "Services", icon: ServicesIcon, keywords: "offer pricing" },
+      { href: "/admin/services", label: "Services", icon: ServicesIcon, keywords: "offer pricing packages commissions" },
       { href: "/admin/blog", label: "Blog", icon: BlogIcon, keywords: "posts articles writing" },
       { href: "/admin/testimonials", label: "Testimonials", icon: TestimonialsIcon, keywords: "quotes reviews" },
-      { href: "/admin/dance", label: "Dance", icon: DanceIcon, keywords: "battles videos breaking" },
+      { href: "/admin/dance", label: "Dance media", icon: DanceIcon, keywords: "battles videos breaking reel" },
     ],
   },
   {
-    label: "Pages",
+    // One entry per public page: the text and settings that belong to that
+    // page alone. Anything shared by every page is under Site settings.
+    label: "Page text",
     items: [
-      { href: "/admin/links", label: "Links page", icon: LinkIcon, keywords: "bio link in bio" },
-      { href: "/admin/resume", label: "Resume page", icon: ResumeIcon, keywords: "cv experience" },
+      { href: "/admin/pages/home", label: "Home page", icon: HomeIcon, keywords: "homepage hero headline stats numbers section headings" },
+      { href: "/admin/pages/about", label: "About page", icon: AboutIcon, keywords: "story timeline toolkit skills bio" },
+      { href: "/admin/pages/services", label: "Services page", icon: PageTextIcon, keywords: "process steps faq questions retainer availability" },
+      { href: "/admin/pages/dance", label: "Dance page", icon: PageTextIcon, keywords: "dance heading intro" },
+      { href: "/admin/links", label: "Links page", icon: LinkIcon, keywords: "bio link in bio background studio hours" },
+      { href: "/admin/resume", label: "Resume page", icon: ResumeIcon, keywords: "cv experience education tools" },
       { href: "/admin/gallery", label: "Gallery page", icon: GalleryIcon, keywords: "images art" },
     ],
   },
@@ -63,8 +72,8 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: "Studio",
     items: [
       { href: "/admin/media", label: "Files", icon: MediaIcon, keywords: "media uploads storage images" },
-      { href: "/admin/profile", label: "Profile", icon: ProfileIcon, keywords: "bio about socials availability" },
-      { href: "/admin/settings", label: "Site settings", icon: SettingsIcon, keywords: "hero logo seo theme colour" },
+      { href: "/admin/profile", label: "Profile", icon: ProfileIcon, keywords: "bio socials availability portrait" },
+      { href: "/admin/settings", label: "Site settings", icon: SettingsIcon, keywords: "brand logo colour seo link preview analytics menu navigation footer email" },
     ],
   },
 ];

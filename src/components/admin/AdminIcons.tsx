@@ -223,3 +223,33 @@ export function RequestsIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function HomeIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3 11.5 12 4l9 7.5" />
+      <path d="M5.5 10v10h13V10" />
+      <path d="M10 20v-6h4v6" />
+    </Icon>
+  );
+}
+
+export function AboutIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="4" width="18" height="16" />
+      <circle cx="9" cy="11" r="2.25" />
+      <path d="M5.5 17c.6-1.8 1.9-2.75 3.5-2.75S11.9 15.2 12.5 17" />
+      <path d="M15 10h3.5M15 14h3.5" />
+    </Icon>
+  );
+}
+
+export function PageTextIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="4" y="3" width="16" height="18" />
+      <path d="M8 8h8M8 12h8M8 16h5" />
+    </Icon>
+  );
+}

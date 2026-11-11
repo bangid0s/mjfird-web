@@ -1,93 +1,73 @@
-import { createClient } from "@/lib/supabase/server";
-import { saveSiteSettings } from "@/lib/admin/site-settings-actions";
-import { Field, fieldInputClasses } from "@/components/admin/Field";
-import HeroMediaPicker from "@/components/admin/HeroMediaPicker";
+import Link from "next/link";
+import { Field, FieldSection, fieldInputClasses } from "@/components/admin/Field";
 import ImageUploader from "@/components/admin/ImageUploader";
 import LogoPicker from "@/components/admin/LogoPicker";
-import LinksBgPicker from "@/components/admin/LinksBgPicker";
+import PageHeader from "@/components/admin/PageHeader";
+import RowsField from "@/components/admin/RowsField";
+import SettingsForm from "@/components/admin/SettingsForm";
 import SharePicker from "@/components/admin/SharePicker";
+import { loadSettingsRow, type SettingsSearchParams } from "@/lib/admin/settings-row";
 import { defaultNavLinks } from "@/lib/data/site-settings";
 import { isValidGaId } from "@/lib/analytics";
 import { SITE_HOST } from "@/lib/site-url";
-import PageHeader from "@/components/admin/PageHeader";
-import type { SiteSettingsRow } from "@/lib/supabase/types";
-import SubmitButton, { FormActions } from "@/components/admin/SubmitButton";
 
-export default async function AdminSettingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ saved?: string; error?: string; pending?: string }>;
-}) {
-  const { saved, error, pending } = await searchParams;
-  const supabase = await createClient();
-  const { data: settings } = await supabase
-    .from("site_settings")
-    .select("*")
-    .limit(1)
-    .single<SiteSettingsRow>();
+// Where each page's own copy is edited now that it no longer lives here.
+const PAGE_SCREENS = [
+  { href: "/admin/pages/home", label: "Home page" },
+  { href: "/admin/pages/about", label: "About page" },
+  { href: "/admin/pages/services", label: "Services page" },
+  { href: "/admin/pages/dance", label: "Dance page" },
+  { href: "/admin/links", label: "Links page" },
+  { href: "/admin/resume", label: "Resume page" },
+  { href: "/admin/gallery", label: "Gallery page" },
+];
 
-  const statsText =
-    settings?.stats?.map((s) => `${s.value}|${s.suffix}|${s.label}`).join("\n") ?? "";
-  const timelineText =
-    settings?.about_timeline?.map((t) => `${t.year}|${t.label}|${t.detail}`).join("\n") ?? "";
-  const skillsText = settings?.about_skills?.join("\n") ?? "";
-  const navLinksText = (settings?.nav_links?.length ? settings.nav_links : defaultNavLinks)
-    .map((l) => `${l.label}|${l.href}`)
-    .join("\n");
-  const processStepsText =
-    settings?.process_steps?.map((s) => `${s.title}|${s.description}`).join("\n") ?? "";
-  const faqText = settings?.services_faq?.map((f) => `${f.q}|${f.a}`).join("\n") ?? "";
+export default async function AdminSettingsPage({ searchParams }: { searchParams: SettingsSearchParams }) {
+  const [status, settings] = await Promise.all([searchParams, loadSettingsRow()]);
+  const navLinks = settings?.nav_links?.length ? settings.nav_links : defaultNavLinks;
   const gaId = settings?.ga_measurement_id ?? "";
-  const gaIdLooksValid = isValidGaId(gaId);
 
   return (
-    <div className="max-w-2xl">
+    <div>
       <PageHeader
         title="Site settings"
-        description="Brand, copy, and theme for the whole public site. Changes apply immediately on save."
+        description="What every page shares: brand, link previews, analytics, the menu and the footer."
       />
 
-      {saved && (
-        <p className="mb-8 border border-success px-4 py-3 text-body-sm font-medium text-success">
-          Settings saved — the site is updated.
+      <nav aria-label="Page text" className="mb-10 flex flex-col gap-3 border border-line bg-bg-raised px-5 py-4">
+        <p className="text-body-sm text-ink-muted">
+          Text for a single page is edited on that page&rsquo;s own screen:
         </p>
-      )}
-      {pending && (
-        <p className="mb-8 border border-line-strong px-4 py-3 text-body-sm text-ink">
-          Saved, except the hero headline, proof note, FAQ and retainer fields. Run
-          supabase/migrations/0034_public_ux_overhaul.sql against your project, then save again.
-        </p>
-      )}
-      {error && (
-        <p className="mb-8 border border-error px-4 py-3 font-mono text-label text-error">
-          Save failed: {error}. If this mentions a missing column, run the latest file in
-          supabase/migrations against your project.
-        </p>
-      )}
+        <ul className="flex flex-wrap gap-2">
+          {PAGE_SCREENS.map((screen) => (
+            <li key={screen.href}>
+              <Link
+                href={screen.href}
+                className="inline-flex h-9 items-center border border-line bg-bg px-3 text-body-sm font-medium text-ink transition-colors hover:border-ink"
+              >
+                {screen.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
-      <form action={saveSiteSettings} className="flex flex-col gap-14">
-        <fieldset className="flex flex-col gap-6">
-          <legend className="mb-2 text-body font-semibold text-ink">Brand — whole site</legend>
-
-          <Field label="Accent color">
-            <div className="flex items-center gap-4">
-              <input
-                type="color"
-                name="accent_color"
-                defaultValue={settings?.accent_color ?? "#f04e23"}
-                className="h-11 w-16 cursor-pointer border border-line bg-transparent"
-              />
-              <span className="font-mono text-body-sm text-ink-muted">
-                Used for buttons, links, and highlights site-wide
-              </span>
-            </div>
+      <SettingsForm section="site" status={status} saveLabel="Save site settings">
+        <FieldSection title="Brand" description="Colour, name and logo, used on every page.">
+          <Field label="Accent color" hint="Used for buttons, links and highlights site-wide.">
+            <input
+              type="color"
+              name="accent_color"
+              defaultValue={settings?.accent_color ?? "#f04e23"}
+              className="h-11 w-16 cursor-pointer border border-line bg-transparent"
+            />
           </Field>
 
-          <Field label="Site title (browser tab / search results)">
+          <Field label="Site title" hint="Shown in the browser tab and in search results.">
             <input name="site_title" defaultValue={settings?.site_title ?? ""} className={fieldInputClasses} />
           </Field>
 
-          <Field label="Site description (SEO / social share)">
+          <Field label="Site description" hint="Shown under the title in search results and link previews.">
             <textarea
               name="site_description"
               rows={2}
@@ -109,18 +89,12 @@ export default async function AdminSettingsPage({
             initialUrl={settings?.favicon_url}
             accept="image/png,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,image/jpeg,image/webp"
           />
-        </fieldset>
+        </FieldSection>
 
-        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 text-body font-semibold text-ink">
-            Link preview — X, WhatsApp, LinkedIn, Slack
-          </legend>
-          <p className="font-mono text-label text-ink-faint">
-            The thumbnail and text that show up when {SITE_HOST} is pasted anywhere. Projects and
-            blog posts can override the image individually — the field sits at the bottom of their
-            edit page.
-          </p>
-
+        <FieldSection
+          title="Link preview"
+          description={`The thumbnail and text shown when ${SITE_HOST} is pasted into X, WhatsApp, LinkedIn or Slack. Projects and blog posts can set their own image on their edit page.`}
+        >
           <SharePicker
             initialMode={settings?.share_image_mode}
             initialImageUrl={settings?.share_image_url}
@@ -137,223 +111,27 @@ export default async function AdminSettingsPage({
             fallbackHeadline={settings?.logo_text || "MJFIRD"}
             host={SITE_HOST}
           />
-        </fieldset>
+        </FieldSection>
 
-        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 text-body font-semibold text-ink">
-            Analytics
-          </legend>
-
-          <Field label="Google Analytics measurement ID">
-            <input
-              name="ga_measurement_id"
-              defaultValue={settings?.ga_measurement_id ?? ""}
-              placeholder="G-XXXXXXXXXX"
-              className={fieldInputClasses}
-            />
-          </Field>
-          {gaId && !gaIdLooksValid && (
-            <p className="font-mono text-label text-error">
-              That doesn’t look like a measurement ID — they start with “G-”. Tracking stays off
-              until it does.
-            </p>
-          )}
-          <p className="font-mono text-label text-ink-faint">
-            Google Analytics → Admin → Data streams → your web stream. Leave it blank to switch
-            tracking off. Only public pages report — the admin is never tracked, and nothing is
-            sent while the site runs locally in dev.
-          </p>
-        </fieldset>
-
-        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 text-body font-semibold text-ink">
-            Navigation
-          </legend>
-
-          <Field label="Menu links — one per line, “Label|/path”. Order here = order in the menu.">
-            <textarea
-              name="nav_links"
-              rows={7}
-              defaultValue={navLinksText}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-          <p className="font-mono text-label text-ink-faint">
-            Available pages: /work · /services · /about · /dance · /blog · /contact
-          </p>
-        </fieldset>
-
-        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 text-body font-semibold text-ink">Homepage — /</legend>
-
-          <Field label="Headline — what you do and for whom. Blank shows the MJFIRD wordmark instead.">
-            <input name="hero_headline" defaultValue={settings?.hero_headline ?? ""} className={fieldInputClasses} />
-          </Field>
-
-          <Field label="Proof note — one short credential shown beside the stats, e.g. a marketplace rating. Blank hides it.">
-            <input name="hero_proof_note" defaultValue={settings?.hero_proof_note ?? ""} className={fieldInputClasses} />
-          </Field>
-
-          <Field label="Eyebrow (above the headline) — used by any slide that doesn’t set its own">
-            <input name="hero_eyebrow" defaultValue={settings?.hero_eyebrow ?? ""} className={fieldInputClasses} />
-          </Field>
-
-          <Field label="Intro paragraph — used by any slide that doesn’t set its own">
-            <textarea
-              name="hero_intro"
-              rows={3}
-              defaultValue={settings?.hero_intro ?? ""}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-
-          <HeroMediaPicker
-            initialType={settings?.hero_media_type}
-            initialUrl={settings?.hero_media_url}
-            initialImages={settings?.hero_media_urls}
-            initialOverlay={settings?.hero_overlay_opacity}
-            initialAnimation={settings?.hero_animation}
-            initialSlideDuration={settings?.hero_slide_duration}
+        <FieldSection
+          title="Menu"
+          description="The links in the site header, in this order. Contact always shows as the button."
+        >
+          <RowsField
+            name="nav_links"
+            label="Menu links"
+            hint="Paths start with a slash: /work, /services, /about, /dance, /gallery, /blog, /contact."
+            columns={[
+              { label: "Label", placeholder: "Work" },
+              { label: "Path", placeholder: "/work" },
+            ]}
+            initial={navLinks.map((link) => [link.label, link.href])}
+            addLabel="Add menu link"
           />
+        </FieldSection>
 
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="Primary button label — goes to /work unless a slide sets its own link">
-              <input name="hero_cta_primary" defaultValue={settings?.hero_cta_primary ?? ""} className={fieldInputClasses} />
-            </Field>
-            <Field label="Secondary button label — always goes to /contact">
-              <input name="hero_cta_secondary" defaultValue={settings?.hero_cta_secondary ?? ""} className={fieldInputClasses} />
-            </Field>
-          </div>
-
-          <Field label="Stats — one per line, “value|suffix|label”">
-            <textarea
-              name="stats"
-              rows={4}
-              defaultValue={statsText}
-              placeholder={"10|+|Years in the cypher\n38||Projects shipped"}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-
-          <p className="text-body-sm font-medium text-ink-faint">
-            Section headings
-          </p>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="Work section — eyebrow">
-              <input
-                name="work_section_eyebrow"
-                defaultValue={settings?.work_section_eyebrow ?? "Selected Work"}
-                className={fieldInputClasses}
-              />
-            </Field>
-            <Field label="Work section — title">
-              <input
-                name="work_section_title"
-                defaultValue={settings?.work_section_title ?? "Recent moves"}
-                className={fieldInputClasses}
-              />
-            </Field>
-            <Field label="Services section — eyebrow">
-              <input
-                name="services_section_eyebrow"
-                defaultValue={settings?.services_section_eyebrow ?? "Services"}
-                className={fieldInputClasses}
-              />
-            </Field>
-            <Field label="Services section — title">
-              <input
-                name="services_section_title"
-                defaultValue={settings?.services_section_title ?? "What I build"}
-                className={fieldInputClasses}
-              />
-            </Field>
-            <Field label="Testimonials section — eyebrow">
-              <input
-                name="testimonials_section_eyebrow"
-                defaultValue={settings?.testimonials_section_eyebrow ?? "Word on the Floor"}
-                className={fieldInputClasses}
-              />
-            </Field>
-            <Field label="Testimonials section — title">
-              <input
-                name="testimonials_section_title"
-                defaultValue={settings?.testimonials_section_title ?? "What clients say"}
-                className={fieldInputClasses}
-              />
-            </Field>
-          </div>
-
-          <p className="font-mono text-label text-ink-faint">
-            Which projects appear in the work section is controlled per-project — hit the ★ in
-            Projects to feature one.
-          </p>
-        </fieldset>
-
-        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 text-body font-semibold text-ink">About page — /about</legend>
-
-          <Field label="Headline">
-            <textarea
-              name="about_headline"
-              rows={2}
-              defaultValue={settings?.about_headline ?? ""}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-
-          <Field label="About me — one or more paragraphs (blank line = new paragraph). Leave empty to use the bio from Profile.">
-            <textarea
-              name="about_description"
-              rows={6}
-              defaultValue={settings?.about_description ?? ""}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-
-          <Field label="Timeline — one entry per line, “year|label|detail”">
-            <textarea
-              name="about_timeline"
-              rows={6}
-              defaultValue={timelineText}
-              placeholder={"2015|Started breaking|First cypher, first freeze."}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-
-          <Field label="Toolkit tags — one per line">
-            <textarea
-              name="about_skills"
-              rows={5}
-              defaultValue={skillsText}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="Button label — blank hides the button">
-              <input
-                name="about_cta_label"
-                defaultValue={settings?.about_cta_label ?? ""}
-                placeholder="See the dance side"
-                className={fieldInputClasses}
-              />
-            </Field>
-            <Field label="Button link">
-              <input
-                name="about_cta_url"
-                defaultValue={settings?.about_cta_url ?? ""}
-                placeholder="/dance"
-                className={fieldInputClasses}
-              />
-            </Field>
-          </div>
-        </fieldset>
-
-        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 text-body font-semibold text-ink">Footer — all pages</legend>
-
-          <Field label="Heading (line break = new line)">
+        <FieldSection title="Footer" description="The closing band at the bottom of every page.">
+          <Field label="Heading" hint="A line break starts a new line.">
             <textarea
               name="footer_heading"
               rows={2}
@@ -361,10 +139,10 @@ export default async function AdminSettingsPage({
               className={`${fieldInputClasses} resize-none`}
             />
           </Field>
-          <Field label="Eyebrow text above heading">
+          <Field label="Line above the heading">
             <input name="footer_subtext" defaultValue={settings?.footer_subtext ?? ""} className={fieldInputClasses} />
           </Field>
-          <Field label="Contact email">
+          <Field label="Contact email" hint="Shown in the footer and used as the resume's email unless it sets its own.">
             <input
               name="contact_email"
               type="email"
@@ -372,188 +150,31 @@ export default async function AdminSettingsPage({
               className={fieldInputClasses}
             />
           </Field>
-        </fieldset>
+        </FieldSection>
 
-        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 text-body font-semibold text-ink">
-            Links page — /links
-          </legend>
-
-          <LinksBgPicker
-            initialType={settings?.links_bg_type}
-            initialUrl={settings?.links_bg_url}
-            initialOverlay={settings?.links_overlay_opacity}
-          />
-          <p className="font-mono text-label text-ink-faint">
-            The buttons themselves are managed under “Links Page” in the sidebar.
-          </p>
-        </fieldset>
-
-        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 text-body font-semibold text-ink">Dance page — /dance</legend>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="Eyebrow">
-              <input
-                name="dance_section_eyebrow"
-                defaultValue={settings?.dance_section_eyebrow ?? "Dance"}
-                className={fieldInputClasses}
-              />
-            </Field>
-            <Field label="Title">
-              <input
-                name="dance_section_title"
-                defaultValue={settings?.dance_section_title ?? "The other half"}
-                className={fieldInputClasses}
-              />
-            </Field>
-          </div>
-
-          <Field label="Intro paragraph">
-            <textarea
-              name="dance_intro"
-              rows={3}
-              defaultValue={settings?.dance_intro ?? ""}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-        </fieldset>
-
-        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 text-body font-semibold text-ink">Services page — /services</legend>
-
-          <Field label="Availability heading (line break = new line)">
-            <textarea
-              name="services_availability_heading"
-              rows={2}
-              defaultValue={settings?.services_availability_heading ?? ""}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-          <Field label="Availability eyebrow text">
+        <FieldSection
+          title="Analytics"
+          description="Only public pages report. The admin is never tracked, and nothing is sent while the site runs locally."
+        >
+          <Field
+            label="Google Analytics measurement ID"
+            hint="Google Analytics, Admin, Data streams, your web stream. Leave blank to switch tracking off."
+          >
             <input
-              name="services_availability_label"
-              defaultValue={settings?.services_availability_label ?? ""}
+              name="ga_measurement_id"
+              defaultValue={gaId}
+              placeholder="G-XXXXXXXXXX"
               className={fieldInputClasses}
             />
           </Field>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="Process section — eyebrow">
-              <input
-                name="process_section_eyebrow"
-                defaultValue={settings?.process_section_eyebrow ?? "Process"}
-                className={fieldInputClasses}
-              />
-            </Field>
-            <Field label="Process section — title">
-              <input
-                name="process_section_title"
-                defaultValue={settings?.process_section_title ?? "How a project runs"}
-                className={fieldInputClasses}
-              />
-            </Field>
-          </div>
-
-          <Field label="Process steps — one per line, “Title|Description” (numbered automatically)">
-            <textarea
-              name="process_steps"
-              rows={5}
-              defaultValue={processStepsText}
-              placeholder={"Discovery|A working session to pin down goals.\nBuild|Design system first, then pages."}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-
-          <Field label="FAQ — one per line, “Question|Answer”. Blank hides the section.">
-            <textarea
-              name="services_faq"
-              rows={6}
-              defaultValue={faqText}
-              placeholder={"How do revisions work?|Each package lists its included rounds."}
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-        </fieldset>
-
-        <fieldset className="flex flex-col gap-6 border-t border-line pt-10">
-          <legend className="mb-2 text-body font-semibold text-ink">
-            Monthly retainer — Home and /services
-          </legend>
-
-          <label className="flex items-center gap-3 text-body-sm font-medium text-ink">
-            <input
-              type="checkbox"
-              name="retainer_enabled"
-              defaultChecked={settings?.retainer_enabled ?? true}
-              className="h-4 w-4 accent-[var(--color-accent)]"
-            />
-            Show the retainer section
-          </label>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="Eyebrow">
-              <input
-                name="retainer_eyebrow"
-                defaultValue={settings?.retainer_eyebrow ?? "Ongoing work"}
-                className={fieldInputClasses}
-              />
-            </Field>
-            <Field label="Title">
-              <input
-                name="retainer_title"
-                defaultValue={settings?.retainer_title ?? "Monthly retainer"}
-                className={fieldInputClasses}
-              />
-            </Field>
-          </div>
-
-          <Field label="Intro — who it is for, in a sentence or two">
-            <textarea
-              name="retainer_intro"
-              rows={3}
-              defaultValue={
-                settings?.retainer_intro ??
-                "A reserved block of illustration and design time every month, for studios and brands with a steady pipeline."
-              }
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-
-          <Field label="What a month includes — one per line">
-            <textarea
-              name="retainer_points"
-              rows={5}
-              defaultValue={
-                settings?.retainer_points?.join("\n") ??
-                "Priority scheduling\nOne point of contact\nConsistent style across every piece\nMonthly invoice"
-              }
-              className={`${fieldInputClasses} resize-none`}
-            />
-          </Field>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="Price label — e.g. “From $X / month”">
-              <input
-                name="retainer_price_label"
-                defaultValue={settings?.retainer_price_label ?? "Quote on request"}
-                className={fieldInputClasses}
-              />
-            </Field>
-            <Field label="Button label — goes to /contact with the retainer preselected">
-              <input
-                name="retainer_cta_label"
-                defaultValue={settings?.retainer_cta_label ?? "Ask about a retainer"}
-                className={fieldInputClasses}
-              />
-            </Field>
-          </div>
-        </fieldset>
-
-        <FormActions>
-          <SubmitButton>Save settings</SubmitButton>
-        </FormActions>
-      </form>
+          {gaId && !isValidGaId(gaId) && (
+            <p className="text-body-sm text-error">
+              That doesn&rsquo;t look like a measurement ID. They start with &ldquo;G-&rdquo;. Tracking stays off
+              until it does.
+            </p>
+          )}
+        </FieldSection>
+      </SettingsForm>
     </div>
   );
 }
