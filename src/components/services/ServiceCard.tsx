@@ -19,8 +19,11 @@ export default function ServiceCard({
     ? Math.min(...service.packages.map((p) => p.delivery_days).filter((d) => d > 0))
     : null;
 
+  // One card, two destinations: the title's link is stretched over the whole
+  // card (so any click still opens the service), and "See works" sits above it
+  // and goes to the gallery filtered to this commission. Links can't nest.
   return (
-    <Link href={`/services/${service.slug}`} data-cursor="view" className="group flex flex-col gap-5">
+    <article data-cursor="view" className="group relative flex flex-col gap-5">
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)] border border-line bg-bg-raised-2 transition-colors duration-[var(--duration-fast)] group-hover:border-line-strong">
         {service.coverUrl ? (
           <SmartImage
@@ -47,7 +50,12 @@ export default function ServiceCard({
           {service.category && <span className="mono-meta">{service.category}</span>}
         </div>
         <Heading className="display-sm transition-colors duration-[var(--duration-fast)] group-hover:text-accent-strong">
-          {service.title}
+          <Link
+            href={`/services/${service.slug}`}
+            className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:outline focus-visible:after:outline-2 focus-visible:after:outline-offset-4 focus-visible:after:outline-accent"
+          >
+            {service.title}
+          </Link>
         </Heading>
         {service.description && (
           <p className="text-body-sm text-pretty text-ink-muted">{service.description}</p>
@@ -67,7 +75,15 @@ export default function ServiceCard({
             <span className="label">{fastest}+ days</span>
           )}
         </div>
+        {service.hasGalleryWorks && (
+          <Link
+            href={`/gallery?service=${encodeURIComponent(service.slug)}`}
+            className="spec relative z-10 self-start text-ink-muted underline decoration-line-strong underline-offset-4 transition-colors duration-[var(--duration-fast)] hover:text-accent hover:decoration-accent"
+          >
+            See works →
+          </Link>
+        )}
       </div>
-    </Link>
+    </article>
   );
 }
