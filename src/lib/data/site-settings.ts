@@ -2,6 +2,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "./config";
 import type { SiteSettingsRow } from "@/lib/supabase/types";
 import { HERO_CTA_DEFAULTS, HERO_PRIMARY_HREF, HERO_SECONDARY_HREF, heroCtaHref, heroCtaLabels } from "@/lib/hero-cta";
+import { parseHeroStyle, type HeroStyle } from "@/lib/home";
 
 export type LinkBrand = { name: string; logoUrl: string; note: string; url: string };
 
@@ -121,6 +122,8 @@ export type SiteSettings = {
   heroHeadline: string;
   /** One short credential beside the hero stats. Blank hides it. */
   heroProofNote: string;
+  /** Which hero the home page shows. The wall needs gallery images; see `heroMode`. */
+  heroStyle: HeroStyle;
   /** General questions on /services. Empty hides the section. */
   servicesFaq: { q: string; a: string }[];
   /** The monthly retainer band on Home and /services. */
@@ -260,6 +263,7 @@ const placeholderSettings: SiteSettings = {
   galleryIntro: "Selected frames — work, process and the floor.",
   heroHeadline: "Character art, card illustration and brand design for games, studios and creators.",
   heroProofNote: "",
+  heroStyle: "wall",
   servicesFaq: [
     { q: "How do revisions work?", a: "Each package lists its included revision rounds. Extra rounds are quoted before any work starts." },
     { q: "How do I pay?", a: "Payment is in USD through PayPal, by balance or card, once the quote is agreed." },
@@ -408,6 +412,7 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     // local-preview content, and a blank headline means "show the wordmark".
     heroHeadline: row.hero_headline ?? "",
     heroProofNote: row.hero_proof_note ?? "",
+    heroStyle: parseHeroStyle(row.hero_style),
     servicesFaq: (row.services_faq ?? []).filter((item) => item?.q && item?.a),
     retainerEnabled: row.retainer_enabled ?? true,
     retainerEyebrow: row.retainer_eyebrow || placeholderSettings.retainerEyebrow,

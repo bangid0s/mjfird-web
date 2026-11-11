@@ -15,8 +15,11 @@ export const OVERHAUL_COLUMNS = [
 /** Hero button destinations. Added by migration 0041. */
 export const HERO_LINK_COLUMNS = ["hero_cta_primary_url", "hero_cta_secondary_url"] as const;
 
+/** Which home page hero is shown. Added by migration 0042. */
+export const HERO_STYLE_COLUMNS = ["hero_style"] as const;
+
 /** Every column a save can skip while its migration hasn't been run yet. */
-export const LATE_COLUMNS: readonly string[] = [...OVERHAUL_COLUMNS, ...HERO_LINK_COLUMNS];
+export const LATE_COLUMNS: readonly string[] = [...OVERHAUL_COLUMNS, ...HERO_LINK_COLUMNS, ...HERO_STYLE_COLUMNS];
 
 export function withoutOverhaulColumns<T extends Record<string, unknown>>(payload: T): Partial<T> {
   const drop = new Set<string>(LATE_COLUMNS);

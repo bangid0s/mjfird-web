@@ -142,6 +142,8 @@ export function buildSettingsPayload(formData: FormData) {
     // Migration 0041 — skipped on save until it is applied (see LATE_COLUMNS).
     hero_cta_primary_url: normalizeHeroHref(String(formData.get("hero_cta_primary_url") ?? "")),
     hero_cta_secondary_url: normalizeHeroHref(String(formData.get("hero_cta_secondary_url") ?? "")),
+    // Migration 0042 — skipped on save until it is applied (see LATE_COLUMNS).
+    hero_style: String(formData.get("hero_style") ?? "") === "slider" ? "slider" : "wall",
     stats: parseStats(String(formData.get("stats") ?? "")),
     work_section_eyebrow: String(formData.get("work_section_eyebrow") ?? ""),
     work_section_title: String(formData.get("work_section_title") ?? ""),
@@ -197,7 +199,7 @@ export const SETTINGS_SECTIONS: Record<SettingsSection, { path: string; columns:
   home: {
     path: "/admin/pages/home",
     columns: [
-      "hero_headline", "hero_proof_note", "hero_eyebrow", "hero_intro",
+      "hero_headline", "hero_proof_note", "hero_eyebrow", "hero_intro", "hero_style",
       "hero_media_type", "hero_media_url", "hero_media_urls",
       "hero_animation", "hero_slide_duration", "hero_overlay_opacity",
       "hero_cta_primary", "hero_cta_secondary", "hero_cta_primary_url", "hero_cta_secondary_url", "stats",

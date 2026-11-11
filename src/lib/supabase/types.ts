@@ -272,6 +272,8 @@ export type SiteSettingsRow = {
   /** Added in migration 0041; blank means the default destination. */
   hero_cta_primary_url?: string | null;
   hero_cta_secondary_url?: string | null;
+  // Added by migration 0042 — optional because a row may predate it.
+  hero_style?: string | null;
   marquee_items: string[];
   stats: { value: number; suffix: string; label: string }[];
   work_section_eyebrow: string;

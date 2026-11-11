@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { LATE_COLUMNS, withoutOverhaulColumns } from "@/lib/admin/site-settings-columns";
+import { sectionPayload } from "@/lib/admin/site-settings-sections";
 import type { GalleryItem } from "@/lib/data/gallery";
 import type { ServicePackage } from "@/lib/services/storefront";
 import {
@@ -190,4 +192,25 @@ test("section numbers: assigned in order, an omitted section leaves no gap", () 
     faq: 2,
     work: 3,
   });
+});
+
+const formOf = (fields: Record<string, string>) => {
+  const data = new FormData();
+  for (const [key, value] of Object.entries(fields)) data.set(key, value);
+  return data;
+};
+
+test("hero style: the Home screen saves it, and only as one of the two values", () => {
+  assert.equal(sectionPayload("home", formOf({ hero_style: "slider" })).hero_style, "slider");
+  assert.equal(sectionPayload("home", formOf({ hero_style: "wall" })).hero_style, "wall");
+  assert.equal(sectionPayload("home", formOf({ hero_style: "<script>" })).hero_style, "wall");
+  assert.equal(sectionPayload("home", formOf({})).hero_style, "wall");
+  assert.equal("hero_style" in sectionPayload("services", formOf({ hero_style: "slider" })), false);
+});
+
+test("hero style: before migration 0042 a Home save drops it and keeps the rest", () => {
+  assert.equal(LATE_COLUMNS.includes("hero_style"), true);
+  const rest = withoutOverhaulColumns(sectionPayload("home", formOf({ hero_style: "slider", hero_eyebrow: "Illustrator" })));
+  assert.equal("hero_style" in rest, false);
+  assert.equal(rest.hero_eyebrow, "Illustrator");
 });

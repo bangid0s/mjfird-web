@@ -27,8 +27,8 @@ export default function SettingsForm({
       {status.pending && (
         <p role="status" className="mb-8 border border-line-strong px-4 py-3 text-body-sm text-ink">
           Saved, except fields that need a newer database migration (hero headline, proof note,
-          FAQ, retainer, hero button links). Run the latest files in supabase/migrations
-          (0034 and 0041) against your project, then save again.
+          FAQ, retainer, hero button links, hero style). Run the latest files in
+          supabase/migrations (0034, 0041 and 0042) against your project, then save again.
         </p>
       )}
       {status.error && (

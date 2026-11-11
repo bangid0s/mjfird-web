@@ -19,7 +19,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
 
       <SettingsForm section="home" status={status} saveLabel="Save home page">
         <FieldSection title="Hero text" description="The first thing a visitor reads.">
-          <Field label="Headline" hint="What you do and for whom. Blank shows the MJFIRD wordmark instead.">
+          <Field label="Headline" hint="What you do and for whom. Blank uses the default headline with the art wall, or the MJFIRD wordmark with the slider.">
             <input name="hero_headline" defaultValue={settings?.hero_headline ?? ""} className={fieldInputClasses} />
           </Field>
           <Field label="Line above the headline" hint="Used by any slide that doesn't set its own.">
@@ -73,7 +73,20 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
           </div>
         </FieldSection>
 
-        <FieldSection title="Hero image or video" description="The media beside the hero text.">
+        <FieldSection
+          title="Hero image or video"
+          description="The art wall fills itself from gallery images filed under your published services, in gallery order. The slider uses the media below."
+        >
+          <Field label="Hero style" hint="The wall needs at least six such gallery images; with fewer, the slider is shown.">
+            <select
+              name="hero_style"
+              defaultValue={settings?.hero_style === "slider" ? "slider" : "wall"}
+              className={fieldInputClasses}
+            >
+              <option value="wall">Art wall (from the gallery)</option>
+              <option value="slider">Slider (the media below)</option>
+            </select>
+          </Field>
           <HeroMediaPicker
             initialType={settings?.hero_media_type}
             initialUrl={settings?.hero_media_url}
