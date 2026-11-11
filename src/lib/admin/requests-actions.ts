@@ -12,6 +12,7 @@ import {
   paymentWriteMessage,
   safePaymentUrl,
 } from "@/lib/commissions/payment-link";
+import { DeliveryUrlError, normalizeDeliveryUrl } from "@/lib/commissions/delivery-link";
 import { readPaypalSandboxConfig } from "@/lib/payments/config";
 import { formatUSD } from "@/lib/services/storefront";
 import type { CommissionRequestRow, CommissionStatus } from "@/lib/supabase/types";
@@ -262,6 +263,25 @@ export async function addDeliveryFiles(id: string, paths: string[]) {
     .update({ delivery_paths: [...req.delivery_paths, ...valid] })
     .eq("id", id);
   if (error) throw new Error(error.message);
+  refresh(id);
+}
+
+/** Paste, replace, or clear the drop link for finished files. */
+export async function setDeliveryUrl(id: string, formData: FormData) {
+  let url: string | null;
+  try {
+    url = normalizeDeliveryUrl(String(formData.get("delivery_url") ?? ""));
+  } catch (err) {
+    throw new Error(err instanceof DeliveryUrlError ? err.message : "Use a full https:// link.");
+  }
+  const { supabase } = await load(id);
+  const { error } = await supabase.from("commission_requests").update({ delivery_url: url }).eq("id", id);
+  if (error) {
+    if (missingDbObject(error.message, "delivery_url") || error.message.includes("'delivery_url' column")) {
+      throw new Error("Run supabase/migrations/0040_delivery_link_and_hero_cta.sql first, then save again.");
+    }
+    throw new Error(error.message);
+  }
   refresh(id);
 }
 

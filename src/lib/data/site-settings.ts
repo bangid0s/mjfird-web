@@ -1,6 +1,7 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "./config";
 import type { SiteSettingsRow } from "@/lib/supabase/types";
+import { HERO_CTA_DEFAULTS, heroCtaLabels } from "@/lib/hero-cta";
 
 export type LinkBrand = { name: string; logoUrl: string; note: string; url: string };
 
@@ -194,8 +195,8 @@ const placeholderSettings: SiteSettings = {
   heroEyebrow: "Breaker — Designer — Builder",
   heroIntro:
     "A decade in the cypher taught me rhythm and restraint. I bring both to brand, motion, and web work for people who don't want to look like a template.",
-  heroCtaPrimary: "See the work",
-  heroCtaSecondary: "Start a project",
+  heroCtaPrimary: HERO_CTA_DEFAULTS.primary,
+  heroCtaSecondary: HERO_CTA_DEFAULTS.secondary,
   stats: [
     { value: 10, suffix: "+", label: "Years in the cypher" },
     { value: 38, suffix: "", label: "Projects shipped" },
@@ -352,8 +353,8 @@ function mapRow(row: SiteSettingsRow): SiteSettings {
     navLinks: row.nav_links?.length ? row.nav_links : defaultNavLinks,
     heroEyebrow: row.hero_eyebrow,
     heroIntro: row.hero_intro,
-    heroCtaPrimary: row.hero_cta_primary,
-    heroCtaSecondary: row.hero_cta_secondary,
+    heroCtaPrimary: heroCtaLabels(row.hero_cta_primary, row.hero_cta_secondary).primary,
+    heroCtaSecondary: heroCtaLabels(row.hero_cta_primary, row.hero_cta_secondary).secondary,
     stats: row.stats?.length ? row.stats : placeholderSettings.stats,
     workSectionEyebrow: row.work_section_eyebrow || placeholderSettings.workSectionEyebrow,
     workSectionTitle: row.work_section_title || placeholderSettings.workSectionTitle,

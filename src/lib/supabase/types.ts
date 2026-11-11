@@ -366,6 +366,8 @@ export type CommissionRequestRow = {
   answers: CommissionAnswer[];
   reference_paths: string[];
   delivery_paths: string[];
+  /** Drop link (Drive, Dropbox, …) for finished files. Added in migration 0040. */
+  delivery_url?: string | null;
   artist_note: string;
   created_at: string;
   updated_at: string;
