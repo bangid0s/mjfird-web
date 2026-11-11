@@ -8,11 +8,16 @@ import { easeFreeze } from "@/lib/motion";
 export default function FilterChips({
   options,
   onChange,
+  initial = "All",
+  label = "Filter by category",
 }: {
   options: string[];
   onChange: (active: string) => void;
+  /** Chip selected on first render, e.g. one picked from the URL. */
+  initial?: string;
+  label?: string;
 }) {
-  const [active, setActive] = useState("All");
+  const [active, setActive] = useState(initial);
   // Namespaced so two filter rows on one page can't share an indicator.
   const layoutId = `filter-pill-${useId()}`;
   const all = ["All", ...options];
@@ -29,7 +34,7 @@ export default function FilterChips({
     <div className="-mx-5 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
       <div
         role="group"
-        aria-label="Filter by category"
+        aria-label={label}
         className="flex w-max items-center border border-line"
       >
         {all.map((option) => {

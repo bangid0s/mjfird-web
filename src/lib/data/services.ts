@@ -66,6 +66,8 @@ export type StorefrontService = {
   backgrounds: ServiceBackground[];
   licenses: ServiceLicense[];
   samples: { url: string; alt: string }[];
+  /** Has gallery images filed under it — worth a "See works" link to /gallery. */
+  hasGalleryWorks: boolean;
   willDraw: string[];
   wontDraw: string[];
   faq: ServiceFaq[];
@@ -96,6 +98,7 @@ export function mapStorefrontRow(row: ServiceRow, galleryCover?: string): Storef
     backgrounds: parseList(backgroundSchema, row.backgrounds),
     licenses: parseLicenses(row.licenses),
     samples,
+    hasGalleryWorks: Boolean(galleryCover),
     willDraw: row.will_draw ?? [],
     wontDraw: row.wont_draw ?? [],
     faq: parseList(faqSchema, row.faq),
@@ -131,8 +134,7 @@ export async function getStorefrontService(slug: string): Promise<StorefrontServ
       .maybeSingle();
     if (error || !data) return null;
     const row = data as ServiceRow;
-    const cover = row.image_url ? undefined : (await getServiceCovers()).get(row.id);
-    return mapStorefrontRow(row, cover);
+    return mapStorefrontRow(row, (await getServiceCovers()).get(row.id));
   } catch {
     return null;
   }
@@ -168,6 +170,7 @@ const placeholderStorefront: StorefrontService[] = [
     ],
     licenses: DEFAULT_LICENSES,
     samples: [],
+    hasGalleryWorks: false,
     willDraw: ["Original characters", "Fan art", "Armor & mecha", "Fantasy creatures"],
     wontDraw: ["NSFW", "Hate or harassment", "Real people without consent"],
     faq: [
@@ -198,6 +201,7 @@ const placeholderStorefront: StorefrontService[] = [
     backgrounds: [],
     licenses: DEFAULT_LICENSES,
     samples: [],
+    hasGalleryWorks: false,
     willDraw: [],
     wontDraw: [],
     faq: [],

@@ -121,8 +121,16 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
           </Reveal>
 
           {hasSamples ? (
-            <Reveal>
+            <Reveal className="flex flex-col gap-4">
               <ServiceSamples items={samples} />
+              {gallerySamples.length > 0 && (
+                <Link
+                  href={`/gallery?service=${encodeURIComponent(service.slug)}`}
+                  className="self-start border border-line px-5 py-2.5 text-body-sm font-medium text-ink-muted transition-colors duration-[var(--duration-fast)] hover:border-accent hover:text-accent"
+                >
+                  See all {service.title} works in the gallery →
+                </Link>
+              )}
             </Reveal>
           ) : (
             service.coverUrl && (
