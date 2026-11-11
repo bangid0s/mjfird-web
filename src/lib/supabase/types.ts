@@ -331,6 +331,8 @@ export type CommissionRequestRow = {
   package_id: string;
   package_name: string;
   package_price: number | string;
+  /** Characters on top of the one the package includes (each billed at package_price). */
+  extra_characters: number;
   delivery_days: number | null;
   revisions: number | null;
   addons: { id: string; name: string; price: number | string }[];

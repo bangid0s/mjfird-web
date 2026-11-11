@@ -5,12 +5,22 @@ import { formatUSD } from "@/lib/services/storefront";
 export default function OrderSummary({ req }: { req: CommissionRequestRow }) {
   const finalPrice = toNumber(req.final_price);
   const estimate = toNumber(req.estimated_total) ?? 0;
+  const unit = toNumber(req.package_price) ?? 0;
+  const extra = req.extra_characters ?? 0;
   return (
     <dl className="flex flex-col gap-3 text-body-sm">
       <div className="flex justify-between gap-3">
         <dt className="text-ink-muted">{req.package_name}</dt>
-        <dd className="text-ink">{formatUSD(toNumber(req.package_price) ?? 0)}</dd>
+        <dd className="text-ink">{formatUSD(unit)}</dd>
       </div>
+      {extra > 0 && (
+        <div className="flex justify-between gap-3">
+          <dt className="text-ink-muted">
+            + {extra} extra character{extra === 1 ? "" : "s"} × {formatUSD(unit)}
+          </dt>
+          <dd className="text-ink">{formatUSD(unit * extra)}</dd>
+        </div>
+      )}
       {req.addons.map((a) => (
         <div key={a.id} className="flex justify-between gap-3">
           <dt className="text-ink-muted">+ {a.name}</dt>

@@ -4,8 +4,9 @@ import { useState } from "react";
 import MagneticButton from "@/components/ui/MagneticButton";
 import AvailabilityBadge from "@/components/services/AvailabilityBadge";
 import Stars from "@/components/reviews/Stars";
+import CharacterStepper from "@/components/services/CharacterStepper";
 import type { StorefrontService } from "@/lib/data/services";
-import { effectiveAvailability, formatUSD, quote } from "@/lib/services/storefront";
+import { clampExtraCharacters, effectiveAvailability, formatUSD, quote } from "@/lib/services/storefront";
 import { cn } from "@/lib/cn";
 
 /*
@@ -23,10 +24,13 @@ export default function ServiceOrderPanel({
 }) {
   const [packageId, setPackageId] = useState(service.packages[0]?.id ?? "");
   const [addonIds, setAddonIds] = useState<string[]>([]);
+  const [extraCharacters, setExtraCharacters] = useState(0);
 
   const status = effectiveAvailability(service.availability, service.slotsTotal, service.slotsTaken);
-  const priced = quote(service.packages, service.addons, packageId, addonIds);
   const selected = service.packages.find((p) => p.id === packageId);
+  // Switching to a package with a lower limit (or none) trims the count.
+  const extra = clampExtraCharacters(selected, extraCharacters);
+  const priced = quote(service.packages, service.addons, packageId, addonIds, extra);
 
   const toggleAddon = (id: string) =>
     setAddonIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -34,6 +38,7 @@ export default function ServiceOrderPanel({
   const params = new URLSearchParams();
   if (packageId) params.set("package", packageId);
   if (addonIds.length) params.set("addons", addonIds.join(","));
+  if (extra) params.set("characters", String(extra));
   // No packages yet → nothing to price, so fall back to a plain inquiry.
   const requestHref = service.packages.length
     ? `/services/${service.slug}/request${params.size ? `?${params.toString()}` : ""}`
@@ -120,6 +125,8 @@ export default function ServiceOrderPanel({
           )}
         </dl>
       )}
+
+      <CharacterStepper pkg={selected} value={extra} onChange={setExtraCharacters} />
 
       {service.addons.length > 0 && (
         <fieldset className="flex flex-col gap-2">

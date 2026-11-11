@@ -13,7 +13,7 @@ export default async function RequestPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ package?: string; addons?: string }>;
+  searchParams: Promise<{ package?: string; addons?: string; characters?: string }>;
 }) {
   const { slug } = await params;
   const query = await searchParams;
@@ -58,6 +58,7 @@ export default async function RequestPage({
           defaultName={profile?.display_name ?? ""}
           initialPackage={query.package}
           initialAddons={(query.addons ?? "").split(",").filter(Boolean)}
+          initialCharacters={Math.max(0, Number.parseInt(query.characters ?? "0", 10) || 0)}
         />
       )}
     </div>

@@ -61,6 +61,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
     p_service_id: service.id,
     p_package_id: String(formData.get("package_id") ?? ""),
     p_addon_ids: formData.getAll("addon_ids").map(String),
+    p_extra_characters: Math.max(0, Number.parseInt(String(formData.get("extra_characters") ?? "0"), 10) || 0),
     p_contact_name: String(formData.get("contact_name") ?? ""),
     p_brief: String(formData.get("brief") ?? ""),
     p_answers: cleanAnswers,
@@ -72,12 +73,14 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
   const req = created as CommissionRequestRow | null;
   if (req) {
     const total = formatUSD(Number(req.estimated_total));
+    const extra = req.extra_characters ?? 0;
+    const characters = extra ? ` · ${extra + 1} characters` : "";
     await Promise.all([
       sendEmail({
         to: ADMIN_EMAIL,
         subject: `New request #${req.ref}: ${req.service_title} — ${req.package_name} (${total})`,
         lines: [
-          `${req.contact_name} (${req.contact_email}) requested ${req.service_title} — ${req.package_name}.`,
+          `${req.contact_name} (${req.contact_email}) requested ${req.service_title} — ${req.package_name}${characters}.`,
           `Estimated total: ${total}${req.waitlisted ? " · joined the waitlist" : ""}`,
           req.brief,
         ],
@@ -89,7 +92,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
         subject: `Request received — ${req.service_title} (#${req.ref})`,
         lines: [
           `Hi ${req.contact_name},`,
-          `Thanks for your request for ${req.service_title} — ${req.package_name}. I review every request myself and will get back to you soon.`,
+          `Thanks for your request for ${req.service_title} — ${req.package_name}${characters}. I review every request myself and will get back to you soon.`,
           `Estimated total: ${total}. No payment is needed until I accept.`,
         ],
         cta: { label: "View your request", path: `/account/requests/${req.id}` },

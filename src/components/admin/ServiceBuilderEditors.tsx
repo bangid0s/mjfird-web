@@ -8,6 +8,7 @@ import {
   type QuestionType,
   type ServiceAddon,
   type ServiceFaq,
+  MAX_EXTRA_CHARACTERS,
   type ServicePackage,
   type ServiceQuestion,
 } from "@/lib/services/storefront";
@@ -140,7 +141,7 @@ export function PackagesEditor({ initial }: { initial: ServicePackage[] }) {
           <Mini label="Short description">
             <input className={fieldInputClasses} value={pkg.description} onChange={(e) => list.update(i, { description: e.target.value })} />
           </Mini>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             <Mini label="Delivery (days)">
               <input
                 className={fieldInputClasses}
@@ -159,7 +160,21 @@ export function PackagesEditor({ initial }: { initial: ServicePackage[] }) {
                 onChange={(e) => list.update(i, { revisions: Number(e.target.value) })}
               />
             </Mini>
+            <Mini label="Max extra characters">
+              <input
+                className={fieldInputClasses}
+                type="number"
+                min={0}
+                max={MAX_EXTRA_CHARACTERS}
+                value={pkg.extra_characters_max}
+                onChange={(e) => list.update(i, { extra_characters_max: Number(e.target.value) })}
+              />
+            </Mini>
           </div>
+          <p className="-mt-1 text-[13px] leading-snug text-ink-faint">
+            0 = one character only. Above 0, clients get a character counter — each extra character adds this package&apos;s
+            price again (+1 = 2×, +2 = 3×). Good for DnD/MTG pieces and custom emotes.
+          </p>
           <Mini label="What's included — one per line">
             <textarea
               className={cn(fieldInputClasses, "resize-y")}
@@ -172,7 +187,7 @@ export function PackagesEditor({ initial }: { initial: ServicePackage[] }) {
       ))}
       <AddButton
         onClick={() =>
-          list.add({ id: newId(), name: "", description: "", price: 0, delivery_days: 14, revisions: 2, features: [] })
+          list.add({ id: newId(), name: "", description: "", price: 0, delivery_days: 14, revisions: 2, features: [], extra_characters_max: 0 })
         }
       >
         Add package
