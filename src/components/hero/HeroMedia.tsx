@@ -124,7 +124,7 @@ export default function HeroMedia({
 
       {/*
         Legibility scrim, and only where copy actually sits on the media.
-        Strength comes from Site Settings.
+        Strength comes from the admin: Home page for the hero, Links page for /links.
 
         Callers that give the media a frame of its own pass scrim="none" and get
         nothing over the artwork at any width — no tint, no bottom fade into the

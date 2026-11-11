@@ -60,10 +60,10 @@ function NavLinks({
   onNavigate?: () => void;
 }) {
   return (
-    <nav aria-label="Admin" className="flex flex-col gap-5">
+    <nav aria-label="Admin" className="flex flex-col gap-4">
       {ADMIN_NAV.map((group) => (
         <div key={group.label} className="flex flex-col gap-0.5">
-          <p className="px-3 pb-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-ink-faint">
+          <p className="px-3 pb-1 text-[12px] font-medium text-ink-faint">
             {group.label}
           </p>
           {group.items.map((item) => {
@@ -78,7 +78,7 @@ function NavLinks({
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group relative flex items-center gap-3 px-3 py-[7px] text-body-sm transition-colors duration-[var(--duration-fast)]",
+                  "group relative flex items-center gap-3 px-3 py-[5px] text-body-sm transition-colors duration-[var(--duration-fast)]",
                   active
                     ? "bg-bg-raised font-medium text-ink"
                     : "text-ink-muted hover:bg-bg-raised/70 hover:text-ink",
@@ -113,29 +113,41 @@ function NavLinks({
   );
 }
 
-function SidebarFooter({ userEmail }: { userEmail?: string | null }) {
+function LiveSiteLink({ className }: { className?: string }) {
+  return (
+    <a
+      href="/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "flex items-center gap-2 px-3 py-2 text-body-sm text-ink-muted transition-colors hover:bg-bg-raised/70 hover:text-ink",
+        className,
+      )}
+    >
+      <ExternalIcon className="h-4 w-4 text-ink-faint" />
+      View live site
+    </a>
+  );
+}
+
+/**
+ * Who is signed in, the theme switch and the way out. On desktop the live-site
+ * link sits in the top bar instead, which leaves the sidebar one row shorter
+ * and the whole list on screen.
+ */
+function SidebarFooter({ userEmail, liveLink = false }: { userEmail?: string | null; liveLink?: boolean }) {
   const initial = (userEmail?.[0] ?? "M").toUpperCase();
   return (
-    <div className="mt-auto flex flex-col gap-3 border-t border-line pt-4">
-      <div className="flex items-center gap-2">
-        <a
-          href="/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-1 items-center gap-2 px-3 py-2 text-body-sm text-ink-muted transition-colors hover:bg-bg-raised/70 hover:text-ink"
-        >
-          <ExternalIcon className="h-4 w-4 text-ink-faint" />
-          View live site
-        </a>
-        <ThemeToggle />
-      </div>
-      <div className="flex items-center gap-3 px-3">
+    <div className="mt-auto flex flex-col gap-3 border-t border-line pt-3">
+      {liveLink && <LiveSiteLink />}
+      <div className="flex items-center gap-2 px-3">
         <span className="grid h-8 w-8 shrink-0 place-items-center border border-line bg-bg-raised font-display text-sm font-semibold text-ink">
           {initial}
         </span>
         <span className="min-w-0 flex-1 truncate text-[12px] text-ink-muted" title={userEmail ?? undefined}>
           {userEmail ?? "Signed in"}
         </span>
+        <ThemeToggle />
         <form action={signOut}>
           <button
             type="submit"
@@ -191,15 +203,16 @@ export default function AdminShell({
     <div className="flex min-h-screen bg-bg text-ink">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line lg:flex">
-        <div className="flex shrink-0 flex-col gap-5 px-3 pb-4 pt-5">
+        <div className="flex shrink-0 flex-col gap-5 px-3 pb-3 pt-5">
+          {/* Search lives in the top bar; a second box here only pushed the
+              list down, and the list is long enough to need the room. */}
           <BrandMark />
-          <SearchTrigger onOpen={() => setPaletteOpen(true)} className="mx-1" />
         </div>
         {/* Only the list scrolls, so the account row never falls off a short screen. */}
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
           <NavLinks pathname={pathname} newInquiries={newInquiries} newRequests={newRequests} />
         </div>
-        <div className="shrink-0 px-3 pb-4">
+        <div className="shrink-0 px-3 pb-3">
           <SidebarFooter userEmail={userEmail} />
         </div>
       </aside>
@@ -267,7 +280,7 @@ export default function AdminShell({
           )}
         >
           <NavLinks pathname={pathname} newInquiries={newInquiries} newRequests={newRequests} onNavigate={() => setOpen(false)} />
-          <SidebarFooter userEmail={userEmail} />
+          <SidebarFooter userEmail={userEmail} liveLink />
         </div>
       </div>
 
@@ -292,6 +305,7 @@ export default function AdminShell({
             )}
           </nav>
           <div className="flex items-center gap-2">
+            <LiveSiteLink />
             <SearchTrigger onOpen={() => setPaletteOpen(true)} className="w-56" />
           </div>
         </header>

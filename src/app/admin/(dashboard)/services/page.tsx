@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import ServicesList from "@/components/admin/ServicesList";
 import PageHeader, { HeaderAction } from "@/components/admin/PageHeader";
@@ -17,7 +18,16 @@ export default async function AdminServicesPage() {
     <div>
       <PageHeader
         title="Services"
-        description="Shown on the homepage and /services. Drag to reorder."
+        description={
+          <>
+            What clients can commission, shown on the homepage and /services. Drag to reorder. The text around
+            them (process, questions, retainer) is under{" "}
+            <Link href="/admin/pages/services" className="font-medium text-ink underline underline-offset-4">
+              Services page
+            </Link>
+            .
+          </>
+        }
         action={<HeaderAction href="/admin/services/new">New service</HeaderAction>}
       />
 

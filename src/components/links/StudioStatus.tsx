@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { formatDuration, getStudioStatus, type StudioHours, type StudioStatus } from "@/lib/studio-hours";
 
-// Live open/closed strip with a dual clock: the visitor's own time next to the
-// studio's. The server-computed status seeds the first render so hydration
-// matches; the visitor's clock starts blank because only the browser knows it.
+// One slim line under the identity card: is the studio at the desk, and what
+// time is it there. The server-computed status seeds the first render so
+// hydration matches, then a timer keeps it honest.
 //
-// Laid out as three spec cells on one hairline row — status, studio clock,
-// visitor clock — so it reads at a glance instead of as a sentence.
+// Closed is the state most visitors meet (anyone outside office hours in one
+// timezone), so it is written as what happens next rather than as a shut door:
+// when the studio opens, and that a message sent now is waiting when it does.
 export default function StudioStatusBar({
   hours,
   initial,
@@ -18,34 +19,35 @@ export default function StudioStatusBar({
   initial: StudioStatus;
 }) {
   const [status, setStatus] = useState(initial);
-  const [viewerTime, setViewerTime] = useState<string | null>(null);
 
   useEffect(() => {
-    const tick = () => {
-      setStatus(getStudioStatus(hours));
-      setViewerTime(
-        new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
-      );
-    };
+    const tick = () => setStatus(getStudioStatus(hours));
     tick();
-    const id = setInterval(tick, 1000);
+    // The line is to the minute; a 15s tick keeps it right without waking the
+    // page every second.
+    const id = setInterval(tick, 15_000);
     return () => clearInterval(id);
   }, [hours]);
 
-  const change =
-    status.minutesUntilChange === null
-      ? null
-      : `${status.open ? "Closes" : "Opens"} in ${formatDuration(status.minutesUntilChange)}`;
+  const wait = status.minutesUntilChange === null ? null : formatDuration(status.minutesUntilChange);
+  const headline = status.open
+    ? "Studio open"
+    : wait
+      ? `Studio opens in ${wait}`
+      : "Studio closed";
+  const detail = status.open
+    ? wait && `Closes in ${wait}`
+    : "Send your brief now and it gets read first.";
 
-  // "Asia/Jakarta" → "Jakarta" for the cell label; the full zone stays in the title.
+  // "Asia/Jakarta" → "Jakarta"; the full zone stays in the title.
   const city = hours.timezone.split("/").pop()?.replace(/_/g, " ") || hours.timezone;
 
   return (
     <section
       aria-label="Studio hours"
-      className="grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-[1fr_auto_auto]"
+      className="flex items-center justify-between gap-4 border border-line bg-bg-raised px-4 py-2.5"
     >
-      <div className="col-span-2 flex min-w-0 items-center gap-3 bg-bg-raised px-4 py-3 sm:col-span-1">
+      <p className="flex min-w-0 items-center gap-3 text-body-sm">
         <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
           {status.open && (
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60 motion-reduce:hidden" />
@@ -53,33 +55,19 @@ export default function StudioStatusBar({
           <span
             className={cn(
               "relative inline-flex h-2 w-2 rounded-full",
-              status.open ? "bg-success" : "bg-ink-faint",
+              status.open ? "bg-success" : "border border-ink-faint",
             )}
           />
         </span>
-        <p className="min-w-0 truncate font-body text-body-sm text-ink">
-          <span className={cn("font-medium", status.open ? "text-success" : "text-ink")}>
-            {status.open ? "Studio open" : "Studio closed"}
-          </span>
-          {change && <span className="text-ink-muted"> · {change}</span>}
-        </p>
-      </div>
+        <span className="min-w-0 truncate">
+          <span className={cn("font-medium", status.open ? "text-success" : "text-ink")}>{headline}</span>
+          {detail && <span className="hidden text-ink-muted sm:inline"> · {detail}</span>}
+        </span>
+      </p>
 
-      <div className="flex flex-col justify-center bg-bg-raised px-4 py-2.5" title={hours.timezone}>
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-          {city}
-        </span>
-        <span className="font-mono text-body-sm tabular-nums text-ink">
-          {status.time} <span className="text-ink-faint">{status.day}</span>
-        </span>
-      </div>
-
-      <div className="flex flex-col justify-center bg-bg-raised px-4 py-2.5">
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-          Your time
-        </span>
-        <span className="font-mono text-body-sm tabular-nums text-ink">{viewerTime ?? "--:--"}</span>
-      </div>
+      <p className="shrink-0 text-body-sm text-ink-muted" title={hours.timezone}>
+        <span className="font-mono tabular-nums text-ink">{status.time}</span> in {city}
+      </p>
     </section>
   );
 }

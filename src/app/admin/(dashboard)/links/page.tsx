@@ -4,6 +4,8 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 import { fieldInputClasses } from "@/components/admin/Field";
 import LinkItemsList, { SECTION_LIST_ID } from "@/components/admin/LinkItemsList";
 import LinksStudioPanel from "@/components/admin/LinksStudioPanel";
+import LinksBgPicker from "@/components/admin/LinksBgPicker";
+import { saveSiteSettings } from "@/lib/admin/site-settings-actions";
 import PageHeader from "@/components/admin/PageHeader";
 import EmptyState from "@/components/admin/EmptyState";
 import SubmitButton from "@/components/admin/SubmitButton";
@@ -27,7 +29,7 @@ export default async function AdminLinksPage() {
     <div>
       <PageHeader
         title="Links page"
-        description="The link-in-bio page at /links — drop that URL in your Instagram or TikTok bio. Every link is a tile in one bento grid: paste an image address to give it a photo, and pick a size to make it claim more of the grid. The section shows as a small label on the tile itself, so drag rows to keep a section together. Give a link the Shop tab to split it out; the tab bar only appears once something is in Shop."
+        description="The link-in-bio page at /links: drop that URL in your Instagram or TikTok bio. Every link is a tile. Paste an image address to give it a photo and pick a size to make it larger; tiles grow to close any gap. Links that share a group heading sit together under that heading. Give a link the Shop tab to split it out; the tab bar only appears once something is in Shop."
         action={
           <a
             href="/links"
@@ -41,6 +43,27 @@ export default async function AdminLinksPage() {
       />
 
       <LinksStudioPanel settings={settings} />
+
+      <form
+        action={saveSiteSettings.bind(null, "links-background")}
+        className="mb-12 flex flex-col gap-6 border border-line p-6"
+      >
+        <div>
+          <h2 className="text-body font-semibold text-ink">Page background</h2>
+          <p className="mt-1 text-label text-ink-muted">
+            The image or video behind the /links window. A YouTube background plays on tablets and desktops;
+            phones get its still frame, since the window covers the screen there.
+          </p>
+        </div>
+        <LinksBgPicker
+          initialType={settings.linksBgType}
+          initialUrl={settings.linksBgUrl}
+          initialOverlay={settings.linksOverlayOpacity}
+        />
+        <div>
+          <SubmitButton>Save background</SubmitButton>
+        </div>
+      </form>
 
       <datalist id={SECTION_LIST_ID}>
         {sections.map((section) => (
