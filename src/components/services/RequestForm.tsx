@@ -5,11 +5,8 @@ import { useFormStatus } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { submitRequest } from "@/lib/client/request-actions";
 import type { StorefrontService } from "@/lib/data/services";
-import { clampExtraCharacters, effectiveAvailability, formatUSD, quote, type LicenseId, type ServiceQuestion } from "@/lib/services/storefront";
-import CharacterStepper from "@/components/services/CharacterStepper";
-import LicensePicker from "@/components/services/LicensePicker";
-import BackgroundPicker from "@/components/services/BackgroundPicker";
-import { choiceBox, choiceRadio, choiceTitle } from "@/components/services/choice";
+import Link from "next/link";
+import { effectiveAvailability, formatUSD, quote, type ServiceQuestion } from "@/lib/services/storefront";
 import type { CommissionAnswer } from "@/lib/supabase/types";
 import { authInput } from "@/components/auth/AuthForms";
 import { cn } from "@/lib/cn";
@@ -239,24 +236,30 @@ export default function RequestForm({
   initialBackground?: string;
 }) {
   const [state, action] = useActionState(submitRequest, undefined);
-  const [packageId, setPackageId] = useState(
-    service.packages.some((p) => p.id === initialPackage) ? initialPackage! : (service.packages[0]?.id ?? ""),
-  );
-  const [addonIds, setAddonIds] = useState(initialAddons.filter((id) => service.addons.some((a) => a.id === id)));
-  const [extraCharacters, setExtraCharacters] = useState(initialCharacters);
-  const [licenseId, setLicenseId] = useState<LicenseId>(
-    service.licenses.some((l) => l.enabled && l.id === initialLicense) ? (initialLicense as LicenseId) : "personal",
-  );
-  const [backgroundId, setBackgroundId] = useState(
-    service.backgrounds.some((b) => b.id === initialBackground) ? initialBackground! : (service.backgrounds[0]?.id ?? ""),
-  );
+  // The order is chosen on the service page and arrives in the URL; this form
+  // only collects the brief, answers and references. quote() re-checks it all
+  // (unknown ids dropped, counts clamped) and the database prices it again.
+  const packageId = service.packages.some((p) => p.id === initialPackage) ? initialPackage! : (service.packages[0]?.id ?? "");
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [questionFiles, setQuestionFiles] = useState<Record<string, Uploaded[]>>({});
   const [refs, setRefs] = useState<Uploaded[]>([]);
 
   const selected = service.packages.find((p) => p.id === packageId);
-  const extra = clampExtraCharacters(selected, extraCharacters);
-  const priced = quote(service.packages, service.addons, packageId, addonIds, extra, service.licenses, licenseId, service.backgrounds, backgroundId);
+  const priced = quote(
+    service.packages,
+    service.addons,
+    packageId,
+    initialAddons,
+    initialCharacters,
+    service.licenses,
+    initialLicense,
+    service.backgrounds,
+    initialBackground ?? "",
+  );
+  const extra = priced?.extraCharacters ?? 0;
+  const addons = service.addons.filter((a) => priced?.addonIds.includes(a.id));
+  const background = service.backgrounds.find((b) => b.id === priced?.backgroundId);
+  const license = service.licenses.find((l) => l.id === priced?.licenseId);
   const waitlist = effectiveAvailability(service.availability, service.slotsTotal, service.slotsTaken) === "waitlist";
   const hasFileQuestion = service.questions.some((q) => q.type === "file");
 
@@ -284,7 +287,7 @@ export default function RequestForm({
     >
       <input type="hidden" name="service_id" value={service.id} />
       <input type="hidden" name="package_id" value={packageId} />
-      {addonIds.map((id) => (
+      {(priced?.addonIds ?? []).map((id) => (
         <input key={id} type="hidden" name="addon_ids" value={id} />
       ))}
       <input type="hidden" name="extra_characters" value={extra} />
@@ -354,76 +357,51 @@ export default function RequestForm({
         <div className="flex flex-col gap-6 border border-line bg-bg-raised/60 p-5 sm:p-6">
           <p className="eyebrow">Your order</p>
 
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2.5 text-body-sm font-medium text-ink">Package</legend>
-            {service.packages.map((pkg) => (
-              <label key={pkg.id} className={choiceBox(pkg.id === packageId, "items-center justify-between gap-3 px-3.5 py-2.5")}>
-                <span className="flex items-center gap-2.5">
-                  <input
-                    type="radio"
-                    checked={pkg.id === packageId}
-                    onChange={() => setPackageId(pkg.id)}
-                    className={choiceRadio(pkg.id === packageId)}
-                  />
-                  <span className={`text-body-sm ${choiceTitle(pkg.id === packageId)}`}>{pkg.name}</span>
-                </span>
-                <span className={`text-body-sm ${choiceTitle(pkg.id === packageId)}`}>{formatUSD(pkg.price)}</span>
-              </label>
-            ))}
-          </fieldset>
-
-          <CharacterStepper pkg={selected} value={extra} onChange={setExtraCharacters} />
-
-          <BackgroundPicker
-            backgrounds={service.backgrounds}
-            value={priced?.backgroundId ?? null}
-            onChange={setBackgroundId}
-            name="background_choice"
-          />
-
-          {service.addons.length > 0 && (
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-2.5 text-body-sm font-medium text-ink">Add-ons</legend>
-              {service.addons.map((addon) => (
-                <label key={addon.id} className="flex cursor-pointer items-center justify-between gap-3 py-0.5">
-                  <span className="flex items-center gap-2.5">
-                    <input
-                      type="checkbox"
-                      checked={addonIds.includes(addon.id)}
-                      onChange={() =>
-                        setAddonIds((prev) => (prev.includes(addon.id) ? prev.filter((x) => x !== addon.id) : [...prev, addon.id]))
-                      }
-                      className="h-4 w-4 accent-[var(--color-accent)]"
-                    />
-                    <span className="text-body-sm text-ink">{addon.name}</span>
-                  </span>
-                  <span className="text-body-sm text-ink-muted">+{formatUSD(addon.price)}</span>
-                </label>
+          {priced && selected ? (
+            <dl className="flex flex-col gap-3 text-body-sm">
+              <div className="flex justify-between gap-3">
+                <dt className="text-ink">{selected.name}</dt>
+                <dd className="text-ink">{formatUSD(selected.price)}</dd>
+              </div>
+              {extra > 0 && (
+                <div className="flex justify-between gap-3">
+                  <dt className="text-ink-muted">
+                    Extra characters: {extra} × {formatUSD(selected.price)}
+                  </dt>
+                  <dd className="text-ink">+{formatUSD(selected.price * extra)}</dd>
+                </div>
+              )}
+              {background && (
+                <div className="flex justify-between gap-3">
+                  <dt className="text-ink-muted">Background: {background.name}</dt>
+                  <dd className="text-ink">{background.price > 0 ? `+${formatUSD(background.price)}` : "Included"}</dd>
+                </div>
+              )}
+              {addons.map((a) => (
+                <div key={a.id} className="flex justify-between gap-3">
+                  <dt className="text-ink-muted">{a.name}</dt>
+                  <dd className="text-ink">+{formatUSD(a.price)}</dd>
+                </div>
               ))}
-            </fieldset>
+              <div className="flex justify-between gap-3">
+                <dt className="text-ink-muted">
+                  License: {license?.name ?? "Personal use"}
+                  {priced.licensePercent > 0 && ` (+${priced.licensePercent}%)`}
+                </dt>
+                <dd className="text-ink">{priced.licenseFee > 0 ? `+${formatUSD(priced.licenseFee)}` : "Included"}</dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-3 border-t border-line pt-4">
+                <dt className="text-ink-muted">Estimated total</dt>
+                <dd className="display-sm">{formatUSD(priced.total)}</dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="text-body-sm text-ink-muted">Pick a package on the service page first.</p>
           )}
 
-          <LicensePicker
-            licenses={service.licenses}
-            value={priced?.licenseId ?? "personal"}
-            onChange={setLicenseId}
-            base={priced ? priced.subtotal + priced.addonsTotal + priced.backgroundPrice : undefined}
-            name="license_choice"
-          />
-
-          {priced && priced.licenseFee > 0 && (
-            <div className="-mb-3 flex items-baseline justify-between border-t border-line pt-4 text-body-sm text-ink-muted">
-              <span>License (+{priced.licensePercent}%)</span>
-              <span>+{formatUSD(priced.licenseFee)}</span>
-            </div>
-          )}
-
-          {priced && (
-            <div className="flex items-baseline justify-between border-t border-line pt-4">
-              <span className="text-body-sm text-ink-muted">Estimated total</span>
-              <span className="display-sm">{formatUSD(priced.total)}</span>
-            </div>
-          )}
+          <Link href={`/services/${service.slug}`} className="spec self-start text-ink-muted hover:text-ink">
+            ← Change order
+          </Link>
 
           <SubmitButton label={waitlist ? "Join the waitlist" : "Send request"} />
           <p className="text-[13px] leading-snug text-ink-faint">

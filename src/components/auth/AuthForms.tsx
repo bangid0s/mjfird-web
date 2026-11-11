@@ -16,7 +16,7 @@ import { cn } from "@/lib/cn";
 export const authInput =
   "w-full border border-line bg-bg-raised px-4 py-3.5 text-body text-ink transition-colors duration-[var(--duration-fast)] placeholder:text-ink-faint focus:border-ink focus:outline-none disabled:opacity-50";
 
-function Label({ text, children }: { text: string; children: React.ReactNode }) {
+export function Label({ text, children }: { text: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-2">
       <span className="eyebrow">{text}</span>
@@ -25,7 +25,7 @@ function Label({ text, children }: { text: string; children: React.ReactNode }) 
   );
 }
 
-function Submit({ children }: { children: React.ReactNode }) {
+export function Submit({ children }: { children: React.ReactNode }) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -38,7 +38,7 @@ function Submit({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Notice({ state }: { state: AuthState }) {
+export function Notice({ state }: { state: AuthState }) {
   if (!state) return null;
   if (state.error)
     return (

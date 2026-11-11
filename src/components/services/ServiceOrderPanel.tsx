@@ -101,6 +101,9 @@ export default function ServiceOrderPanel({
         </fieldset>
       )}
 
+      {/* Right under the packages: the count belongs to the chosen package. */}
+      <CharacterStepper pkg={selected} value={extra} onChange={setExtraCharacters} />
+
       {selected && (
         <dl className="grid grid-cols-2 gap-3 border-y border-line py-4">
           <div>
@@ -128,8 +131,6 @@ export default function ServiceOrderPanel({
           )}
         </dl>
       )}
-
-      <CharacterStepper pkg={selected} value={extra} onChange={setExtraCharacters} />
 
       <BackgroundPicker backgrounds={service.backgrounds} value={priced?.backgroundId ?? null} onChange={setBackgroundId} />
 

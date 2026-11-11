@@ -21,7 +21,6 @@ type NavLink = { label: string; href: string };
 */
 
 export default function Nav({
-  availabilityStatus,
   logoUrl,
   logoUrlLight,
   logoType = "text",
@@ -30,7 +29,6 @@ export default function Nav({
   contactEmail,
   socials = [],
 }: {
-  availabilityStatus?: string;
   logoUrl?: string | null;
   logoUrlLight?: string | null;
   logoType?: "text" | "image";
@@ -159,16 +157,6 @@ export default function Nav({
           </nav>
 
           <div className="flex shrink-0 items-center gap-4 lg:gap-5">
-            {availabilityStatus && (
-              <span className="label hidden items-center gap-2 xl:inline-flex">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70 motion-reduce:hidden" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
-                </span>
-                {availabilityStatus}
-              </span>
-            )}
-
             <AccountLink className="hidden lg:inline" />
 
             <Link
@@ -177,7 +165,7 @@ export default function Nav({
               aria-current={pathname === "/services" ? "page" : undefined}
               className="hidden items-center bg-accent px-4 py-2.5 font-body text-body-sm font-medium text-accent-ink transition-[filter] duration-[var(--duration-fast)] hover:brightness-110 sm:inline-flex"
             >
-              Start a project
+              Commission me
             </Link>
 
             <ThemeToggle />
@@ -263,15 +251,9 @@ export default function Nav({
                   onClick={() => setOpen(false)}
                   className="flex items-center justify-center bg-accent px-5 py-4 font-body text-body font-medium text-accent-ink"
                 >
-                  Start a project
+                  Commission me
                 </Link>
                 <AccountLink className="text-ink" onNavigate={() => setOpen(false)} />
-                {availabilityStatus && (
-                  <p className="label flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                    {availabilityStatus}
-                  </p>
-                )}
                 {contactEmail && (
                   <a
                     href={`mailto:${contactEmail}`}

@@ -13,7 +13,6 @@ export default async function RootNotFound() {
 
   return (
     <SiteChrome
-      availabilityStatus={profile.availabilityStatus}
       socials={profile.socials}
       footerHeading={settings.footerHeading}
       footerSubtext={settings.footerSubtext}
