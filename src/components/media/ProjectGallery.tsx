@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { isYouTubeUrl, isVideoFile, mediaThumbnail } from "@/lib/media";
 import { getYouTubeId, youTubeEmbedUrl } from "@/lib/youtube";
+import FlowImage from "@/components/media/FlowImage";
 
 type GalleryImage = { url: string; alt?: string };
 
@@ -59,12 +60,11 @@ export default function ProjectGallery({ images }: { images: GalleryImage[] }) {
               className="group relative block w-full overflow-hidden break-inside-avoid rounded-[var(--radius-md)] border border-line bg-bg-raised transition-colors duration-[var(--duration-fast)] hover:border-line-strong"
               aria-label={playable ? "Play media" : "View full image"}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <FlowImage
                 src={mediaThumbnail(image.url)}
                 alt={image.alt ?? ""}
-                loading="lazy"
-                className="w-full transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.03]"
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                className="h-auto w-full transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.03]"
               />
               {playable && (
                 <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-accent pl-1 text-accent-ink">
@@ -135,11 +135,12 @@ export default function ProjectGallery({ images }: { images: GalleryImage[] }) {
             ) : isVideoFile(active.url) ? (
               <video src={active.url} controls autoPlay playsInline className="mx-auto max-h-[85svh] w-auto" />
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <FlowImage
                 src={active.url}
                 alt={active.alt ?? ""}
-                className="mx-auto max-h-[85svh] w-auto rounded-[var(--radius-md)] object-contain"
+                sizes="(min-width: 1024px) 1024px, 100vw"
+                priority
+                className="mx-auto h-auto max-h-[85svh] w-auto max-w-full rounded-[var(--radius-md)] object-contain"
               />
             )}
             {active.alt && (

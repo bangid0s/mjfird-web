@@ -3,6 +3,7 @@ import { isVideoFile, isYouTubeUrl } from "@/lib/media";
 import SmartImage from "@/components/media/SmartImage";
 import VideoEmbed from "@/components/media/VideoEmbed";
 import type { CoverFit } from "@/lib/supabase/types";
+import FlowImage from "@/components/media/FlowImage";
 
 const OBJECT_FIT: Record<Exclude<CoverFit, "natural">, string> = {
   cover: "object-cover",
@@ -132,11 +133,11 @@ export default function CoverMedia({
     // one. The image sets its own height, and `object-contain` only comes into
     // play if `maxHeight` has to rein it in.
     return (
-      /* eslint-disable-next-line @next/next/no-img-element */
-      <img
+      <FlowImage
         src={src}
         alt={alt}
-        loading={priority ? "eager" : "lazy"}
+        sizes={sizes}
+        priority={priority}
         style={maxHeight ? { maxHeight } : undefined}
         className={cn("mx-auto block h-auto w-full object-contain", className, mediaClassName)}
       />

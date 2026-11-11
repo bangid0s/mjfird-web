@@ -1,9 +1,11 @@
 import Image from "next/image";
-import { isSupabaseHosted, mediaThumbnail } from "@/lib/media";
+import { mediaThumbnail } from "@/lib/media";
+import { isOptimizable } from "@/lib/image-hosts";
 
-// Fill-mode image that works with any URL: Supabase uploads get next/image
-// optimization, arbitrary pasted URLs render as a plain <img>, and YouTube
-// links fall back to their thumbnail frame.
+// Fill-mode image that works with any URL: images from known hosts (Supabase,
+// Behance, DeviantArt… see image-hosts.ts) get next/image optimization, other
+// pasted URLs render as a plain <img>, and YouTube links fall back to their
+// thumbnail frame.
 export default function SmartImage({
   src,
   alt = "",
@@ -22,14 +24,14 @@ export default function SmartImage({
 }) {
   const resolved = mediaThumbnail(src);
 
-  if (isSupabaseHosted(resolved)) {
+  if (isOptimizable(resolved)) {
     return (
       <Image
         src={resolved}
         alt={alt}
         fill
         sizes={sizes}
-        priority={priority}
+        preload={priority}
         className={className}
         style={style}
       />
@@ -41,6 +43,8 @@ export default function SmartImage({
     <img
       src={resolved}
       alt={alt}
+      loading={priority ? "eager" : "lazy"}
+      decoding="async"
       style={style}
       className={`absolute inset-0 h-full w-full ${className}`}
     />

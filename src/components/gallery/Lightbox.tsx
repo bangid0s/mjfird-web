@@ -8,6 +8,7 @@ import VerifiedBadge from "@/components/reviews/VerifiedBadge";
 import { isVideoFile, isYouTubeUrl, mediaThumbnail } from "@/lib/media";
 import { getYouTubeId, youTubeEmbedUrl } from "@/lib/youtube";
 import type { GalleryItem } from "@/lib/data/gallery";
+import FlowImage from "@/components/media/FlowImage";
 
 function isExternal(url: string) {
   return /^https?:\/\//i.test(url);
@@ -139,11 +140,13 @@ export default function Lightbox({
         ) : isVideoFile(item.imageUrl) ? (
           <video key={item.id} src={item.imageUrl} controls autoPlay playsInline className="max-h-[70svh] w-auto" />
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <FlowImage
+            key={item.id}
             src={mediaThumbnail(item.imageUrl)}
             alt={item.title || ""}
-            className={`${hasStory ? "max-h-[62svh]" : "max-h-[78svh]"} w-auto object-contain`}
+            sizes="(min-width: 1024px) 1024px, 100vw"
+            priority
+            className={`${hasStory ? "max-h-[62svh]" : "max-h-[78svh]"} h-auto w-auto max-w-full object-contain`}
           />
         )}
 

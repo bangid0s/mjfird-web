@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import SmartImage from "@/components/media/SmartImage";
 import { getYouTubeId, youTubeEmbedUrl } from "@/lib/youtube";
 import { cn } from "@/lib/cn";
 
@@ -58,6 +60,15 @@ export default function HeroMedia({
   const hasSlides = slides.length > 1 && Boolean(onGoTo);
   const current = Math.min(Math.max(activeIndex, 0), Math.max(slides.length - 1, 0));
 
+  // Only the slide on screen and the one after it are fetched; the rest wait
+  // until the slider gets near them, so the first image isn't competing with
+  // every other slide for bandwidth. Once shown, a slide stays mounted so the
+  // crossfade back to it is instant.
+  const [reached, setReached] = useState<ReadonlySet<number>>(() => new Set([current]));
+  if (!reached.has(current)) setReached(new Set(reached).add(current));
+  const shouldRender = (i: number) =>
+    reached.has(i) || i === current || i === (current + 1) % Math.max(slides.length, 1);
+
   if (type === "youtube" && !youTubeId) return null;
   if (type === "image" && slides.length === 0) return null;
 
@@ -108,19 +119,21 @@ export default function HeroMedia({
       )}
 
       {type === "image" &&
-        slides.map((imageUrl, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={`${imageUrl}-${i}`}
-            src={imageUrl}
-            alt=""
-            className={cn(
-              "absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-[var(--ease-freeze)]",
-              ANIMATION_CLASS[animation] ?? "",
-              i === current ? "opacity-100" : "opacity-0",
-            )}
-          />
-        ))}
+        slides.map((imageUrl, i) =>
+          shouldRender(i) ? (
+            <SmartImage
+              key={`${imageUrl}-${i}`}
+              src={imageUrl}
+              sizes="100vw"
+              priority={i === current && reached.size === 1}
+              className={cn(
+                "object-cover transition-opacity duration-1000 ease-[var(--ease-freeze)]",
+                ANIMATION_CLASS[animation] ?? "",
+                i === current ? "opacity-100" : "opacity-0",
+              )}
+            />
+          ) : null,
+        )}
 
       {/*
         Legibility scrim, and only where copy actually sits on the media.
