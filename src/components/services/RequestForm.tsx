@@ -5,7 +5,8 @@ import { useFormStatus } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { submitRequest } from "@/lib/client/request-actions";
 import type { StorefrontService } from "@/lib/data/services";
-import { effectiveAvailability, formatUSD, quote, type ServiceQuestion } from "@/lib/services/storefront";
+import { clampExtraCharacters, effectiveAvailability, formatUSD, quote, type ServiceQuestion } from "@/lib/services/storefront";
+import CharacterStepper from "@/components/services/CharacterStepper";
 import type { CommissionAnswer } from "@/lib/supabase/types";
 import { authInput } from "@/components/auth/AuthForms";
 import { cn } from "@/lib/cn";
@@ -220,6 +221,7 @@ export default function RequestForm({
   email,
   initialPackage,
   initialAddons,
+  initialCharacters = 0,
 }: {
   service: StorefrontService;
   userId: string;
@@ -227,17 +229,21 @@ export default function RequestForm({
   email: string;
   initialPackage?: string;
   initialAddons: string[];
+  initialCharacters?: number;
 }) {
   const [state, action] = useActionState(submitRequest, undefined);
   const [packageId, setPackageId] = useState(
     service.packages.some((p) => p.id === initialPackage) ? initialPackage! : (service.packages[0]?.id ?? ""),
   );
   const [addonIds, setAddonIds] = useState(initialAddons.filter((id) => service.addons.some((a) => a.id === id)));
+  const [extraCharacters, setExtraCharacters] = useState(initialCharacters);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [questionFiles, setQuestionFiles] = useState<Record<string, Uploaded[]>>({});
   const [refs, setRefs] = useState<Uploaded[]>([]);
 
-  const priced = quote(service.packages, service.addons, packageId, addonIds);
+  const selected = service.packages.find((p) => p.id === packageId);
+  const extra = clampExtraCharacters(selected, extraCharacters);
+  const priced = quote(service.packages, service.addons, packageId, addonIds, extra);
   const waitlist = effectiveAvailability(service.availability, service.slotsTotal, service.slotsTaken) === "waitlist";
   const hasFileQuestion = service.questions.some((q) => q.type === "file");
 
@@ -268,6 +274,7 @@ export default function RequestForm({
       {addonIds.map((id) => (
         <input key={id} type="hidden" name="addon_ids" value={id} />
       ))}
+      <input type="hidden" name="extra_characters" value={extra} />
       <input type="hidden" name="answers" value={JSON.stringify(answerList)} />
       <input type="hidden" name="reference_paths" value={JSON.stringify(allPaths)} />
 
@@ -355,6 +362,8 @@ export default function RequestForm({
               </label>
             ))}
           </fieldset>
+
+          <CharacterStepper pkg={selected} value={extra} onChange={setExtraCharacters} />
 
           {service.addons.length > 0 && (
             <fieldset className="flex flex-col gap-2">

@@ -140,12 +140,11 @@ const placeholderStorefront: StorefrontService[] = [
     slotsTotal: 5,
     slotsTaken: 2,
     packages: [
-      { id: "bust", name: "Bust", description: "Head and shoulders.", price: 60, delivery_days: 10, revisions: 2, features: ["1 character", "Simple background", "High-res PNG"] },
-      { id: "half", name: "Half body", description: "Waist up, with a pose.", price: 95, delivery_days: 14, revisions: 2, features: ["1 character", "Simple background", "High-res PNG", "Sketch process file"] },
-      { id: "full", name: "Full body", description: "Full figure, dynamic pose.", price: 140, delivery_days: 21, revisions: 3, features: ["1 character", "Simple background", "High-res PNG", "Sketch process file", "Timelapse"] },
+      { id: "bust", name: "Bust", description: "Head and shoulders.", price: 60, delivery_days: 10, revisions: 2, features: ["1 character", "Simple background", "High-res PNG"], extra_characters_max: 4 },
+      { id: "half", name: "Half body", description: "Waist up, with a pose.", price: 95, delivery_days: 14, revisions: 2, features: ["1 character", "Simple background", "High-res PNG", "Sketch process file"], extra_characters_max: 4 },
+      { id: "full", name: "Full body", description: "Full figure, dynamic pose.", price: 140, delivery_days: 21, revisions: 3, features: ["1 character", "Simple background", "High-res PNG", "Sketch process file", "Timelapse"], extra_characters_max: 4 },
     ],
     addons: [
-      { id: "extra-char", name: "Extra character", description: "Per additional character.", price: 50 },
       { id: "bg", name: "Detailed background", description: "A painted scene instead of a flat backdrop.", price: 40 },
       { id: "commercial", name: "Commercial license", description: "Use on merch, ads, or products you sell.", price: 80 },
     ],
@@ -173,8 +172,8 @@ const placeholderStorefront: StorefrontService[] = [
     slotsTotal: null,
     slotsTaken: 0,
     packages: [
-      { id: "starter", name: "Starter", description: "Logo and basics.", price: 450, delivery_days: 21, revisions: 2, features: ["Primary logo", "Color palette", "Type pairing"] },
-      { id: "complete", name: "Complete", description: "A full system.", price: 1200, delivery_days: 35, revisions: 3, features: ["Logo suite", "Color & type system", "Social kit", "Brand guide PDF"] },
+      { id: "starter", name: "Starter", description: "Logo and basics.", price: 450, delivery_days: 21, revisions: 2, features: ["Primary logo", "Color palette", "Type pairing"], extra_characters_max: 0 },
+      { id: "complete", name: "Complete", description: "A full system.", price: 1200, delivery_days: 35, revisions: 3, features: ["Logo suite", "Color & type system", "Social kit", "Brand guide PDF"], extra_characters_max: 0 },
     ],
     addons: [{ id: "rush", name: "Rush delivery", description: "Halves the timeline.", price: 300 }],
     samples: [],

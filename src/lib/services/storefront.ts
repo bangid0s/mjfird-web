@@ -14,6 +14,9 @@ const money = z.coerce.number().finite().min(0).max(100_000).transform((n) => Ma
 const shortText = z.string().trim().max(200);
 const id = z.string().trim().min(1).max(64);
 
+/** Hard cap on extra characters per request (the database enforces the same). */
+export const MAX_EXTRA_CHARACTERS = 20;
+
 export const packageSchema = z.object({
   id,
   name: shortText.min(1),
@@ -22,6 +25,12 @@ export const packageSchema = z.object({
   delivery_days: z.coerce.number().int().min(0).max(365).default(0),
   revisions: z.coerce.number().int().min(0).max(99).default(0),
   features: z.array(shortText.min(1)).max(30).default([]),
+  /**
+   * How many characters a client may add on top of the one the package
+   * includes. 0 = not offered. Each extra character costs the package price
+   * again: +1 doubles it, +2 triples it.
+   */
+  extra_characters_max: z.coerce.number().int().min(0).max(MAX_EXTRA_CHARACTERS).default(0),
 });
 
 export const addonSchema = z.object({
@@ -121,33 +130,46 @@ export function effectiveAvailability(
 export type PriceQuote = {
   packageId: string;
   addonIds: string[];
+  /** Characters on top of the one the package includes. */
+  extraCharacters: number;
+  /** Package price × every character (1 + extraCharacters). */
   subtotal: number;
   addonsTotal: number;
   total: number;
 };
 
+/** Clamp a requested extra-character count to what the package allows. */
+export function clampExtraCharacters(pkg: ServicePackage | undefined, requested: unknown): number {
+  const n = Math.floor(Number(requested));
+  if (!pkg || !Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(n, pkg.extra_characters_max);
+}
+
 /**
  * Price a selection against the stored service. Unknown package → null;
- * unknown add-on ids are ignored. Use this on the server for anything that
- * moves money.
+ * unknown add-on ids are ignored; extra characters are clamped to the
+ * package's limit. Use this on the server for anything that moves money.
  */
 export function quote(
   packages: ServicePackage[],
   addons: ServiceAddon[],
   packageId: string,
   addonIds: string[],
+  extraCharacters = 0,
 ): PriceQuote | null {
   const pkg = packages.find((p) => p.id === packageId);
   if (!pkg) return null;
+  const extra = clampExtraCharacters(pkg, extraCharacters);
   const chosen = addons.filter((a) => addonIds.includes(a.id));
-  const addonsTotal = chosen.reduce((sum, a) => sum + a.price, 0);
-  const total = Math.round((pkg.price + addonsTotal) * 100) / 100;
+  const addonsTotal = Math.round(chosen.reduce((sum, a) => sum + a.price, 0) * 100) / 100;
+  const subtotal = Math.round(pkg.price * (1 + extra) * 100) / 100;
   return {
     packageId: pkg.id,
     addonIds: chosen.map((a) => a.id),
-    subtotal: pkg.price,
-    addonsTotal: Math.round(addonsTotal * 100) / 100,
-    total,
+    extraCharacters: extra,
+    subtotal,
+    addonsTotal,
+    total: Math.round((subtotal + addonsTotal) * 100) / 100,
   };
 }
 
