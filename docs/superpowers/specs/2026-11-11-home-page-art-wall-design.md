@@ -110,9 +110,10 @@ Top to bottom:
    A fact with no data is left out; with no facts the line is omitted.
 5. **Buttons.** The existing two hero buttons, labels and destinations from
    settings, unchanged.
-6. **Stats.** `settings.stats` and `settings.heroProofNote` through `ProofLine`.
-   The numbers count up once when they enter the viewport; reduced motion shows
-   the final value at once.
+6. **Stats.** `settings.stats` and `settings.heroProofNote` through `ProofLine`,
+   static as today. A count-up was considered and dropped: the server-rendered
+   page would show the final number and then jump back to zero once the script
+   loaded.
 
 ### 4.2 Art wall
 
@@ -147,9 +148,12 @@ over the wall or focus is inside it, and while the wall is off screen.
 **Reduced motion.** No drift: the columns and the row are static, the row
 scrolls by hand.
 
-**Loading.** Tiles use `SmartImage`, so Supabase-hosted images are resized by
-`next/image`; `sizes` is `(min-width: 1024px) 16vw, 42vw`. The first tile of
-each column is marked `priority`; the rest load lazily.
+**Loading.** Tiles use `SmartImage`. The gallery images are currently hosted on
+third-party CDNs (Behance, DeviantArt), so they render as plain images at their
+original size and cannot be resized by the site; an image uploaded to the
+site's own media library would be resized by `next/image` (`sizes` is
+`(min-width: 1024px) 16vw, 42vw`). The first six tiles load at once; the rest
+load lazily.
 
 ## 5. Sections
 
@@ -173,8 +177,10 @@ One row per published service, all of them, in service order. A row is an
   with `showServices={false}`. A service with fewer than two samples shows its
   cover in a single 4:3 frame instead; with no cover either, the sample area is
   omitted and the text spans the row.
-- **Actions.** A filled button "Order" → `/services/[slug]`, and "See works" →
-  `/gallery?service=[slug]` when the service has gallery images.
+- **Actions.** A filled button → `/services/[slug]`, reading "Order" while the
+  service is open, "Join the waitlist" on waitlist and "See details" when
+  closed; and "See works" → `/gallery?service=[slug]` when the service has
+  gallery images.
 
 Layout: from `lg`, text on the left (5 of 12 columns) and samples on the right
 (7 of 12), rows separated by hairlines. Below `lg`, the samples become a
@@ -193,7 +199,7 @@ Under the steps, a row of up to three assurances:
 
 - "N revision rounds included": the lowest revision count across all packages,
   omitted when zero.
-- "Sketch approval before colour": shown only when every published service has
+- "Sketch approval before color": shown only when every published service has
   a package feature that mentions a sketch.
 - "Work starts once the invoice is paid": fixed text. It describes how the
   site's request flow works and matches every service's terms.
@@ -221,9 +227,9 @@ pages:
 |---|---|
 | How long does it take? | Seven days or more, depending on the size of the piece and my queue. I confirm a delivery date in your quote, before you pay. Rush delivery is +50%. |
 | How do I pay? | Once we agree on the scope, I send an invoice. Work starts when it is paid. |
-| How many revisions do I get? | Most commissions include two rounds, mostly at the sketch stage, and you approve the sketch before I move to colour. A major redesign after approval counts as new work. |
+| How many revisions do I get? | Most commissions include two rounds, mostly at the sketch stage, and you approve the sketch before I move to color. A major redesign after approval counts as new work. |
 | What do you need from me? | Your character sheet or description, any references, the pose and mood you want, and where the art will be used. |
-| Can I use the art commercially? | It depends on the commission, and each service page lists what its licence covers. D&D character art includes use in streams, videos and socials. MTG and Pokémon card art is for personal use only. |
+| Can I use the art commercially? | It depends on the commission, and each service page lists what its license covers. D&D character art includes use in streams, videos and socials. MTG and Pokémon card art is for personal use only. |
 
 These defaults apply to the home page only. They are fixed text: if the terms
 change, the owner replaces them by filling "Services FAQ" in the admin, which
@@ -249,13 +255,14 @@ existing motion tokens.
 |---|---|---|
 | `src/lib/home.ts` (new) | Pure rules: wall selection, hero facts and status, package lines, samples per service, assurances, FAQ fallback, default headline | data types only |
 | `components/home/HomeHero.tsx` (new, server) | Copy column and layout of the wall hero | `home.ts`, `ArtWall`, `ProofLine`, `MagneticButton` |
+| `components/home/HomeFaq.tsx` (new, server) | FAQ section layout | `ServicesFaq` |
+| `components/media/SmartImage.tsx` | Gains an opt-in `lazy` for plain images | — |
 | `components/home/ArtWall.tsx` (new, client) | Drifting columns or row, pause rules, lightbox state | `TiltCard`, `SmartImage`, `Lightbox` |
 | `components/home/TiltCard.tsx` (new, client) | Pointer tilt and highlight around any child | — |
 | `components/home/CommissionMenu.tsx` (new, server) | One row per service | `home.ts`, `SampleStrip`, `AvailabilityBadge` |
 | `components/home/SampleStrip.tsx` (new, client) | A service's samples and their lightbox | `TiltCard`, `SmartImage`, `Lightbox` |
 | `components/hero/Hero.tsx` | Unchanged; the slider hero | — |
 | `components/reviews/Testimonials.tsx` | Gains `limit` | — |
-| `components/ui/ProofLine.tsx` | Gains an optional count-up | `AnimatedNumber` |
 | `app/(site)/page.tsx` | Loads data, picks the hero, lays out the sections | all of the above |
 
 `page.tsx` additionally loads `getGalleryItems()`. Sample lists per service are
