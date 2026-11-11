@@ -641,3 +641,37 @@ html[data-cursor="custom"] [contenteditable="true"] {
     text-wrap: pretty;
   }
 }
+
+/*
+  Paper. A printed page is always the light sheet, whatever theme the visitor
+  is browsing in: dark tokens on white paper print light-grey type that can't
+  be read, and browsers drop backgrounds by default. Only /resume is designed
+  to be printed, but the rule is global so no page prints unreadably.
+*/
+@page {
+  size: A4;
+  margin: 14mm 15mm;
+}
+
+@media print {
+  :root,
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]) {
+    --color-bg: #ffffff;
+    --color-bg-raised: #ffffff;
+    --color-bg-raised-2: #f1f1ef;
+    --color-ink: #141416;
+    --color-ink-muted: #3a3a40;
+    --color-ink-faint: #5c5c62;
+    --color-line: #cfcfcb;
+    --color-line-strong: #a9a9a4;
+    --color-accent-strong: color-mix(in oklab, var(--color-accent-base) 76%, #000000);
+    --color-success: #12805a;
+    color-scheme: light;
+  }
+
+  html,
+  body {
+    background: #ffffff;
+  }
+}
