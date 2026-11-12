@@ -250,10 +250,12 @@ export default function Nav({
                     href={ctaLink.href}
                     onClick={() => setOpen(false)}
                     aria-current={pathname === ctaLink.href ? "page" : undefined}
-                    className="flex w-full items-center justify-between gap-4 bg-accent px-5 py-4 text-accent-ink transition-[filter] active:brightness-90"
+                    className="flex w-full items-center justify-between gap-4 bg-accent px-5 py-5 text-[#141416] transition-[filter] active:brightness-90"
                   >
-                    <span className="display-sm">Commission Me</span>
-                    <span aria-hidden="true">↗</span>
+                    {/* Dark ink on the orange in both themes; .display-sm would
+                        otherwise repaint it with the theme's ink colour. */}
+                    <span className="display-sm text-[1.75rem] text-[#141416]">Commission Me</span>
+                    <span aria-hidden="true" className="text-[1.5rem]">↗</span>
                   </Link>
                 </motion.div>
               )}
