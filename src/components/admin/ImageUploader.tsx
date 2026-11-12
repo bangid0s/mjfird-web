@@ -24,6 +24,13 @@ export default function ImageUploader({
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Only clears the field — the post keeps its old image until the form is saved.
+  const clear = () => {
+    setUrl("");
+    setError(null);
+    onUploaded?.("");
+  };
+
   const handleFile = async (file: File) => {
     setUploading(true);
     setError(null);
@@ -59,20 +66,38 @@ export default function ImageUploader({
           dragging ? "border-accent bg-bg-raised" : "border-line hover:border-ink-faint",
         )}
       >
-        {url &&
-          (isVideoFile(url) ? (
-            <video src={url} muted loop playsInline controls className="h-32 w-full max-w-xs object-cover" />
-          ) : (
-            <span className="relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={mediaThumbnail(url)} alt="" className="h-32 w-full max-w-xs object-contain" />
-              {isYouTubeUrl(url) && (
-                <span className="absolute left-1 top-1 bg-bg/85 px-1.5 py-0.5 text-[11px] font-medium text-accent">
-                  YouTube
-                </span>
-              )}
-            </span>
-          ))}
+        {url && (
+          <span className="relative">
+            {isVideoFile(url) ? (
+              <video src={url} muted loop playsInline controls className="h-32 w-full max-w-xs object-cover" />
+            ) : (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={mediaThumbnail(url)} alt="" className="h-32 w-full max-w-xs object-contain" />
+                {isYouTubeUrl(url) && (
+                  <span className="absolute left-1 top-1 bg-bg/85 px-1.5 py-0.5 text-[11px] font-medium text-accent">
+                    YouTube
+                  </span>
+                )}
+              </>
+            )}
+            <button
+              type="button"
+              onClick={(e) => {
+                // Inside the drop-zone label: stop the click opening the file picker.
+                e.preventDefault();
+                e.stopPropagation();
+                clear();
+              }}
+              disabled={uploading}
+              aria-label="Delete this image"
+              title="Delete this image"
+              className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-bg text-lg leading-none text-error shadow-sm transition-colors hover:border-error hover:bg-error hover:text-bg disabled:opacity-40"
+            >
+              ×
+            </button>
+          </span>
+        )}
         <span className="font-mono text-label text-ink-faint">
           {uploading ? "Uploading…" : url ? "Drop a file to replace — or click to browse" : "Drag & drop here — or click to browse"}
         </span>
@@ -103,13 +128,11 @@ export default function ImageUploader({
       {url && (
         <button
           type="button"
-          onClick={() => {
-            setUrl("");
-            onUploaded?.("");
-          }}
-          className="self-start text-body-sm font-medium text-ink-faint hover:text-error"
+          onClick={clear}
+          disabled={uploading}
+          className="self-start border border-line px-3 py-1.5 text-body-sm font-medium text-error transition-colors hover:border-error disabled:opacity-40"
         >
-          Remove
+          Delete image
         </button>
       )}
       {error && <span className="font-mono text-label text-error">{error}</span>}
