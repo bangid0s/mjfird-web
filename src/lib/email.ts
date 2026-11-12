@@ -10,7 +10,10 @@ import { SITE_URL } from "@/lib/site-url";
 
 const FROM = process.env.RESEND_FROM ?? "MJFIRD <notifications@mjfird.com>";
 
-export const ADMIN_EMAIL = process.env.INQUIRY_NOTIFY_EMAIL ?? "info@mjfird.com";
+// Studio inboxes. Contact-form inquiries / project emails go to hello@;
+// commission requests, revisions, approvals and payments go to info@.
+export const INQUIRY_EMAIL = process.env.INQUIRY_NOTIFY_EMAIL || "hello@mjfird.com";
+export const COMMISSION_EMAIL = process.env.COMMISSION_NOTIFY_EMAIL || "info@mjfird.com";
 
 export async function sendEmail({
   to,
