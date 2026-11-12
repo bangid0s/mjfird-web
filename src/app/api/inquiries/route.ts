@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/data/config";
-import { ADMIN_EMAIL, sendEmail } from "@/lib/email";
+import { INQUIRY_EMAIL, sendEmail } from "@/lib/email";
 import { inquiryAdminEmail, inquiryClientEmail } from "@/lib/notifications/copy";
 
 const schema = z.object({
@@ -50,8 +50,8 @@ export async function POST(request: Request) {
   // Studio alert (reply goes straight to the sender) + confirmation to the sender.
   // sendEmail never throws and is a no-op without RESEND_API_KEY.
   await Promise.all([
-    sendEmail({ to: ADMIN_EMAIL, ...inquiryAdminEmail(parsed.data), replyTo: parsed.data.email }),
-    sendEmail({ to: parsed.data.email, ...inquiryClientEmail(parsed.data), replyTo: ADMIN_EMAIL }),
+    sendEmail({ to: INQUIRY_EMAIL, ...inquiryAdminEmail(parsed.data), replyTo: parsed.data.email }),
+    sendEmail({ to: parsed.data.email, ...inquiryClientEmail(parsed.data), replyTo: INQUIRY_EMAIL }),
   ]);
 
   return NextResponse.json({ ok: true });

@@ -18,7 +18,8 @@ Set these in the shell for the script. Do not commit the values.
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel Preview and `.env.local` | Public. Already used by the app. |
 | `NEXT_PUBLIC_SITE_URL` | Vercel Preview and `.env.local` | Public origin, no trailing slash. Local default in the app code is the request host. |
 | `RESEND_FROM` | Vercel Preview and `.env.local` | Server-only sender for app mail (`src/lib/email.ts`). |
-| `INQUIRY_NOTIFY_EMAIL` | Vercel Preview and `.env.local` | Server-only. |
+| `INQUIRY_NOTIFY_EMAIL` | Vercel Preview and `.env.local` | Server-only. Studio inbox for contact-form inquiries. Default `hello@mjfird.com`. |
+| `COMMISSION_NOTIFY_EMAIL` | Vercel Preview and `.env.local` | Server-only. Studio inbox for commission requests, updates and payments. Default `info@mjfird.com`. |
 
 `SUPABASE_SERVICE_ROLE_KEY` is not used by this script.
 
