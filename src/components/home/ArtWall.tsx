@@ -50,7 +50,25 @@ export default function ArtWall({
   if (items.length === 0) return null;
 
   return (
-    <div ref={ref} className={cn("art-wall", className)}>
+    <div
+      ref={ref}
+      className={cn("art-wall", className)}
+      // Tabbing to a tile below the fold of the panel makes the browser scroll
+      // the panel to it. Once focus leaves the wall, put the panel back.
+      onFocus={(e) => {
+        const tile = (e.target as HTMLElement).closest<HTMLElement>(".art-wall-tile");
+        if (!tile || !tile.matches(":focus-visible")) return;
+        // Keyboard focus drops the wall back to its resting layout (the :has
+        // rule in globals.css), which moves the tile after the browser has
+        // already scrolled to where it was. Scroll again, to where it is now.
+        requestAnimationFrame(() => tile.scrollIntoView({ block: "nearest", inline: "nearest" }));
+      }}
+      onBlur={(e) => {
+        if (e.currentTarget.contains(e.relatedTarget)) return;
+        e.currentTarget.scrollTop = 0;
+        e.currentTarget.scrollLeft = 0;
+      }}
+    >
       <div className="art-wall-row">
         {columns.map((column, c) => (
           <div

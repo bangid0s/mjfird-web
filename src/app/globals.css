@@ -691,6 +691,10 @@ html[data-cursor="custom"] [contenteditable="true"] {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       column-gap: 1rem;
+      /* Each column is only as tall as its own tiles. Stretched to the
+         tallest neighbour, a shorter column's -50% would overshoot its
+         content and the loop would jump by a tile. */
+      align-items: start;
       width: auto;
       height: 100%;
       animation: none;
@@ -726,6 +730,22 @@ html[data-cursor="custom"] [contenteditable="true"] {
     .art-wall-tile[data-clone] {
       display: none;
     }
+  }
+
+  /*
+    Keyboard. Only the first copy of each tile can take focus, and mid-loop
+    that copy may have drifted out of the panel while its duplicate is what is
+    on screen. So while a tile holds keyboard focus the wall rests: no drift,
+    no duplicates, every tile where the browser can scroll to it. A mouse click
+    doesn't match :focus-visible, so clicking a tile moves nothing.
+  */
+  .art-wall:has(.art-wall-tile:focus-visible) .art-wall-row,
+  .art-wall:has(.art-wall-tile:focus-visible) .art-wall-track {
+    animation: none;
+  }
+
+  .art-wall:has(.art-wall-tile:focus-visible) .art-wall-tile[data-clone] {
+    display: none;
   }
 
   @media (prefers-reduced-motion: reduce) and (max-width: 1023.98px) {
