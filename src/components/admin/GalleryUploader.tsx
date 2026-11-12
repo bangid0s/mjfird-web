@@ -85,7 +85,17 @@ export default function GalleryUploader({
                 {i + 1}
                 {isYouTubeUrl(image.url) && <span className="ml-1 uppercase text-accent">▶ YT</span>}
               </span>
-              <div className="absolute inset-x-1 bottom-1 flex justify-between gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+              {/* Always visible — touch screens have no hover to reveal it. */}
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                aria-label={`Delete item ${i + 1}`}
+                title="Delete"
+                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full border border-line bg-bg/95 text-base leading-none text-error shadow-sm transition-colors hover:border-error hover:bg-error hover:text-bg"
+              >
+                ×
+              </button>
+              <div className="absolute inset-x-1 bottom-1 flex justify-between gap-1 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100">
                 <button
                   type="button"
                   onClick={() => move(i, -1)}
@@ -94,14 +104,6 @@ export default function GalleryUploader({
                   className="bg-bg/90 px-2 py-1 font-mono text-label text-ink disabled:opacity-30"
                 >
                   ←
-                </button>
-                <button
-                  type="button"
-                  onClick={() => remove(i)}
-                  aria-label="Remove image"
-                  className="bg-bg/90 px-2 py-1 font-mono text-label text-error"
-                >
-                  ×
                 </button>
                 <button
                   type="button"
