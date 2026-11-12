@@ -47,6 +47,9 @@ export default function Nav({
   // and the footer.
   const { primary, overflow } = partitionNavLinks(links, 6);
   const sheetLinks = [...primary, ...overflow];
+  // Services is pulled out of the phone list and shown as the CTA button.
+  const ctaLink = sheetLinks.find((link) => link.href === "/services");
+  const sheetList = sheetLinks.filter((link) => link !== ctaLink);
 
   // Lenis drives the real scroll position, so a plain scroll listener is still
   // the right signal here. The bar takes a ground as soon as the page moves,
@@ -198,7 +201,9 @@ export default function Nav({
             className="flex h-[calc(100svh-var(--nav-h))] flex-col overflow-y-auto border-b border-line bg-bg lg:hidden"
           >
             <div className="container-page flex flex-1 flex-col py-2">
-              {sheetLinks.map((link, i) => (
+              {sheetList.map((link, i) => {
+                const active = pathname === link.href;
+                return (
                 <motion.div
                   key={link.href}
                   initial={{ opacity: 0, y: 14 }}
@@ -208,10 +213,10 @@ export default function Nav({
                   <Link
                     href={link.href}
                     onClick={() => setOpen(false)}
-                    aria-current={pathname === link.href ? "page" : undefined}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
                       "group flex items-baseline gap-4 border-b border-line py-4",
-                      pathname === link.href ? "text-ink" : "text-ink-muted",
+                      active ? "text-ink" : "text-ink-muted",
                     )}
                   >
                     <span className="mono-meta w-6 shrink-0">
@@ -220,7 +225,7 @@ export default function Nav({
                     <span className="display-md flex-1 transition-colors group-active:text-accent">
                       {link.label}
                     </span>
-                    {pathname === link.href ? (
+                    {active ? (
                       <span aria-hidden="true" className="h-2 w-2 shrink-0 self-center bg-accent" />
                     ) : (
                       <span aria-hidden="true" className="text-ink-faint">
@@ -229,12 +234,36 @@ export default function Nav({
                     )}
                   </Link>
                 </motion.div>
-              ))}
+                );
+              })}
+
+              {/* On the phone sheet, Services leaves the list and becomes the
+                  call to action: a filled accent button under the last link. */}
+              {ctaLink && (
+                <motion.div
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.42, ease: easeFreeze, delay: 0.04 + sheetList.length * 0.035 }}
+                  className="pt-6"
+                >
+                  <Link
+                    href={ctaLink.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={pathname === ctaLink.href ? "page" : undefined}
+                    className="flex w-full items-center justify-between gap-4 bg-accent px-5 py-5 text-[#141416] transition-[filter] active:brightness-90"
+                  >
+                    {/* Dark ink on the orange in both themes; .display-sm would
+                        otherwise repaint it with the theme's ink colour. */}
+                    <span className="display-sm text-[1.75rem] text-[#141416]">Commission Me</span>
+                    <span aria-hidden="true" className="text-[1.5rem]">↗</span>
+                  </Link>
+                </motion.div>
+              )}
 
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.1 + sheetLinks.length * 0.035 }}
+                transition={{ duration: 0.4, delay: 0.1 + (sheetList.length + (ctaLink ? 1 : 0)) * 0.035 }}
                 className="mt-auto flex flex-col gap-6 pb-8 pt-10"
               >
                 <AccountLink className="text-ink" onNavigate={() => setOpen(false)} />
