@@ -198,7 +198,12 @@ export default function Nav({
             className="flex h-[calc(100svh-var(--nav-h))] flex-col overflow-y-auto border-b border-line bg-bg lg:hidden"
           >
             <div className="container-page flex flex-1 flex-col py-2">
-              {sheetLinks.map((link, i) => (
+              {sheetLinks.map((link, i) => {
+                // On the phone sheet, Services is the call to action: it reads
+                // "Commission Me" and carries the accent so it stands out.
+                const isCta = link.href === "/services";
+                const active = pathname === link.href;
+                return (
                 <motion.div
                   key={link.href}
                   initial={{ opacity: 0, y: 14 }}
@@ -208,28 +213,34 @@ export default function Nav({
                   <Link
                     href={link.href}
                     onClick={() => setOpen(false)}
-                    aria-current={pathname === link.href ? "page" : undefined}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
                       "group flex items-baseline gap-4 border-b border-line py-4",
-                      pathname === link.href ? "text-ink" : "text-ink-muted",
+                      isCta ? "text-accent" : active ? "text-ink" : "text-ink-muted",
                     )}
                   >
                     <span className="mono-meta w-6 shrink-0">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <span className="display-md flex-1 transition-colors group-active:text-accent">
-                      {link.label}
+                    <span
+                      className={cn(
+                        "display-md flex-1 transition-colors",
+                        isCta ? "group-active:text-accent-strong" : "group-active:text-accent",
+                      )}
+                    >
+                      {isCta ? "Commission Me" : link.label}
                     </span>
-                    {pathname === link.href ? (
+                    {active ? (
                       <span aria-hidden="true" className="h-2 w-2 shrink-0 self-center bg-accent" />
                     ) : (
-                      <span aria-hidden="true" className="text-ink-faint">
+                      <span aria-hidden="true" className={isCta ? "text-accent" : "text-ink-faint"}>
                         ↗
                       </span>
                     )}
                   </Link>
                 </motion.div>
-              ))}
+                );
+              })}
 
               <motion.div
                 initial={{ opacity: 0 }}
