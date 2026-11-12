@@ -3,7 +3,7 @@ import ArtWall from "@/components/home/ArtWall";
 import MagneticButton from "@/components/ui/MagneticButton";
 import ProofLine from "@/components/ui/ProofLine";
 import type { GalleryItem } from "@/lib/data/gallery";
-import { STATUS_LABEL } from "@/lib/home";
+import { STATUS_LABEL, wallColumns } from "@/lib/home";
 import type { Availability } from "@/lib/services/storefront";
 import { cn } from "@/lib/cn";
 
@@ -103,6 +103,7 @@ export default function HomeHero({
 
         <ArtWall
           items={wall}
+          columns={wallColumns(wall)}
           className={cn(
             // Narrow: a row in the flow, bled out to both screen edges.
             "-mx-5 mt-9 sm:-mx-8",

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { LATE_COLUMNS, withoutOverhaulColumns } from "@/lib/admin/site-settings-columns";
+import { HOME_CONTENT_PATHS } from "@/lib/admin/revalidate-paths";
+import { LATE_COLUMNS, lateColumnFallbacks } from "@/lib/admin/site-settings-columns";
 import { sectionPayload } from "@/lib/admin/site-settings-sections";
 import type { GalleryItem } from "@/lib/data/gallery";
 import type { ServicePackage } from "@/lib/services/storefront";
@@ -133,9 +134,12 @@ test("packages: up to three lines in stored order, then a count of the rest", ()
   assert.deepEqual(packageLines(four), {
     lines: [{ name: "A", price: "$30" }, { name: "B", price: "$35" }, { name: "C", price: "$40.50" }],
     more: 1,
+    // The cheapest package ($15) is the fourth: the listed lines don't show it.
+    showsLowest: false,
   });
-  assert.deepEqual(packageLines([pkg()]), { lines: [{ name: "Bust Up", price: "$35" }], more: 0 });
-  assert.deepEqual(packageLines([]), { lines: [], more: 0 });
+  assert.equal(packageLines([pkg({ price: 15 }), pkg({ price: 30 }), pkg({ price: 35 }), pkg({ price: 40 })]).showsLowest, true);
+  assert.deepEqual(packageLines([pkg()]), { lines: [{ name: "Bust Up", price: "$35" }], more: 0, showsLowest: true });
+  assert.deepEqual(packageLines([]), { lines: [], more: 0, showsLowest: false });
 });
 
 test("samples: gallery images first, then manual samples, no repeats, no video, capped", () => {
@@ -219,9 +223,39 @@ test("hero style: the Home screen saves it, and only as one of the two values", 
   assert.equal("hero_style" in sectionPayload("services", formOf({ hero_style: "slider" })), false);
 });
 
-test("hero style: before migration 0042 a Home save drops it and keeps the rest", () => {
+test("hero style: before migration 0042 a Home save loses only the hero style", () => {
   assert.equal(LATE_COLUMNS.includes("hero_style"), true);
-  const rest = withoutOverhaulColumns(sectionPayload("home", formOf({ hero_style: "slider", hero_eyebrow: "Illustrator" })));
-  assert.equal("hero_style" in rest, false);
-  assert.equal(rest.hero_eyebrow, "Illustrator");
+  const payload = sectionPayload(
+    "home",
+    formOf({ hero_style: "slider", hero_eyebrow: "Illustrator", hero_headline: "Card art", hero_cta_primary_url: "/gallery" }),
+  );
+  const [first] = lateColumnFallbacks(payload);
+  assert.equal("hero_style" in first, false);
+  // 0034 and 0041 are already applied on such a database: their columns must still be written.
+  assert.equal(first.hero_headline, "Card art");
+  assert.equal(first.hero_cta_primary_url, "/gallery");
+  assert.equal(first.hero_eyebrow, "Illustrator");
+});
+
+test("late columns: each retry drops one more migration, newest first, down to the original columns", () => {
+  const payload = sectionPayload("home", formOf({ hero_eyebrow: "Illustrator" }));
+  const steps = lateColumnFallbacks(payload);
+  assert.equal(steps.length, 3);
+  assert.equal("hero_cta_primary_url" in steps[0], true);
+  assert.equal("hero_cta_primary_url" in steps[1], false);
+  assert.equal("hero_headline" in steps[1], true);
+  assert.equal("hero_headline" in steps[2], false);
+  assert.equal(steps[2].hero_eyebrow, "Illustrator");
+  for (const column of LATE_COLUMNS) assert.equal(column in steps[2], false, column);
+});
+
+test("late columns: a screen that owns none of a migration's columns gets no empty retry for it", () => {
+  // Services owns only 0034 columns: one retry, not three.
+  assert.equal(lateColumnFallbacks(sectionPayload("services", formOf({}))).length, 1);
+  assert.deepEqual(lateColumnFallbacks({ site_title: "x" }), []);
+});
+
+test("gallery saves refresh the home page, whose wall and menu samples come from the gallery", () => {
+  assert.equal(HOME_CONTENT_PATHS.gallery.includes("/"), true);
+  assert.equal(HOME_CONTENT_PATHS.gallery.includes("/gallery"), true);
 });

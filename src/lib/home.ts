@@ -145,14 +145,21 @@ export function heroFacts(services: WithPackages[]): string[] {
   return facts;
 }
 
-/** A service row's package list: the first few in stored order, then how many more. */
+/**
+ * A service row's package list: the first few in stored order, then how many
+ * more. `showsLowest` says whether the listed lines include the cheapest
+ * package — when they don't, the row must still print its "From" price.
+ */
 export function packageLines(
   packages: ServicePackage[],
   max = 3,
-): { lines: { name: string; price: string }[]; more: number } {
+): { lines: { name: string; price: string }[]; more: number; showsLowest: boolean } {
+  const listed = packages.slice(0, max);
+  const lowest = packages.length > 0 ? Math.min(...packages.map((p) => p.price)) : null;
   return {
-    lines: packages.slice(0, max).map((p) => ({ name: p.name, price: formatUSD(p.price) })),
+    lines: listed.map((p) => ({ name: p.name, price: formatUSD(p.price) })),
     more: Math.max(0, packages.length - max),
+    showsLowest: lowest !== null && listed.some((p) => p.price === lowest),
   };
 }
 

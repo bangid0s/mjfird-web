@@ -5,7 +5,6 @@ import Lightbox from "@/components/gallery/Lightbox";
 import TiltCard from "@/components/home/TiltCard";
 import SmartImage from "@/components/media/SmartImage";
 import type { GalleryItem } from "@/lib/data/gallery";
-import { wallColumns } from "@/lib/home";
 import { cn } from "@/lib/cn";
 
 // Slightly different speeds so the three columns never line up for long.
@@ -20,7 +19,21 @@ const DURATIONS = ["84s", "102s", "72s"];
  * any tile repeated to pad a short column, is hidden from assistive technology
  * and from the tab order.
  */
-export default function ArtWall({ items, className }: { items: GalleryItem[]; className?: string }) {
+export default function ArtWall({
+  items,
+  columns,
+  className,
+}: {
+  /** The wall's images in wall order: the set the viewer steps through. */
+  items: GalleryItem[];
+  /**
+   * The same images dealt into columns (`wallColumns`). Passed in rather than
+   * computed here: this is a client component, and importing the home-page
+   * rules would ship the storefront's validation schemas to every visitor.
+   */
+  columns: { item: GalleryItem; index: number; repeat: boolean }[][];
+  className?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState<number | null>(null);
 
@@ -35,7 +48,6 @@ export default function ArtWall({ items, className }: { items: GalleryItem[]; cl
   }, []);
 
   if (items.length === 0) return null;
-  const columns = wallColumns(items);
 
   return (
     <div ref={ref} className={cn("art-wall", className)}>

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { HOME_CONTENT_PATHS } from "@/lib/admin/revalidate-paths";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeMediaUrl } from "@/lib/media";
@@ -41,10 +42,10 @@ function parsePayload(formData: FormData) {
   };
 }
 
-/** Service pages and cards read gallery images too, so they refresh with it. */
+/** Service pages, their cards and the home page read gallery images too, so they refresh with it. */
 function revalidateGallery() {
   revalidatePath("/admin/gallery");
-  revalidatePath("/gallery");
+  for (const path of HOME_CONTENT_PATHS.gallery) revalidatePath(path);
   revalidatePath("/services", "layout");
 }
 

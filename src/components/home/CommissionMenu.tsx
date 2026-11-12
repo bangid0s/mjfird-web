@@ -37,7 +37,7 @@ function MenuRow({ service, samples }: { service: StorefrontService; samples: Ga
   const status = effectiveAvailability(service.availability, service.slotsTotal, service.slotsTaken);
   const from = startingPrice(service.packages);
   const days = fastestDelivery(service.packages);
-  const { lines, more } = packageLines(service.packages);
+  const { lines, more, showsLowest } = packageLines(service.packages);
   // One sample is not a strip: show the service's cover instead.
   const showStrip = samples.length >= 2;
   const showCover = !showStrip && Boolean(service.coverUrl);
@@ -143,9 +143,11 @@ function MenuRow({ service, samples }: { service: StorefrontService; samples: Ga
           </MagneticButton>
           <p className="text-body text-ink">
             {from !== null ? (
-              // Narrow screens print every package price on the line above,
-              // so "From" would only repeat the first of them.
-              <span className={lines.length > 0 ? "max-sm:hidden" : undefined}>
+              // Narrow screens print the package prices on the line above. When
+              // the cheapest is among them "From" would only repeat it; when it
+              // isn't (it sits past the listed few) "From" is the only place
+              // the lowest price appears, so it stays.
+              <span className={showsLowest ? "max-sm:hidden" : undefined}>
                 <span className="text-ink-faint">From </span>
                 {formatUSD(from)}
                 {days !== null && <span className="text-ink-faint"> · </span>}
