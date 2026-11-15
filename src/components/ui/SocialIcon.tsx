@@ -17,6 +17,7 @@ type IconKey =
   | "whatsapp"
   | "facebook"
   | "threads"
+  | "discord"
   | "email"
   | "web";
 
@@ -32,6 +33,7 @@ const MATCHERS: [IconKey, RegExp][] = [
   ["whatsapp", /whatsapp|wa\.me/i],
   ["facebook", /facebook|fb\.com/i],
   ["threads", /threads/i],
+  ["discord", /discord/i],
   ["email", /^mailto:|e-?mail/i],
 ];
 
@@ -56,7 +58,12 @@ const PATHS: Record<IconKey, React.ReactNode> = {
       <path d="M10.25 9.25v5.5l4.75-2.75z" fill="currentColor" stroke="none" />
     </>
   ),
-  x: <path d="M4.5 4.5l15 15M19.5 4.5l-15 15" />,
+  x: (
+    <>
+      <path d="M4.5 4.5h3.75l11.25 15h-3.75z" />
+      <path d="M4.75 19.5l6.1-6.6M13.15 11.1l6.1-6.6" />
+    </>
+  ),
   tiktok: (
     <path d="M14 4v10.5a3.5 3.5 0 1 1-3.5-3.5M14 4c.4 2.4 2.2 4.1 4.75 4.4" />
   ),
@@ -90,6 +97,15 @@ const PATHS: Record<IconKey, React.ReactNode> = {
   ),
   threads: (
     <path d="M16.25 10.75C15.75 8 14 6.75 12 6.75c-3 0-5 2.25-5 5.25s2 5.25 5 5.25c2.5 0 4-1.5 4-3.25 0-2.25-2.5-3-4.5-2.5-1.5.4-2 1.5-1.5 2.4.75 1.35 4.25 1.35 5-1.9" />
+  ),
+  discord: (
+    <>
+      <path d="M8.75 6.25c-1.6.3-3 .85-4.15 1.6C3 10.5 2.5 13.4 2.75 16.4c1.35 1 2.8 1.7 4.35 2.1l1.05-1.85" />
+      <path d="M15.25 6.25c1.6.3 3 .85 4.15 1.6 1.6 2.65 2.1 5.55 1.85 8.55-1.35 1-2.8 1.7-4.35 2.1l-1.05-1.85" />
+      <path d="M8.75 6.25l.6 1.15c1.75-.35 3.55-.35 5.3 0l.6-1.15M7.5 15.75c2.9 1.35 6.1 1.35 9 0" />
+      <circle cx="9.25" cy="12.5" r="1.15" fill="currentColor" stroke="none" />
+      <circle cx="14.75" cy="12.5" r="1.15" fill="currentColor" stroke="none" />
+    </>
   ),
   email: (
     <>

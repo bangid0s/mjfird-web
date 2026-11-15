@@ -6,6 +6,7 @@ import MagneticButton from "@/components/ui/MagneticButton";
 import Reveal from "@/components/motion/Reveal";
 import StudioTime from "@/components/layout/StudioTime";
 import BackToTop from "@/components/layout/BackToTop";
+import SocialIcon from "@/components/ui/SocialIcon";
 
 export default function Footer({
   socials,
@@ -93,8 +94,13 @@ export default function Footer({
                     target="_blank"
                     rel="noopener noreferrer"
                     data-cursor="view"
-                    className="group inline-flex items-center gap-1.5 text-body-sm text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-ink"
+                    className="group inline-flex items-center gap-2.5 text-body-sm text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-ink"
                   >
+                    <SocialIcon
+                      url={item.url}
+                      label={item.label}
+                      className="h-[18px] w-[18px] shrink-0 transition-colors duration-[var(--duration-fast)] group-hover:text-accent-strong"
+                    />
                     {item.label}
                     <span
                       aria-hidden="true"

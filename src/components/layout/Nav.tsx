@@ -10,6 +10,7 @@ import ThemeToggle from "@/components/ui/ThemeToggle";
 import ThemedLogo from "@/components/ui/ThemedLogo";
 import AccountLink from "@/components/layout/AccountLink";
 import { partitionNavLinks } from "@/lib/nav-links";
+import SocialIcon from "@/components/ui/SocialIcon";
 
 type NavLink = { label: string; href: string };
 
@@ -279,7 +280,13 @@ export default function Nav({
                   <ul className="flex flex-wrap gap-x-6 gap-y-2">
                     {socials.map((social) => (
                       <li key={social.url}>
-                        <a href={social.url} target="_blank" rel="noopener noreferrer" className="label hover:text-ink">
+                        <a
+                          href={social.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="label inline-flex items-center gap-2 hover:text-ink"
+                        >
+                          <SocialIcon url={social.url} label={social.label} className="h-4 w-4 shrink-0" />
                           {social.label} ↗
                         </a>
                       </li>

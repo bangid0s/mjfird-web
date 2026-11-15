@@ -17,9 +17,10 @@ const placeholderProfile: ProfileData = {
   avatarUrl: null,
   availabilityStatus: "Open for work",
   socials: [
-    { label: "Instagram", url: "https://instagram.com" },
-    { label: "YouTube", url: "https://youtube.com" },
-    { label: "GitHub", url: "https://github.com" },
+    { label: "Instagram", url: "https://www.instagram.com/m.j.fird" },
+    { label: "X", url: "https://x.com/MJFird" },
+    { label: "YouTube", url: "https://www.youtube.com/@MJFiRD" },
+    { label: "Discord", url: "https://discord.gg/6exYhqVmvx" },
   ],
 };
 
