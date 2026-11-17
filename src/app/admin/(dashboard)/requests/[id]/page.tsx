@@ -9,7 +9,8 @@ import Timeline from "@/components/commissions/Timeline";
 import { DeliveryUploader, StatusActions } from "@/components/admin/RequestActions";
 import { postAdminMessage } from "@/lib/admin/requests-actions";
 import { formatDate } from "@/lib/admin/format";
-import { priceOf } from "@/lib/commissions/status";
+import { priceOf, toNumber } from "@/lib/commissions/status";
+import { formatUSD } from "@/lib/services/storefront";
 import { safeDeliveryUrl } from "@/lib/commissions/delivery-link";
 import Link from "next/link";
 import type { CommissionMessageRow, CommissionRequestRow, TestimonialRow } from "@/lib/supabase/types";
@@ -30,13 +31,30 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
   if (!data) notFound();
   const req = data as CommissionRequestRow;
 
-  const [{ data: msgs }, refs, deliveries, { data: reviewRow }, { data: clientProfile }] = await Promise.all([
+  const [{ data: msgs }, refs, deliveries, { data: reviewRow }, { data: clientProfile }, { data: discordRow }] = await Promise.all([
     supabase.from("commission_messages").select("*").eq("request_id", id).order("created_at"),
     signFiles(supabase, req.reference_paths),
     signFiles(supabase, req.delivery_paths),
     supabase.from("testimonials").select("*").eq("request_id", id).maybeSingle(),
     supabase.from("client_profiles").select("region, discord, x_handle, social_url").eq("id", req.client_id).maybeSingle(),
+    supabase
+      .from("client_discord_links")
+      .select("discord_username, discord_user_id, in_guild, past_client, synced_at")
+      .eq("client_id", req.client_id)
+      .maybeSingle(),
   ]);
+  const verifiedDiscord = discordRow as {
+    discord_username: string;
+    discord_user_id: string;
+    in_guild: boolean;
+    past_client: boolean;
+    synced_at: string;
+  } | null;
+  const discountAmount = toNumber(req.discount_amount ?? 0) ?? 0;
+  const discountNote =
+    discountAmount > 0
+      ? `Already includes ${req.discount_label ?? "Discount"} −${toNumber(req.discount_percent ?? 0)}% (−${formatUSD(discountAmount)}) from a verified Discord role.`
+      : null;
   const client = clientProfile as { region: string; discord: string; x_handle: string; social_url: string } | null;
   const review = reviewRow as TestimonialRow | null;
   const deliveryFiles = req.delivery_paths.map((path) => {
@@ -94,7 +112,14 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
 
         <div className="flex flex-col gap-6">
           <Panel title="Actions">
-            <StatusActions id={req.id} status={req.status} estimate={priceOf(req)} note={req.artist_note} paymentUrl={req.payment_url} />
+            <StatusActions
+              id={req.id}
+              status={req.status}
+              estimate={priceOf(req)}
+              note={req.artist_note}
+              paymentUrl={req.payment_url}
+              discountNote={discountNote}
+            />
           </Panel>
           <Panel title="Order">
             <OrderSummary req={req} />
@@ -136,6 +161,26 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
             <a href={`mailto:${req.contact_email}?subject=${encodeURIComponent(`Your request #${req.ref}`)}`} className="text-body-sm text-ink-muted hover:text-accent">
               {req.contact_email}
             </a>
+            {verifiedDiscord && (
+              <dl className="flex flex-col gap-1.5 border-t border-line pt-3 text-body-sm">
+                <div className="flex gap-2">
+                  <dt className="w-16 shrink-0 text-ink-faint">Discord</dt>
+                  <dd className="min-w-0 text-ink">
+                    <span className="select-all">{verifiedDiscord.discord_username || verifiedDiscord.discord_user_id}</span>{" "}
+                    <span className="text-[13px] text-ink-faint">· verified</span>
+                  </dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt className="w-16 shrink-0 text-ink-faint">Roles</dt>
+                  <dd className="text-ink">
+                    {verifiedDiscord.in_guild
+                      ? ["Web Linked", verifiedDiscord.past_client ? "Past Client" : null].filter(Boolean).join(" · ")
+                      : "Not in the server"}
+                  </dd>
+                </div>
+                <p className="text-[13px] text-ink-faint">Checked {formatDate(verifiedDiscord.synced_at)}</p>
+              </dl>
+            )}
             {client && (client.region || client.discord || client.x_handle || client.social_url) && (
               <dl className="flex flex-col gap-1.5 border-t border-line pt-3 text-body-sm">
                 {client.region && (

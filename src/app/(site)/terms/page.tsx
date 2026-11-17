@@ -25,7 +25,7 @@ export default async function TermsPage() {
     <LegalDocument
       eyebrow="Terms"
       title="Terms of service & client policies"
-      updated="10 November 2026"
+      updated="17 November 2026"
       contactEmail={settings.contactEmail}
       related={{ href: "/privacy", label: "Privacy policy" }}
     >
@@ -127,6 +127,13 @@ export default async function TermsPage() {
         <p>
           What goes in the quotation is what you get. Anything added later, such as an extra character, a background or
           a new format, is a change of scope and is quoted separately.
+        </p>
+        <p>
+          <Term>Past-client discount.</Term>{" "}If you hold the Past Client role on the Fird Studio Discord and connect
+          that Discord account on your mjfird.com profile, requests you send through the website get the discount shown
+          in the order summary. It is checked when you send the request, applies only to orders placed on mjfird.com,
+          can&apos;t be combined with other offers, and doesn&apos;t depend on leaving a review. I may change or end it at
+          any time; requests already sent keep the price they were quoted.
         </p>
       </LegalSection>
 

@@ -5,6 +5,7 @@ import RequestForm from "@/components/services/RequestForm";
 import { getStorefrontService } from "@/lib/data/services";
 import { requireUser } from "@/lib/auth/session";
 import { effectiveAvailability } from "@/lib/services/storefront";
+import { refreshDiscountFor } from "@/lib/discord/sync";
 
 export const metadata: Metadata = { title: "Request a commission", robots: { index: false } };
 
@@ -23,7 +24,10 @@ export default async function RequestPage({
   const service = await getStorefrontService(slug);
   if (!service) notFound();
 
-  const { data: profile } = await supabase.from("client_profiles").select("display_name").eq("id", user.id).maybeSingle();
+  const [{ data: profile }, discountPercent] = await Promise.all([
+    supabase.from("client_profiles").select("display_name").eq("id", user.id).maybeSingle(),
+    refreshDiscountFor(supabase, user),
+  ]);
   const closed = effectiveAvailability(service.availability, service.slotsTotal, service.slotsTaken) === "closed";
 
   return (
@@ -56,6 +60,7 @@ export default async function RequestPage({
           userId={user.id}
           email={user.email ?? ""}
           defaultName={profile?.display_name ?? ""}
+          discountPercent={discountPercent}
           initialPackage={query.package}
           initialAddons={(query.addons ?? "").split(",").filter(Boolean)}
           initialLicense={query.license}
