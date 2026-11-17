@@ -276,25 +276,36 @@ export default function Nav({
                     {contactEmail}
                   </a>
                 )}
-                {socials.length > 0 && (
-                  <ul className="flex flex-wrap gap-x-6 gap-y-2">
-                    {socials.map((social) => (
-                      <li key={social.url}>
-                        <a
-                          href={social.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="label inline-flex items-center gap-2 hover:text-ink"
-                        >
-                          <SocialIcon url={social.url} label={social.label} className="h-4 w-4 shrink-0" />
-                          {social.label} ↗
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </motion.div>
             </div>
+
+            {/* Socials stay pinned to the bottom of the screen while the sheet
+                scrolls, so they are visible as soon as the menu opens. */}
+            {socials.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: easeFreeze, delay: 0.16 }}
+                className="sticky bottom-0 border-t border-line bg-bg pb-[env(safe-area-inset-bottom)]"
+              >
+                <ul aria-label="Social profiles" className="container-page flex items-center gap-1 py-2">
+                  {socials.map((social) => (
+                    <li key={social.url} className="first:-ml-2.5">
+                      <a
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={social.label}
+                        title={social.label}
+                        className="flex h-11 w-11 items-center justify-center text-ink-muted transition-colors active:text-accent"
+                      >
+                        <SocialIcon url={social.url} label={social.label} className="h-6 w-6" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
           </motion.nav>
         )}
       </AnimatePresence>

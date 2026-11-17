@@ -86,28 +86,20 @@ export default function Footer({
 
           <div>
             <p className="eyebrow mb-4 text-ink-faint">Elsewhere</p>
-            <ul className="flex flex-col gap-2.5">
+            {/* Icons only, side by side; the label lives on aria-label and the tooltip. */}
+            <ul className="-ml-2.5 flex flex-wrap items-center gap-1">
               {socials.map((item) => (
                 <li key={item.url}>
                   <a
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label={item.label}
+                    title={item.label}
                     data-cursor="view"
-                    className="group inline-flex items-center gap-2.5 text-body-sm text-ink-muted transition-colors duration-[var(--duration-fast)] hover:text-ink"
+                    className="flex h-11 w-11 items-center justify-center text-ink-muted transition-[color,transform] duration-[var(--duration-fast)] hover:-translate-y-0.5 hover:text-accent-strong"
                   >
-                    <SocialIcon
-                      url={item.url}
-                      label={item.label}
-                      className="h-[18px] w-[18px] shrink-0 transition-colors duration-[var(--duration-fast)] group-hover:text-accent-strong"
-                    />
-                    {item.label}
-                    <span
-                      aria-hidden="true"
-                      className="text-ink-faint transition-transform duration-[var(--duration-fast)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                    >
-                      ↗
-                    </span>
+                    <SocialIcon url={item.url} label={item.label} className="h-[22px] w-[22px]" />
                   </a>
                 </li>
               ))}
