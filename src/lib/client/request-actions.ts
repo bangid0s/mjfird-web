@@ -9,6 +9,7 @@ import { COMMISSION_EMAIL, sendEmail } from "@/lib/email";
 import { mapStorefrontRow } from "@/lib/data/services";
 import type { CommissionAnswer, CommissionRequestRow, ServiceRow } from "@/lib/supabase/types";
 import { formatUSD } from "@/lib/services/storefront";
+import { refreshDiscountFor } from "@/lib/discord/sync";
 
 export type RequestState = { error?: string; done?: boolean } | undefined;
 
@@ -57,6 +58,9 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
     })
     .filter(Boolean);
 
+  // Re-check Discord roles so the database's discount trigger sees a fresh result.
+  await refreshDiscountFor(supabase, user);
+
   const { data: requestId, error } = await supabase.rpc("submit_commission_request", {
     p_service_id: service.id,
     p_package_id: String(formData.get("package_id") ?? ""),
@@ -81,6 +85,9 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
       ? `${req.background_name}${Number(req.background_price) > 0 ? ` (+${formatUSD(Number(req.background_price))})` : ""}`
       : null;
     const license = `${req.license_name ?? "Personal use"}${Number(req.license_percent) > 0 ? ` (+${Number(req.license_percent)}%)` : ""}`;
+    const discountAmount = Number(req.discount_amount ?? 0);
+    const discount =
+      discountAmount > 0 ? `${req.discount_label ?? "Discount"} (${Number(req.discount_percent)}%): −${formatUSD(discountAmount)}` : null;
     await Promise.all([
       sendEmail({
         to: COMMISSION_EMAIL,
@@ -89,6 +96,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
           `${req.contact_name} (${req.contact_email}) requested ${req.service_title} — ${req.package_name}${characters}.`,
           ...(background ? [`Background: ${background}`] : []),
           `License: ${license}`,
+          ...(discount ? [`${discount} — verified Discord role`] : []),
           `Estimated total: ${total}${req.waitlisted ? " · joined the waitlist" : ""}`,
           req.brief,
         ],
@@ -103,6 +111,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
           `Thanks for your request for ${req.service_title} — ${req.package_name}${characters}. I review every request myself and will get back to you soon.`,
           ...(background ? [`Background: ${background}.`] : []),
           `License: ${license}.`,
+          ...(discount ? [`${discount}. Thanks for coming back!`] : []),
           `Estimated total: ${total}. No payment is needed until I accept.`,
         ],
         cta: { label: "View your request", path: `/account/requests/${req.id}` },

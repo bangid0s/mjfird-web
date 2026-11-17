@@ -1,19 +1,12 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { safeNext } from "@/lib/auth/session";
+import { requestOrigin as origin } from "@/lib/auth/origin";
 
 export type AuthState = { error?: string; message?: string } | undefined;
-
-async function origin() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
-  return host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_SITE_URL ?? "https://mjfird.com");
-}
 
 function friendlyAuthError(message: string) {
   const m = message.toLowerCase();

@@ -7,6 +7,7 @@ import { submitRequest } from "@/lib/client/request-actions";
 import type { StorefrontService } from "@/lib/data/services";
 import Link from "next/link";
 import { effectiveAvailability, formatUSD, quote, type ServiceQuestion } from "@/lib/services/storefront";
+import { discountOn } from "@/lib/discord/perks";
 import type { CommissionAnswer } from "@/lib/supabase/types";
 import { authInput } from "@/components/auth/AuthForms";
 import { cn } from "@/lib/cn";
@@ -224,6 +225,7 @@ export default function RequestForm({
   initialCharacters = 0,
   initialLicense = "personal",
   initialBackground,
+  discountPercent = 0,
 }: {
   service: StorefrontService;
   userId: string;
@@ -234,6 +236,8 @@ export default function RequestForm({
   initialCharacters?: number;
   initialLicense?: string;
   initialBackground?: string;
+  /** Past-client percent off, from the verified Discord role. The database applies it again on submit. */
+  discountPercent?: number;
 }) {
   const [state, action] = useActionState(submitRequest, undefined);
   // The order is chosen on the service page and arrives in the URL; this form
@@ -257,6 +261,7 @@ export default function RequestForm({
     initialBackground ?? "",
   );
   const extra = priced?.extraCharacters ?? 0;
+  const discounted = discountOn(priced?.total ?? 0, discountPercent);
   const addons = service.addons.filter((a) => priced?.addonIds.includes(a.id));
   const background = service.backgrounds.find((b) => b.id === priced?.backgroundId);
   const license = service.licenses.find((l) => l.id === priced?.licenseId);
@@ -390,9 +395,15 @@ export default function RequestForm({
                 </dt>
                 <dd className="text-ink">{priced.licenseFee > 0 ? `+${formatUSD(priced.licenseFee)}` : "Included"}</dd>
               </div>
+              {discounted.cut > 0 && (
+                <div className="flex justify-between gap-3">
+                  <dt className="text-accent">Past client discount ({discountPercent}%)</dt>
+                  <dd className="text-accent">−{formatUSD(discounted.cut)}</dd>
+                </div>
+              )}
               <div className="flex items-baseline justify-between gap-3 border-t border-line pt-4">
                 <dt className="text-ink-muted">Estimated total</dt>
-                <dd className="display-sm">{formatUSD(priced.total)}</dd>
+                <dd className="display-sm">{formatUSD(discounted.total)}</dd>
               </div>
             </dl>
           ) : (

@@ -358,7 +358,12 @@ export type CommissionRequestRow = {
   license_percent: number | string;
   /** license_percent of (package × characters + add-ons + background). */
   license_fee: number | string;
+  /** After any discount below. Undiscounted = estimated_total + discount_amount. */
   estimated_total: number | string;
+  /** Past-client discount from a verified Discord role (migration 0043). */
+  discount_percent?: number | string;
+  discount_amount?: number | string;
+  discount_label?: string | null;
   final_price: number | string | null;
   currency: string;
   status: CommissionStatus;

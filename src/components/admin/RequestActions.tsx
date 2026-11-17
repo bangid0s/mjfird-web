@@ -49,12 +49,15 @@ export function StatusActions({
   estimate,
   note,
   paymentUrl,
+  discountNote = null,
 }: {
   id: string;
   status: CommissionStatus;
   estimate: number;
   note: string;
   paymentUrl: string | null;
+  /** Shown under the price when the estimate already includes a past-client discount. */
+  discountNote?: string | null;
 }) {
   const { pending, error, run } = useRun();
   const [mode, setMode] = useState<"accept" | "decline" | null>(null);
@@ -81,6 +84,7 @@ export function StatusActions({
             <label className="flex flex-col gap-1.5">
               <span className="text-[13px] font-medium text-ink-muted">Final price (USD) — adjust if the brief needs more</span>
               <input name="final_price" type="number" min={0} step="0.01" defaultValue={estimate} className={fieldInputClasses} />
+              {discountNote && <span className="text-[13px] text-accent">{discountNote}</span>}
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-[13px] font-medium text-ink-muted">PayPal payment link (optional)</span>
