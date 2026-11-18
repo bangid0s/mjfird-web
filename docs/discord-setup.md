@@ -48,8 +48,30 @@ Add these to Production (and Preview if you test there). All are server-only:
 | `DISCORD_CLIENT_DISCOUNT_PERCENT` | `10` (0–50) |
 | `DISCORD_INVITE_URL` | `https://discord.gg/…` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Needed to store the role check (already set if PayPal checkout works) |
+| `DISCORD_APPLICATION_ID` | General Information → Application ID (for the slash commands) |
+| `DISCORD_PUBLIC_KEY` | General Information → Public Key (verifies slash-command requests; not secret) |
+| `CRON_SECRET` | Any long random string. Vercel sends it to the daily sync; keep it secret |
 
 The profile panel stays hidden until the first three are set, so you can deploy the code before finishing the setup.
+
+## 5. Daily sync and slash commands
+
+**Daily sync** (`vercel.json` → `/api/cron/discord-sync`, 03:00 WIB). Each run:
+- registers the `/link` and `/status` slash commands in your server (safe to repeat)
+- re-checks every linked client, so someone who joined the server after linking gets **Web Linked** without pressing Refresh
+
+Vercel's free (Hobby) plan allows cron jobs once a day. For hourly runs, either upgrade to Pro and change the schedule to `0 * * * *`, or point a free scheduler such as cron-job.org at `https://mjfird.com/api/cron/discord-sync` with the header `Authorization: Bearer <CRON_SECRET>`.
+
+To run it right away (for example to register the commands the first time): Vercel → Project → Settings → Cron Jobs → **Run**.
+
+**Slash commands** (`/api/discord/interactions`, no always-on bot needed):
+1. Developer Portal → General Information → **Interactions Endpoint URL**: `https://mjfird.com/api/discord/interactions` → Save. Discord tests the URL on save, so deploy with `DISCORD_PUBLIC_KEY` set first.
+2. Run the daily sync once (above) so the commands get registered.
+
+| Command | What the member sees (only them) |
+|---|---|
+| `/link` | A button to connect their mjfird.com account, plus the past-client discount if the Past Client role is set |
+| `/status` | Whether they're linked and their current discount. It also refreshes their stored role check and gives Web Linked if it's missing |
 
 ## How it behaves
 
