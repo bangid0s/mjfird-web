@@ -7,6 +7,7 @@ import { signOut } from "@/lib/admin/auth-actions";
 import { cn } from "@/lib/cn";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import CommandPalette from "@/components/admin/CommandPalette";
+import NotificationBell from "@/components/layout/NotificationBell";
 import { ADMIN_NAV, findNavItem, isActive } from "@/components/admin/admin-nav";
 import { ExternalIcon, SearchIcon, SignOutIcon } from "@/components/admin/AdminIcons";
 
@@ -221,6 +222,7 @@ export default function AdminShell({
       <div className="fixed inset-x-0 top-0 z-[var(--z-nav)] flex h-14 items-center justify-between gap-3 border-b border-line bg-bg/90 px-4 backdrop-blur-md lg:hidden">
         <BrandMark />
         <div className="flex items-center gap-1">
+          <NotificationBell allHref="/admin/requests" />
           <button
             type="button"
             aria-label="Search admin"
@@ -306,6 +308,7 @@ export default function AdminShell({
           </nav>
           <div className="flex items-center gap-2">
             <LiveSiteLink />
+            <NotificationBell allHref="/admin/requests" />
             <SearchTrigger onOpen={() => setPaletteOpen(true)} className="w-56" />
           </div>
         </header>

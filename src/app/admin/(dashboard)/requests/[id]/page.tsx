@@ -13,6 +13,7 @@ import { priceOf, toNumber } from "@/lib/commissions/status";
 import { formatUSD } from "@/lib/services/storefront";
 import { safeDeliveryUrl } from "@/lib/commissions/delivery-link";
 import Link from "next/link";
+import { markRequestNotificationsRead } from "@/lib/notifications/read";
 import type { CommissionMessageRow, CommissionRequestRow, TestimonialRow } from "@/lib/supabase/types";
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -30,6 +31,7 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
   const { data } = await supabase.from("commission_requests").select("*").eq("id", id).maybeSingle();
   if (!data) notFound();
   const req = data as CommissionRequestRow;
+  await markRequestNotificationsRead(supabase, id);
 
   const [{ data: msgs }, refs, deliveries, { data: reviewRow }, { data: clientProfile }, { data: discordRow }] = await Promise.all([
     supabase.from("commission_messages").select("*").eq("request_id", id).order("created_at"),
