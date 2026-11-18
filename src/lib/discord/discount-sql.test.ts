@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { PGlite } from "@electric-sql/pglite";
 
-const migration = ["0043_discord_link_discounts.sql", "0044_discord_role_list_and_labels.sql"]
+const migration = ["0043_discord_link_discounts.sql", "0045_discord_role_list_and_labels.sql"]
   .map((f) => readFileSync(new URL(`../../../supabase/migrations/${f}`, import.meta.url), "utf8"))
   .join("\n");
 

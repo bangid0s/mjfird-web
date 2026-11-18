@@ -34,7 +34,7 @@ The discount is applied by the database when the request is created (migration `
 1. **Sign In / Providers → Discord**: enable it and paste the Client ID and Client Secret from step 1.2.
 2. **Sign In / Providers**, at the top: turn on **Allow manual linking**. Without it, "Connect Discord" returns an error.
 3. **URL Configuration → Redirect URLs** must already include `https://mjfird.com/auth/callback` (it does if Google sign-in works).
-4. Apply the migrations `0043_discord_link_discounts.sql` and `0044_discord_role_list_and_labels.sql` (SQL editor, or `supabase db push`).
+4. Apply the migrations `0043_discord_link_discounts.sql` and `0045_discord_role_list_and_labels.sql` (SQL editor, or `supabase db push`).
 
 ## 4. Vercel environment variables
 

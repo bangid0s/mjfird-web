@@ -395,3 +395,15 @@ export type CommissionMessageRow = {
   body: string;
   created_at: string;
 };
+
+export type NotificationRow = {
+  id: string;
+  user_id: string;
+  kind: string;
+  title: string;
+  body: string;
+  href: string;
+  request_id: string | null;
+  read_at: string | null;
+  created_at: string;
+};
