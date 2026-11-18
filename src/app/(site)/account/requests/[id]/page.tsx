@@ -10,6 +10,7 @@ import CancelRequestButton from "@/components/commissions/CancelRequestButton";
 import { PayPalCheckout } from "@/components/commissions/PayPalCheckout";
 import { RequestPayment } from "@/components/commissions/RequestPayment";
 import { requireUser } from "@/lib/auth/session";
+import { markRequestNotificationsRead } from "@/lib/notifications/read";
 import { clientPaymentView } from "@/lib/commissions/payment-link";
 import { deliveryHost, safeDeliveryUrl } from "@/lib/commissions/delivery-link";
 import { paypalButtonAvailable, readPaypalSandboxConfig } from "@/lib/payments/config";
@@ -34,6 +35,7 @@ export default async function ClientRequestPage({
   const { data } = await supabase.from("commission_requests").select("*").eq("id", id).maybeSingle();
   if (!data) notFound();
   const req = data as CommissionRequestRow;
+  await markRequestNotificationsRead(supabase, id);
   const paypal = readPaypalSandboxConfig();
   const paypalClientId =
     paypal && paypalButtonAvailable(paypal, { status: req.status, currency: req.currency, finalPrice: req.final_price })

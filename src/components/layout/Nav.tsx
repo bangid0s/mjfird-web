@@ -9,6 +9,7 @@ import { easeFreeze } from "@/lib/motion";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import ThemedLogo from "@/components/ui/ThemedLogo";
 import AccountLink from "@/components/layout/AccountLink";
+import NotificationBell from "@/components/layout/NotificationBell";
 import { partitionNavLinks } from "@/lib/nav-links";
 import SocialIcon from "@/components/ui/SocialIcon";
 
@@ -162,6 +163,8 @@ export default function Nav({
 
           <div className="flex shrink-0 items-center gap-4 lg:gap-5">
             <AccountLink className="hidden lg:inline" />
+
+            <NotificationBell />
 
             <ThemeToggle />
 
