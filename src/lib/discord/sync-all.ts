@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DiscordConfig } from "@/lib/discord/config";
-import type { FetchLike } from "@/lib/discord/api";
+import { getGuildRoles, type FetchLike, type GuildRole } from "@/lib/discord/api";
 import { syncDiscordLink } from "@/lib/discord/sync";
 
 export type SyncAllResult =
@@ -40,6 +40,14 @@ export async function syncAllDiscordLinks(deps: SyncAllDeps): Promise<SyncAllRes
     return { ok: false, reason: "db_error" };
   }
 
+  // One role-list call for the whole run instead of one per member.
+  let guildRoles: GuildRole[] | null = null;
+  try {
+    guildRoles = await getGuildRoles(config, fetchImpl);
+  } catch (err) {
+    console.error("[discord] role list failed:", err instanceof Error ? err.message : "unknown error");
+  }
+
   const rows = (data ?? []) as { client_id: string; discord_user_id: string; discord_username: string | null }[];
   let synced = 0;
   let failed = 0;
@@ -51,7 +59,7 @@ export async function syncAllDiscordLinks(deps: SyncAllDeps): Promise<SyncAllRes
     const result = await syncDiscordLink(
       row.client_id,
       { discordUserId: row.discord_user_id, username: row.discord_username ?? "" },
-      { config, db, fetchImpl },
+      { config, db, fetchImpl, guildRoles },
     );
     if (result.ok) {
       synced++;

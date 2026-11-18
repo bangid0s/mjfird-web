@@ -3,7 +3,9 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { PGlite } from "@electric-sql/pglite";
 
-const migration = readFileSync(new URL("../../../supabase/migrations/0043_discord_link_discounts.sql", import.meta.url), "utf8");
+const migration = ["0043_discord_link_discounts.sql", "0045_discord_role_list_and_labels.sql"]
+  .map((f) => readFileSync(new URL(`../../../supabase/migrations/${f}`, import.meta.url), "utf8"))
+  .join("\n");
 
 const CLIENT = "22222222-2222-4222-8222-222222222222";
 const OTHER = "44444444-4444-4444-8444-444444444444";
@@ -46,13 +48,24 @@ async function createDb() {
   return pg;
 }
 
-async function link(pg: PGlite, values: { client?: string; inGuild?: boolean; pastClient?: boolean; percent?: number; age?: string }) {
+async function link(
+  pg: PGlite,
+  values: { client?: string; inGuild?: boolean; pastClient?: boolean; percent?: number; age?: string; label?: string | null },
+) {
   await pg.query(
-    `insert into client_discord_links (client_id, discord_user_id, in_guild, past_client, discount_percent, synced_at)
-     values ($1, $2, $3, $4, $5, now() - $6::interval)
+    `insert into client_discord_links (client_id, discord_user_id, in_guild, past_client, discount_percent, synced_at, discount_label)
+     values ($1, $2, $3, $4, $5, now() - $6::interval, $7)
      on conflict (client_id) do update set in_guild = excluded.in_guild, past_client = excluded.past_client,
-       discount_percent = excluded.discount_percent, synced_at = excluded.synced_at`,
-    [values.client ?? CLIENT, values.client === OTHER ? "999999999999999999" : "444444444444444444", values.inGuild ?? true, values.pastClient ?? true, values.percent ?? 10, values.age ?? "0 minutes"],
+       discount_percent = excluded.discount_percent, synced_at = excluded.synced_at, discount_label = excluded.discount_label`,
+    [
+      values.client ?? CLIENT,
+      values.client === OTHER ? "999999999999999999" : "444444444444444444",
+      values.inGuild ?? true,
+      values.pastClient ?? true,
+      values.percent ?? 10,
+      values.age ?? "0 minutes",
+      values.label === undefined ? "VIP Client" : values.label,
+    ],
   );
 }
 
@@ -74,10 +87,21 @@ async function as(pg: PGlite, uid: string, sql: string, params: unknown[] = []) 
   }
 }
 
-test("a freshly verified past client gets the percent off, rounded like money", async () => {
+test("a freshly verified client gets the percent off, rounded like money, labelled with their role", async () => {
   const pg = await createDb();
   await link(pg, {});
-  assert.deepEqual(await order(pg, 55.55), { estimated_total: "49.99", discount_percent: "10.00", discount_amount: "5.56", discount_label: "Past client" });
+  assert.deepEqual(await order(pg, 55.55), { estimated_total: "49.99", discount_percent: "10.00", discount_amount: "5.56", discount_label: "VIP Client" });
+  await link(pg, { percent: 5, label: "Client" });
+  assert.deepEqual(await order(pg, 100), { estimated_total: "95.00", discount_percent: "5.00", discount_amount: "5.00", discount_label: "Client" });
+  await link(pg, { label: null });
+  assert.equal((await order(pg, 100)).discount_label, "Client discount", "falls back when the role name is unknown");
+});
+
+test("the role list column defaults to an empty list", async () => {
+  const pg = await createDb();
+  await link(pg, {});
+  const r = await pg.query<{ roles: unknown }>("select roles from client_discord_links where client_id = $1", [CLIENT]);
+  assert.deepEqual(r.rows[0].roles, []);
 });
 
 test("no discount without a link, without the role, outside the server, or when the check is stale", async () => {

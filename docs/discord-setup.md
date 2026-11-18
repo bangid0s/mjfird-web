@@ -3,7 +3,8 @@
 Clients connect their Discord account on **/account/profile**. The site then:
 
 - gives them the **Web Linked** role in the Fird Studio server (if they're a member)
-- checks whether they hold **Past Client**, a role you give by hand. If they do, every request they send through the website gets the configured discount (default 10%) taken off the estimate.
+- checks which of your **discount roles** they hold (e.g. Client 5%, VIP Client 10%; roles you give by hand). The highest one is taken off the estimate of every request they send through the website. Discounts never stack.
+- shows all of their server roles on the profile page (refreshed by **Refresh roles**, `/status` and the daily sync).
 
 The discount is applied by the database when the request is created (migration `0043_discord_link_discounts.sql`), using a role check the server made in the last hour. The browser can't set it. Your accept form opens with the discounted price and says so; PayPal checkout charges whatever final price you accept.
 
@@ -33,7 +34,7 @@ The discount is applied by the database when the request is created (migration `
 1. **Sign In / Providers → Discord**: enable it and paste the Client ID and Client Secret from step 1.2.
 2. **Sign In / Providers**, at the top: turn on **Allow manual linking**. Without it, "Connect Discord" returns an error.
 3. **URL Configuration → Redirect URLs** must already include `https://mjfird.com/auth/callback` (it does if Google sign-in works).
-4. Apply the migration `supabase/migrations/0043_discord_link_discounts.sql` (SQL editor, or `supabase db push`).
+4. Apply the migrations `0043_discord_link_discounts.sql` and `0045_discord_role_list_and_labels.sql` (SQL editor, or `supabase db push`).
 
 ## 4. Vercel environment variables
 
@@ -44,8 +45,8 @@ Add these to Production (and Preview if you test there). All are server-only:
 | `DISCORD_BOT_TOKEN` | Bot token from step 1.3 |
 | `DISCORD_GUILD_ID` | Server id |
 | `DISCORD_LINKED_ROLE_ID` | Web Linked role id |
-| `DISCORD_CLIENT_ROLE_ID` | Past Client role id |
-| `DISCORD_CLIENT_DISCOUNT_PERCENT` | `10` (0–50) |
+| `DISCORD_DISCOUNT_ROLES` | Discount roles as `roleId:percent` pairs, comma-separated, e.g. `111…:5,222…:10` (each 0–50) |
+| `DISCORD_CLIENT_ROLE_ID` / `DISCORD_CLIENT_DISCOUNT_PERCENT` | Older single-role setting, only used when `DISCORD_DISCOUNT_ROLES` is empty |
 | `DISCORD_INVITE_URL` | `https://discord.gg/…` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Needed to store the role check (already set if PayPal checkout works) |
 | `DISCORD_APPLICATION_ID` | General Information → Application ID (for the slash commands) |

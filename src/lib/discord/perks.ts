@@ -1,5 +1,5 @@
 import type { DiscordConfig } from "@/lib/discord/config";
-import type { DiscordMember } from "@/lib/discord/api";
+import type { DiscordMember, GuildRole } from "@/lib/discord/api";
 
 export type DiscordIdentity = { discordUserId: string; username: string };
 
@@ -31,19 +31,50 @@ export function discordIdentityOf(user: { identities?: IdentityLike[] | null } |
 export type DiscordPerks = {
   inGuild: boolean;
   hasLinkedRole: boolean;
+  /** Holds at least one discount role. Stored as past_client for the SQL trigger. */
   pastClient: boolean;
   discountPercent: number;
+  discountRoleId: string | null;
 };
 
+const NO_PERKS: DiscordPerks = { inGuild: false, hasLinkedRole: false, pastClient: false, discountPercent: 0, discountRoleId: null };
+
+/** The member's best discount role wins; discounts never stack. */
 export function perksFor(member: DiscordMember | null, config: DiscordConfig): DiscordPerks {
-  if (!member) return { inGuild: false, hasLinkedRole: false, pastClient: false, discountPercent: 0 };
-  const pastClient = Boolean(config.clientRoleId && member.roles.includes(config.clientRoleId));
+  if (!member) return NO_PERKS;
+  const best = config.discountRoles.find((d) => member.roles.includes(d.roleId)) ?? null; // sorted highest first
   return {
     inGuild: true,
     hasLinkedRole: member.roles.includes(config.linkedRoleId),
-    pastClient,
-    discountPercent: pastClient ? config.clientDiscountPercent : 0,
+    pastClient: Boolean(best),
+    discountPercent: best?.percent ?? 0,
+    discountRoleId: best?.roleId ?? null,
   };
+}
+
+export type RoleInfo = { id: string; name: string; color: number };
+
+/** The member's roles with names, top of the server's list first, without @everyone. */
+export function memberRoles(roleIds: string[], guildRoles: GuildRole[], guildId: string): RoleInfo[] {
+  return guildRoles
+    .filter((r) => r.id !== guildId && roleIds.includes(r.id))
+    .sort((a, b) => b.position - a.position)
+    .map(({ id, name, color }) => ({ id, name, color }));
+}
+
+/** Stored role list from the database, defensively parsed. */
+export function parseStoredRoles(value: unknown): RoleInfo[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((r): r is Record<string, unknown> => Boolean(r) && typeof r === "object")
+    .filter((r) => typeof r.id === "string" && typeof r.name === "string")
+    .map((r) => ({ id: r.id as string, name: r.name as string, color: typeof r.color === "number" ? r.color : 0 }));
+}
+
+/** Label for the discount, e.g. "VIP Client". Falls back when the role name isn't known. */
+export function discountLabel(perks: DiscordPerks, roles: RoleInfo[]) {
+  if (!perks.discountRoleId) return null;
+  return roles.find((r) => r.id === perks.discountRoleId)?.name || "Client discount";
 }
 
 /** How long a role check counts for a new request (matches the SQL trigger). */

@@ -5,7 +5,7 @@ import ProfileForm from "@/components/account/ProfileForm";
 import DiscordLinkPanel from "@/components/account/DiscordLinkPanel";
 import { requireUser } from "@/lib/auth/session";
 import { readDiscordConfig } from "@/lib/discord/config";
-import { discordIdentityOf } from "@/lib/discord/perks";
+import { discordIdentityOf, parseStoredRoles } from "@/lib/discord/perks";
 
 export const metadata: Metadata = { title: "My profile", robots: { index: false } };
 
@@ -18,7 +18,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     discordConfig
       ? supabase
           .from("client_discord_links")
-          .select("discord_username, in_guild, past_client, discount_percent")
+          .select("discord_username, in_guild, past_client, discount_percent, discount_label, roles")
           .eq("client_id", user.id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -55,6 +55,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                   inGuild: Boolean(linkRow?.in_guild),
                   pastClient: Boolean(linkRow?.past_client),
                   discountPercent: Number(linkRow?.discount_percent ?? 0),
+                  discountLabel: linkRow?.discount_label ?? null,
+                  roles: parseStoredRoles(linkRow?.roles),
                 }
               : null
           }

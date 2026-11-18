@@ -1,11 +1,19 @@
 import { connectDiscord, disconnectDiscord, refreshDiscord } from "@/lib/client/discord-actions";
+import type { RoleInfo } from "@/lib/discord/perks";
 
 export type DiscordPanelLink = {
   username: string;
   inGuild: boolean;
   pastClient: boolean;
   discountPercent: number;
+  discountLabel: string | null;
+  roles: RoleInfo[];
 } | null;
+
+/** Discord's role colour (0 = no colour) as CSS, for the small dot on each role. */
+function roleColor(color: number) {
+  return color > 0 ? `#${color.toString(16).padStart(6, "0")}` : "var(--color-ink-faint)";
+}
 
 const NOTICES: Record<string, { tone: "ok" | "error"; text: string }> = {
   linked: { tone: "ok", text: "Discord connected." },
@@ -43,7 +51,7 @@ export default function DiscordLinkPanel({
         </h2>
         <p className="text-body-sm text-pretty text-ink-muted">
           Connect the Discord account you use in the Fird Studio server. Linked members get the <strong className="font-medium text-ink">Web Linked</strong> role, and
-          past clients get a discount on every order placed here.
+          clients get a discount on every order placed here.
         </p>
       </div>
 
@@ -68,12 +76,33 @@ export default function DiscordLinkPanel({
             </div>
             <div className="flex justify-between gap-3">
               <dt className="text-ink-faint">Server</dt>
-              <dd className="text-ink">{link?.inGuild ? "Member · Web Linked" : "Not in the server yet"}</dd>
+              <dd className="text-ink">{link?.inGuild ? "Member" : "Not in the server yet"}</dd>
             </div>
+            {link?.inGuild && (
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-3">
+                <dt className="shrink-0 text-ink-faint">Roles</dt>
+                <dd>
+                  {link.roles.length > 0 ? (
+                    <ul className="flex flex-wrap gap-1.5 sm:justify-end">
+                      {link.roles.map((role) => (
+                        <li key={role.id} className="inline-flex items-center gap-1.5 border border-line px-2 py-0.5 text-[13px] text-ink">
+                          <span aria-hidden className="size-2 rounded-full" style={{ backgroundColor: roleColor(role.color) }} />
+                          {role.name}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-ink-muted">Press Refresh roles to load them</span>
+                  )}
+                </dd>
+              </div>
+            )}
             {link?.pastClient && link.discountPercent > 0 && (
               <div className="flex justify-between gap-3">
                 <dt className="text-ink-faint">Perk</dt>
-                <dd className="text-accent">Past client · {link.discountPercent}% off website orders</dd>
+                <dd className="text-accent">
+                  {link.discountLabel ?? "Client"} · {link.discountPercent}% off website orders
+                </dd>
               </div>
             )}
           </dl>

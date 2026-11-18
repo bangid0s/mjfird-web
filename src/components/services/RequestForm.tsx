@@ -226,6 +226,7 @@ export default function RequestForm({
   initialLicense = "personal",
   initialBackground,
   discountPercent = 0,
+  discountLabel = null,
 }: {
   service: StorefrontService;
   userId: string;
@@ -236,8 +237,10 @@ export default function RequestForm({
   initialCharacters?: number;
   initialLicense?: string;
   initialBackground?: string;
-  /** Past-client percent off, from the verified Discord role. The database applies it again on submit. */
+  /** Percent off from the client's best verified Discord role. The database applies it again on submit. */
   discountPercent?: number;
+  /** Name of the role that earned it, e.g. "VIP Client". */
+  discountLabel?: string | null;
 }) {
   const [state, action] = useActionState(submitRequest, undefined);
   // The order is chosen on the service page and arrives in the URL; this form
@@ -397,7 +400,9 @@ export default function RequestForm({
               </div>
               {discounted.cut > 0 && (
                 <div className="flex justify-between gap-3">
-                  <dt className="text-accent">Past client discount ({discountPercent}%)</dt>
+                  <dt className="text-accent">
+                    {discountLabel ?? "Client"} discount ({discountPercent}%)
+                  </dt>
                   <dd className="text-accent">−{formatUSD(discounted.cut)}</dd>
                 </div>
               )}
