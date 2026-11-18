@@ -1,21 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseDiscountPercent, readDiscordConfig, type DiscordConfig } from "./config";
+import { parseDiscountPercent, parseDiscountRoles, readDiscordConfig, type DiscordConfig } from "./config";
 import { addMemberRole, getGuildMember, removeMemberRole, DiscordApiError, type FetchLike } from "./api";
-import { activeDiscountPercent, discordIdentityOf, discountOn, perksFor } from "./perks";
+import { activeDiscountPercent, discordIdentityOf, discountLabel, discountOn, memberRoles, parseStoredRoles, perksFor } from "./perks";
 import { forgetDiscordLink, refreshDiscountFor, syncDiscordLink } from "./sync";
 
 const GUILD = "111111111111111111";
 const LINKED = "222222222222222222";
 const CLIENT_ROLE = "333333333333333333";
+const VIP_ROLE = "333333333333333334";
 const USER = "444444444444444444";
 
 const config: DiscordConfig = {
   botToken: "bot-token",
   guildId: GUILD,
   linkedRoleId: LINKED,
-  clientRoleId: CLIENT_ROLE,
-  clientDiscountPercent: 10,
+  discountRoles: [{ roleId: CLIENT_ROLE, percent: 10 }],
   inviteUrl: "https://discord.gg/abc",
 };
 
@@ -53,7 +53,7 @@ test("config: invite must be an https Discord link; percent defaults to 10 and i
   const base = { DISCORD_BOT_TOKEN: "x", DISCORD_GUILD_ID: GUILD, DISCORD_LINKED_ROLE_ID: LINKED };
   assert.equal(readDiscordConfig({ ...base, DISCORD_INVITE_URL: "https://evil.example/discord.gg" })?.inviteUrl, null);
   assert.equal(readDiscordConfig({ ...base, DISCORD_INVITE_URL: "http://discord.gg/x" })?.inviteUrl, null);
-  assert.equal(readDiscordConfig(base)?.clientRoleId, null);
+  assert.deepEqual(readDiscordConfig(base)?.discountRoles, []);
   assert.equal(parseDiscountPercent(undefined), 10);
   assert.equal(parseDiscountPercent("15"), 15);
   assert.equal(parseDiscountPercent("90"), 50);
@@ -73,11 +73,58 @@ test("identity: only a Discord identity with a numeric id counts", () => {
   );
 });
 
-test("perks: Past Client role gives the configured percent; no role, no discount", () => {
-  assert.deepEqual(perksFor(null, config), { inGuild: false, hasLinkedRole: false, pastClient: false, discountPercent: 0 });
-  assert.deepEqual(perksFor({ roles: [] }, config), { inGuild: true, hasLinkedRole: false, pastClient: false, discountPercent: 0 });
-  assert.deepEqual(perksFor({ roles: [LINKED, CLIENT_ROLE] }, config), { inGuild: true, hasLinkedRole: true, pastClient: true, discountPercent: 10 });
-  assert.equal(perksFor({ roles: [CLIENT_ROLE] }, { ...config, clientRoleId: null }).discountPercent, 0);
+test("perks: a discount role gives its percent; no role, no discount", () => {
+  assert.deepEqual(perksFor(null, config), { inGuild: false, hasLinkedRole: false, pastClient: false, discountPercent: 0, discountRoleId: null });
+  assert.deepEqual(perksFor({ roles: [] }, config), { inGuild: true, hasLinkedRole: false, pastClient: false, discountPercent: 0, discountRoleId: null });
+  assert.deepEqual(perksFor({ roles: [LINKED, CLIENT_ROLE] }, config), {
+    inGuild: true,
+    hasLinkedRole: true,
+    pastClient: true,
+    discountPercent: 10,
+    discountRoleId: CLIENT_ROLE,
+  });
+  assert.equal(perksFor({ roles: [CLIENT_ROLE] }, { ...config, discountRoles: [] }).discountPercent, 0);
+});
+
+test("perks: with several discount roles the highest wins, never stacked", () => {
+  const multi = readDiscordConfig({
+    DISCORD_BOT_TOKEN: "x",
+    DISCORD_GUILD_ID: GUILD,
+    DISCORD_LINKED_ROLE_ID: LINKED,
+    DISCORD_DISCOUNT_ROLES: `${CLIENT_ROLE}:5, ${VIP_ROLE}:10`,
+  })!;
+  assert.deepEqual(multi.discountRoles, [
+    { roleId: VIP_ROLE, percent: 10 },
+    { roleId: CLIENT_ROLE, percent: 5 },
+  ]);
+  assert.equal(perksFor({ roles: [CLIENT_ROLE] }, multi).discountPercent, 5);
+  const both = perksFor({ roles: [CLIENT_ROLE, VIP_ROLE] }, multi);
+  assert.equal(both.discountPercent, 10);
+  assert.equal(both.discountRoleId, VIP_ROLE);
+});
+
+test("config: discount role list ignores bad entries and falls back to the single-role settings", () => {
+  assert.deepEqual(parseDiscountRoles({ DISCORD_DISCOUNT_ROLES: `nope:5,${CLIENT_ROLE}:,${CLIENT_ROLE}:0,${VIP_ROLE}:80,${VIP_ROLE}:3` }), [
+    { roleId: VIP_ROLE, percent: 50 },
+  ]);
+  assert.deepEqual(parseDiscountRoles({ DISCORD_CLIENT_ROLE_ID: CLIENT_ROLE, DISCORD_CLIENT_DISCOUNT_PERCENT: "7" }), [{ roleId: CLIENT_ROLE, percent: 7 }]);
+  assert.deepEqual(parseDiscountRoles({}), []);
+});
+
+test("roles: named, ordered top-down, without @everyone; label comes from the winning role", () => {
+  const guildRoles = [
+    { id: GUILD, name: "@everyone", color: 0, position: 0 },
+    { id: LINKED, name: "Web Linked", color: 0, position: 1 },
+    { id: CLIENT_ROLE, name: "Client", color: 0x2ecc71, position: 5 },
+    { id: "999999999999999999", name: "Staff", color: 0, position: 9 },
+  ];
+  const roles = memberRoles([GUILD, LINKED, CLIENT_ROLE], guildRoles, GUILD);
+  assert.deepEqual(roles.map((r) => r.name), ["Client", "Web Linked"]);
+  assert.equal(discountLabel(perksFor({ roles: [CLIENT_ROLE] }, config), roles), "Client");
+  assert.equal(discountLabel(perksFor({ roles: [CLIENT_ROLE] }, config), []), "Client discount");
+  assert.equal(discountLabel(perksFor({ roles: [] }, config), roles), null);
+  assert.deepEqual(parseStoredRoles([{ id: "1", name: "A", color: 3 }, { id: 2 }, "x"]), [{ id: "1", name: "A", color: 3 }]);
+  assert.deepEqual(parseStoredRoles(null), []);
 });
 
 test("discount math matches the SQL trigger's rounding", () => {
@@ -145,17 +192,43 @@ function fakeDb(stored: Record<string, unknown> | null = null) {
 
 const identity = { discordUserId: USER, username: "Rina" };
 
-test("sync: member without the linked role gets it, and the result is stored", async () => {
+const rolesUrl = `https://discord.com/api/v10/guilds/${GUILD}/roles`;
+
+test("sync: member without the linked role gets it; roles and the discount label are stored", async () => {
   const f = fakeFetch({
     [`GET ${memberUrl}`]: { status: 200, body: { roles: [CLIENT_ROLE] } },
     [`PUT ${memberUrl}/roles/${LINKED}`]: { status: 204 },
+    [`GET ${rolesUrl}`]: {
+      status: 200,
+      body: [
+        { id: GUILD, name: "@everyone", color: 0, position: 0 },
+        { id: LINKED, name: "Web Linked", color: 0, position: 1 },
+        { id: CLIENT_ROLE, name: "Client", color: 5, position: 4 },
+      ],
+    },
   });
   const { db, writes } = fakeDb();
   const result = await syncDiscordLink("client-1", identity, { config, db, fetchImpl: f.impl });
-  assert.deepEqual(result, { ok: true, perks: { inGuild: true, hasLinkedRole: true, pastClient: true, discountPercent: 10 } });
+  assert.ok(result.ok);
+  assert.deepEqual(result.perks, { inGuild: true, hasLinkedRole: true, pastClient: true, discountPercent: 10, discountRoleId: CLIENT_ROLE });
+  assert.equal(result.label, "Client");
   assert.equal(writes[0].op, "upsert");
   assert.equal(writes[0].row?.discount_percent, 10);
+  assert.equal(writes[0].row?.discount_label, "Client");
+  assert.deepEqual(writes[0].row?.roles, [
+    { id: CLIENT_ROLE, name: "Client", color: 5 },
+    { id: LINKED, name: "Web Linked", color: 0 },
+  ]);
   assert.equal(writes[0].row?.discord_user_id, USER);
+});
+
+test("sync: if the role list can't be fetched, the discount still applies and old role names are kept", async () => {
+  const f = fakeFetch({ [`GET ${memberUrl}`]: { status: 200, body: { roles: [LINKED, CLIENT_ROLE] } } });
+  const { db, writes } = fakeDb();
+  const result = await syncDiscordLink("client-1", identity, { config, db, fetchImpl: f.impl });
+  assert.ok(result.ok && result.perks.discountPercent === 10);
+  assert.equal("roles" in (writes[0].row ?? {}), false, "roles column left untouched");
+  assert.equal(writes[0].row?.discount_label, "Client discount");
 });
 
 test("sync: not in the server stores no discount; Discord errors store nothing", async () => {
@@ -178,8 +251,10 @@ test("refreshDiscountFor: 0 without Discord; falls back to the stored fresh resu
   const user = { id: "client-1", identities: [{ provider: "discord", id: USER, identity_data: { provider_id: USER } }] };
   const stored = { in_guild: true, past_client: true, discount_percent: 10, synced_at: new Date().toISOString() };
   const { db } = fakeDb(stored);
-  assert.equal(await refreshDiscountFor(db, { id: "x", identities: [] }, { config, db, fetchImpl: fakeFetch({}).impl }), 0);
-  assert.equal(await refreshDiscountFor(db, user, { config, db, fetchImpl: fakeFetch({}).impl }), 10);
+  assert.deepEqual(await refreshDiscountFor(db, { id: "x", identities: [] }, { config, db, fetchImpl: fakeFetch({}).impl }), { percent: 0, label: null });
+  assert.deepEqual(await refreshDiscountFor(db, user, { config, db, fetchImpl: fakeFetch({}).impl }), { percent: 10, label: null });
+  const labelled = fakeDb({ ...stored, discount_label: "VIP Client" });
+  assert.deepEqual(await refreshDiscountFor(labelled.db, user, { config, db: labelled.db, fetchImpl: fakeFetch({}).impl }), { percent: 10, label: "VIP Client" });
 });
 
 test("forget: removes the linked role and the stored row", async () => {

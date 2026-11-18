@@ -18,8 +18,7 @@ const config: DiscordConfig = {
   botToken: "bot-token",
   guildId: GUILD,
   linkedRoleId: LINKED,
-  clientRoleId: CLIENT_ROLE,
-  clientDiscountPercent: 10,
+  discountRoles: [{ roleId: CLIENT_ROLE, percent: 10 }],
   inviteUrl: null,
 };
 
@@ -56,7 +55,9 @@ test("config: public key and application id must look right", () => {
 
 // --- interactions ------------------------------------------------------------
 
-function fakeDb(link: { client_id: string } | null, opts: { failLookup?: boolean } = {}) {
+type FakeLink = { client_id: string; discord_username?: string; roles?: unknown };
+
+function fakeDb(link: FakeLink | null, opts: { failLookup?: boolean } = {}) {
   const updates: Record<string, unknown>[] = [];
   const db = {
     from() {
@@ -104,27 +105,26 @@ test("/link: already linked says so", async () => {
   assert.match(res.data.content, /already linked/);
 });
 
-test("/status: past client sees the discount, the stored check is refreshed, no role call needed", async () => {
-  const { db, updates } = fakeDb({ client_id: "c1" });
-  const added: string[] = [];
+test("/status: client sees the discount with their role name; the stored check is refreshed and a full sync queued", async () => {
+  const { db, updates } = fakeDb({ client_id: "c1", discord_username: "Rina", roles: [{ id: CLIENT_ROLE, name: "VIP Client", color: 0 }] });
+  const queued: { clientId: string; id: string; name: string }[] = [];
   const now = new Date("2026-11-18T03:00:00Z");
   const res = (await handleInteraction(command("status", [LINKED, CLIENT_ROLE]), {
     config,
     db,
     siteUrl: SITE,
     now: () => now,
-    addLinkedRole: (id) => added.push(id),
+    resync: (clientId, identity) => queued.push({ clientId, id: identity.discordUserId, name: identity.username }),
   })) as Message;
-  assert.match(res.data.content, /10% off/);
+  assert.match(res.data.content, /10% off\*\* \(VIP Client\)/);
   assert.deepEqual(updates[0], { in_guild: true, past_client: true, discount_percent: 10, synced_at: now.toISOString() });
-  assert.deepEqual(added, []);
+  assert.deepEqual(queued, [{ clientId: "c1", id: USER, name: "Rina" }]);
 });
 
-test("/status: linked member missing Web Linked gets it in the background; no discount without the role", async () => {
+test("/status: member missing Web Linked is told it's coming; no discount without a discount role", async () => {
   const { db, updates } = fakeDb({ client_id: "c1" });
-  const added: string[] = [];
-  const res = (await handleInteraction(command("status", []), { config, db, siteUrl: SITE, addLinkedRole: (id) => added.push(id) })) as Message;
-  assert.deepEqual(added, [USER]);
+  const res = (await handleInteraction(command("status", []), { config, db, siteUrl: SITE, resync: () => undefined })) as Message;
+  assert.match(res.data.content, /on its way/);
   assert.match(res.data.content, /No discount/);
   assert.equal(updates[0].discount_percent, 0);
 });

@@ -1,8 +1,7 @@
 import { after, NextResponse } from "next/server";
 import { readDiscordConfig } from "@/lib/discord/config";
-import { addMemberRole } from "@/lib/discord/api";
 import { handleInteraction, readPublicKey, verifyDiscordRequest, type Interaction } from "@/lib/discord/interactions";
-import { serviceClient } from "@/lib/discord/sync";
+import { serviceClient, syncDiscordLink } from "@/lib/discord/sync";
 import { SITE_URL } from "@/lib/site-url";
 
 export const runtime = "nodejs";
@@ -38,16 +37,11 @@ export async function POST(request: Request) {
     config,
     db: serviceClient(),
     siteUrl: SITE_URL,
-    addLinkedRole: config
-      ? (userId) =>
-          after(async () => {
-            try {
-              await addMemberRole(config, userId, config.linkedRoleId);
-            } catch (err) {
-              console.error("[discord] role add from /status failed:", err instanceof Error ? err.message : "unknown error");
-            }
-          })
-      : undefined,
+    resync: (clientId, identity) =>
+      after(async () => {
+        const result = await syncDiscordLink(clientId, identity);
+        if (!result.ok) console.error("[discord] /status background sync failed:", result.reason);
+      }),
   });
   return NextResponse.json(replyBody);
 }

@@ -6,17 +6,21 @@
   DISCORD_BOT_TOKEN            Bot token (Developer Portal → Bot → Reset Token)
   DISCORD_GUILD_ID             Your server's id
   DISCORD_LINKED_ROLE_ID       Role the bot gives everyone who links ("Web Linked")
-  DISCORD_CLIENT_ROLE_ID       Role you give manually to past clients (optional)
-  DISCORD_CLIENT_DISCOUNT_PERCENT  Percent off for that role (default 10, max 50)
+  DISCORD_DISCOUNT_ROLES       Roles that earn a discount, as roleId:percent pairs,
+                               e.g. "111…:5,222…:10". Highest one wins (max 50 each).
+  DISCORD_CLIENT_ROLE_ID       Older single-role setting, used only when
+  DISCORD_CLIENT_DISCOUNT_PERCENT  DISCORD_DISCOUNT_ROLES is unset (default 10)
   DISCORD_INVITE_URL           Invite shown to linked people who aren't in the server yet
 */
+
+export type DiscountRole = { roleId: string; percent: number };
 
 export type DiscordConfig = {
   botToken: string;
   guildId: string;
   linkedRoleId: string;
-  clientRoleId: string | null;
-  clientDiscountPercent: number;
+  /** Highest percent first. */
+  discountRoles: DiscountRole[];
   inviteUrl: string | null;
 };
 
@@ -34,6 +38,26 @@ export function parseDiscountPercent(value: string | undefined) {
   const n = Number(value);
   if (!Number.isFinite(n)) return 10;
   return Math.min(50, Math.max(0, Math.round(n * 100) / 100));
+}
+
+/** "roleId:percent,roleId:percent" → valid pairs, highest percent first, zero percents dropped. */
+export function parseDiscountRoles(env: Env): DiscountRole[] {
+  const list = env.DISCORD_DISCOUNT_ROLES?.trim();
+  const pairs: DiscountRole[] = [];
+  if (list) {
+    for (const part of list.split(",")) {
+      const [id, pct] = part.split(":").map((v) => v.trim());
+      const roleId = snowflake(id);
+      if (!roleId || pct === undefined || pct === "") continue;
+      const percent = parseDiscountPercent(pct);
+      if (percent > 0 && !pairs.some((p) => p.roleId === roleId)) pairs.push({ roleId, percent });
+    }
+  } else {
+    const roleId = snowflake(env.DISCORD_CLIENT_ROLE_ID);
+    const percent = parseDiscountPercent(env.DISCORD_CLIENT_DISCOUNT_PERCENT);
+    if (roleId && percent > 0) pairs.push({ roleId, percent });
+  }
+  return pairs.sort((a, b) => b.percent - a.percent);
 }
 
 function inviteUrl(value: string | undefined) {
@@ -59,8 +83,7 @@ export function readDiscordConfig(env: Env = process.env): DiscordConfig | null 
     botToken,
     guildId,
     linkedRoleId,
-    clientRoleId: snowflake(env.DISCORD_CLIENT_ROLE_ID),
-    clientDiscountPercent: parseDiscountPercent(env.DISCORD_CLIENT_DISCOUNT_PERCENT),
+    discountRoles: parseDiscountRoles(env),
     inviteUrl: inviteUrl(env.DISCORD_INVITE_URL),
   };
 }

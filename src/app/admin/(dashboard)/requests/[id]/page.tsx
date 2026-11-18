@@ -13,6 +13,7 @@ import { priceOf, toNumber } from "@/lib/commissions/status";
 import { formatUSD } from "@/lib/services/storefront";
 import { safeDeliveryUrl } from "@/lib/commissions/delivery-link";
 import Link from "next/link";
+import { parseStoredRoles } from "@/lib/discord/perks";
 import type { CommissionMessageRow, CommissionRequestRow, TestimonialRow } from "@/lib/supabase/types";
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -39,7 +40,7 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
     supabase.from("client_profiles").select("region, discord, x_handle, social_url").eq("id", req.client_id).maybeSingle(),
     supabase
       .from("client_discord_links")
-      .select("discord_username, discord_user_id, in_guild, past_client, synced_at")
+      .select("discord_username, discord_user_id, in_guild, past_client, synced_at, roles")
       .eq("client_id", req.client_id)
       .maybeSingle(),
   ]);
@@ -49,6 +50,7 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
     in_guild: boolean;
     past_client: boolean;
     synced_at: string;
+    roles: unknown;
   } | null;
   const discountAmount = toNumber(req.discount_amount ?? 0) ?? 0;
   const discountNote =
@@ -174,7 +176,9 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
                   <dt className="w-16 shrink-0 text-ink-faint">Roles</dt>
                   <dd className="text-ink">
                     {verifiedDiscord.in_guild
-                      ? ["Web Linked", verifiedDiscord.past_client ? "Past Client" : null].filter(Boolean).join(" · ")
+                      ? parseStoredRoles(verifiedDiscord.roles)
+                          .map((r) => r.name)
+                          .join(" · ") || "Member"
                       : "Not in the server"}
                   </dd>
                 </div>

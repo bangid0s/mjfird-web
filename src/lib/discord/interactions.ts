@@ -8,7 +8,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DiscordConfig } from "@/lib/discord/config";
-import { perksFor } from "@/lib/discord/perks";
+import { parseStoredRoles, perksFor, type DiscordIdentity } from "@/lib/discord/perks";
 
 export const INTERACTION_PING = 1;
 export const INTERACTION_COMMAND = 2;
@@ -70,8 +70,8 @@ export type InteractionDeps = {
   db: SupabaseClient | null;
   siteUrl: string;
   now?: () => Date;
-  /** Give Web Linked in the background, after the reply is sent. */
-  addLinkedRole?: (discordUserId: string) => void;
+  /** Full re-sync in the background, after the reply is sent (Web Linked role, role names). */
+  resync?: (clientId: string, identity: DiscordIdentity) => void;
 };
 
 function reply(content: string, buttons: Button[] = []): InteractionReply {
@@ -107,7 +107,7 @@ export async function handleInteraction(interaction: Interaction, deps: Interact
 
   const { data: link, error } = await db
     .from("client_discord_links")
-    .select("client_id")
+    .select("client_id, discord_username, roles")
     .eq("discord_user_id", userId)
     .maybeSingle();
   if (error) {
@@ -115,9 +115,8 @@ export async function handleInteraction(interaction: Interaction, deps: Interact
     return reply("Something went wrong on our side. Please try again in a minute.");
   }
 
-  const perkLine = config.clientRoleId
-    ? ` Past clients also get ${config.clientDiscountPercent}% off every request sent through the website.`
-    : "";
+  const topPercent = config.discountRoles[0]?.percent ?? 0;
+  const perkLine = topPercent > 0 ? ` Clients also get up to ${topPercent}% off every request sent through the website.` : "";
 
   if (!link) {
     return reply(
@@ -132,8 +131,8 @@ export async function handleInteraction(interaction: Interaction, deps: Interact
     ]);
   }
 
-  // /status: the signed interaction carries the member's current roles, so we
-  // can refresh the stored check without another call to Discord.
+  // /status: the signed interaction carries the member's current roles, so the
+  // reply needs no extra call to Discord. A full sync runs after it.
   const roles = Array.isArray(interaction.member?.roles)
     ? (interaction.member.roles as unknown[]).filter((r): r is string => typeof r === "string")
     : [];
@@ -149,14 +148,17 @@ export async function handleInteraction(interaction: Interaction, deps: Interact
     })
     .eq("discord_user_id", userId);
   if (saveError) console.error("[discord] interaction save failed:", saveError.message);
-  if (!perks.hasLinkedRole) deps.addLinkedRole?.(userId);
+  const row = link as { client_id: string; discord_username?: string | null; roles?: unknown };
+  deps.resync?.(row.client_id, { discordUserId: userId, username: row.discord_username ?? "" });
 
+  const known = parseStoredRoles(row.roles);
+  const roleName = perks.discountRoleId ? known.find((r) => r.id === perks.discountRoleId)?.name : undefined;
   const lines = ["Your Discord is linked to your mjfird.com account."];
   if (!perks.hasLinkedRole) lines.push("Your Web Linked role is on its way (it can take a few seconds).");
   lines.push(
     perks.pastClient
-      ? `Past client discount: **${perks.discountPercent}% off** every request you send through the website.`
-      : "No discount on your account right now. The past-client discount comes with the Past Client role.",
+      ? `Your discount: **${perks.discountPercent}% off**${roleName ? ` (${roleName})` : ""} on every request you send through the website.`
+      : "No discount on your account right now. Discounts come with the studio's client roles.",
   );
   return reply(lines.join("\n"), [button("Open my profile", profileUrl), button("Browse services", servicesUrl)]);
 }

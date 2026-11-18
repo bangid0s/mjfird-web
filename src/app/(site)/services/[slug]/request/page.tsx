@@ -24,7 +24,7 @@ export default async function RequestPage({
   const service = await getStorefrontService(slug);
   if (!service) notFound();
 
-  const [{ data: profile }, discountPercent] = await Promise.all([
+  const [{ data: profile }, discount] = await Promise.all([
     supabase.from("client_profiles").select("display_name").eq("id", user.id).maybeSingle(),
     refreshDiscountFor(supabase, user),
   ]);
@@ -60,7 +60,8 @@ export default async function RequestPage({
           userId={user.id}
           email={user.email ?? ""}
           defaultName={profile?.display_name ?? ""}
-          discountPercent={discountPercent}
+          discountPercent={discount.percent}
+          discountLabel={discount.label}
           initialPackage={query.package}
           initialAddons={(query.addons ?? "").split(",").filter(Boolean)}
           initialLicense={query.license}

@@ -55,6 +55,28 @@ export async function getGuildMember(config: DiscordConfig, userId: string, fetc
   return { roles };
 }
 
+export type GuildRole = { id: string; name: string; color: number; position: number };
+
+/** Every role in the server (names, colours, order). Needs no extra permission. */
+export async function getGuildRoles(config: DiscordConfig, fetchImpl: FetchLike = fetch): Promise<GuildRole[]> {
+  const res = await fetchImpl(`${API}/guilds/${config.guildId}/roles`, { headers: headers(config), cache: "no-store", signal: AbortSignal.timeout(5000) });
+  if (!res.ok) {
+    await res.body?.cancel().catch(() => undefined);
+    throw new DiscordApiError(`Discord role list failed (HTTP ${res.status}).`, res.status);
+  }
+  const data = (await res.json()) as unknown;
+  if (!Array.isArray(data)) return [];
+  return data
+    .filter((r): r is Record<string, unknown> => Boolean(r) && typeof r === "object")
+    .filter((r) => typeof r.id === "string" && typeof r.name === "string")
+    .map((r) => ({
+      id: r.id as string,
+      name: (r.name as string).slice(0, 100),
+      color: typeof r.color === "number" ? r.color : 0,
+      position: typeof r.position === "number" ? r.position : 0,
+    }));
+}
+
 async function roleCall(method: "PUT" | "DELETE", config: DiscordConfig, userId: string, roleId: string, reason: string, fetchImpl: FetchLike) {
   const res = await fetchImpl(`${memberPath(config, userId)}/roles/${roleId}`, {
     method,
