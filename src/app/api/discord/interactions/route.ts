@@ -1,5 +1,6 @@
 import { after, NextResponse } from "next/server";
 import { readDiscordConfig } from "@/lib/discord/config";
+import { loadDiscountRoles } from "@/lib/discord/discount-roles";
 import { handleInteraction, readPublicKey, verifyDiscordRequest, type Interaction } from "@/lib/discord/interactions";
 import { serviceClient, syncDiscordLink } from "@/lib/discord/sync";
 import { SITE_URL } from "@/lib/site-url";
@@ -32,10 +33,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Bad request." }, { status: 400 });
   }
 
-  const config = readDiscordConfig();
+  const envConfig = readDiscordConfig();
+  const db = serviceClient();
+  // Discount roles come from /admin/discord (or the env variable until that's saved).
+  const config = envConfig ? { ...envConfig, discountRoles: await loadDiscountRoles(db, envConfig.discountRoles) } : null;
   const replyBody = await handleInteraction(interaction, {
     config,
-    db: serviceClient(),
+    db,
     siteUrl: SITE_URL,
     resync: (clientId, identity) =>
       after(async () => {

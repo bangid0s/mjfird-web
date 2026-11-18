@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DiscordConfig } from "@/lib/discord/config";
 import { getGuildRoles, type FetchLike, type GuildRole } from "@/lib/discord/api";
 import { syncDiscordLink } from "@/lib/discord/sync";
+import { loadDiscountRoles } from "@/lib/discord/discount-roles";
 
 export type SyncAllResult =
   | { ok: true; checked: number; synced: number; failed: number; stoppedEarly: boolean }
@@ -48,6 +49,9 @@ export async function syncAllDiscordLinks(deps: SyncAllDeps): Promise<SyncAllRes
     console.error("[discord] role list failed:", err instanceof Error ? err.message : "unknown error");
   }
 
+  // Same for the discount roles: read the admin's list once per run.
+  const discountRoles = await loadDiscountRoles(db, config.discountRoles);
+
   const rows = (data ?? []) as { client_id: string; discord_user_id: string; discord_username: string | null }[];
   let synced = 0;
   let failed = 0;
@@ -59,7 +63,7 @@ export async function syncAllDiscordLinks(deps: SyncAllDeps): Promise<SyncAllRes
     const result = await syncDiscordLink(
       row.client_id,
       { discordUserId: row.discord_user_id, username: row.discord_username ?? "" },
-      { config, db, fetchImpl, guildRoles },
+      { config, db, fetchImpl, guildRoles, discountRoles },
     );
     if (result.ok) {
       synced++;

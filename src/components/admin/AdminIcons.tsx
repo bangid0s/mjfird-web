@@ -215,6 +215,15 @@ export function SparkIcon(props: IconProps) {
   );
 }
 
+export function DiscountIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3 12V3h9l9 9-9 9z" />
+      <circle cx="7.5" cy="7.5" r="1.5" />
+    </Icon>
+  );
+}
+
 export function RequestsIcon(props: IconProps) {
   return (
     <Icon {...props}>
