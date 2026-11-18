@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceRoleClient } from "@/lib/payments/service-role";
-import { readDiscordConfig, type DiscordConfig } from "@/lib/discord/config";
+import { readDiscordConfig, type DiscordConfig, type DiscountRole } from "@/lib/discord/config";
+import { loadDiscountRoles } from "@/lib/discord/discount-roles";
 import { addMemberRole, getGuildMember, getGuildRoles, removeMemberRole, type FetchLike, type GuildRole } from "@/lib/discord/api";
 import {
   activeDiscountPercent,
@@ -31,6 +32,8 @@ export type SyncDeps = {
   fetchImpl?: FetchLike;
   /** The server's role list, when the caller already has it (the daily sync fetches it once). */
   guildRoles?: GuildRole[] | null;
+  /** Discount roles in force, when the caller already loaded them (the daily sync loads them once). */
+  discountRoles?: DiscountRole[];
 };
 
 function defaultDeps(): SyncDeps {
@@ -43,8 +46,13 @@ function defaultDeps(): SyncDeps {
  * from "Refresh", and right before a request is submitted.
  */
 export async function syncDiscordLink(clientId: string, identity: DiscordIdentity, deps: SyncDeps = defaultDeps()): Promise<SyncResult> {
-  const { config, db, fetchImpl } = deps;
-  if (!config || !db) return { ok: false, reason: "not_configured" };
+  const { db, fetchImpl } = deps;
+  if (!deps.config || !db) return { ok: false, reason: "not_configured" };
+  // The admin's list on /admin/discord, or the environment variable until it's saved.
+  const config: DiscordConfig = {
+    ...deps.config,
+    discountRoles: deps.discountRoles ?? (await loadDiscountRoles(db, deps.config.discountRoles)),
+  };
 
   let perks: DiscordPerks;
   let roleIds: string[] = [];
