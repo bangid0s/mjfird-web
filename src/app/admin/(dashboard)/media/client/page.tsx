@@ -191,7 +191,16 @@ export default async function AdminClientFilesPage({
                       {request.contact_name} · {request.contact_email} · {formatDate(request.created_at)}
                     </span>
                   </div>
-                  <StatusChip status={request.status} />
+                  <div className="flex items-center gap-4">
+                    <a
+                      href={`/admin/requests/${request.id}/files?kind=all`}
+                      download
+                      className="text-body-sm font-medium text-ink-muted transition-colors hover:text-ink"
+                    >
+                      Download all (.zip)
+                    </a>
+                    <StatusChip status={request.status} />
+                  </div>
                 </div>
                 <ClientFilesGrid files={files} />
               </section>
