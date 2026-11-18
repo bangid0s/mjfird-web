@@ -6,7 +6,7 @@ import { activeDiscountPercent, discordIdentityOf, perksFor, type DiscordIdentit
 
 export type SyncResult = { ok: true; perks: DiscordPerks } | { ok: false; reason: "not_configured" | "discord_error" | "db_error" };
 
-function serviceClient() {
+export function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
