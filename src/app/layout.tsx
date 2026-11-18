@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Instrument_Sans, Geist, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { getSiteSettings } from "@/lib/data/site-settings";
@@ -89,6 +90,8 @@ export default async function RootLayout({
           }}
         />
         {children}
+        {/* Vercel Web Analytics: page views, referrers, country, device. Read back in Fird HQ → Reach. */}
+        <Analytics />
       </body>
     </html>
   );
