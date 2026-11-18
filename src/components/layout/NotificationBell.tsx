@@ -103,14 +103,25 @@ export default function NotificationBell({
   useEffect(() => {
     if (!userId) return;
     const supabase = client();
-    const channel = supabase
-      .channel(`notifications:${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
-        () => void load(),
-      )
-      .subscribe();
+    // The browser client is a singleton and `.channel(topic)` hands back an
+    // existing channel with the same topic. The admin shell mounts two bells
+    // (mobile bar + desktop header), so a shared topic made the second
+    // `.on()` throw "cannot add postgres_changes callbacks after subscribe()"
+    // and took the whole page down. Each bell gets its own topic, and a
+    // Realtime failure only costs live updates, never the page.
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      channel = supabase
+        .channel(`notifications:${userId}:${panelId.replace(/[^a-zA-Z0-9_-]/g, "")}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+          () => void load(),
+        )
+        .subscribe();
+    } catch (err) {
+      console.error("Notification bell: live updates unavailable", err);
+    }
 
     const onVisible = () => {
       if (document.visibilityState === "visible") void load();
@@ -120,9 +131,9 @@ export default function NotificationBell({
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
-      void supabase.removeChannel(channel);
+      if (channel) void supabase.removeChannel(channel);
     };
-  }, [userId, load]);
+  }, [userId, load, panelId]);
 
   // Close on outside click and Escape.
   useEffect(() => {
