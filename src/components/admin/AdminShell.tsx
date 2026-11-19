@@ -7,6 +7,7 @@ import { signOut } from "@/lib/admin/auth-actions";
 import { cn } from "@/lib/cn";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import CommandPalette from "@/components/admin/CommandPalette";
+import AdminLiveRefresh from "@/components/admin/AdminLiveRefresh";
 import NotificationBell from "@/components/layout/NotificationBell";
 import { ADMIN_NAV, findNavItem, isActive } from "@/components/admin/admin-nav";
 import { ExternalIcon, SearchIcon, SignOutIcon } from "@/components/admin/AdminIcons";
@@ -339,6 +340,7 @@ export default function AdminShell({
       </div>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <AdminLiveRefresh />
     </div>
   );
 }

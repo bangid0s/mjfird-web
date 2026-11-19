@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email";
 import { manualAdvanceConflict, manualWritePlan, priceOf, toNumber } from "@/lib/commissions/status";
@@ -18,6 +19,32 @@ import { formatUSD } from "@/lib/services/storefront";
 import type { CommissionRequestRow, CommissionStatus } from "@/lib/supabase/types";
 
 type State = { error?: string } | undefined;
+
+/*
+  Why the admin buttons felt stuck:
+  - Every action awaited the client email (Resend) before the page could
+    refresh, with no timeout. Emails now go out with after(), once the
+    response — and the refreshed page — is already on its way.
+  - The refresh was the last line, so anything failing after the database
+    write left a changed request on an unchanged screen. Refresh now runs
+    right after the write.
+  - Thrown errors reach the browser as a generic message in production, so
+    actions return { error } instead and the real reason is shown.
+*/
+
+/** Sends the email after the response is sent, so a slow mail API never holds up the screen. */
+function emailLater(args: Parameters<typeof sendEmail>[0]) {
+  after(() => sendEmail(args));
+}
+
+async function guard(fn: () => Promise<void>): Promise<State> {
+  try {
+    await fn();
+    return undefined;
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Something went wrong. Please try again." };
+  }
+}
 
 async function load(id: string) {
   const supabase = await createClient();
@@ -45,19 +72,29 @@ async function checkoutTableState(supabase: Awaited<ReturnType<typeof createClie
   return "unknown" as const;
 }
 
+/** Slot counting is bookkeeping: if it fails, the request change still stands, so log instead of erroring. */
 async function bumpSlots(supabase: Awaited<ReturnType<typeof createClient>>, serviceId: string | null, delta: 1 | -1) {
   if (!serviceId) return;
-  const { data } = await supabase.from("services").select("slots_taken").eq("id", serviceId).single();
-  if (!data) return;
-  await supabase
-    .from("services")
-    .update({ slots_taken: Math.max(0, (data.slots_taken ?? 0) + delta) })
-    .eq("id", serviceId);
-  revalidatePath("/services");
-  revalidatePath("/services/[slug]", "page");
+  try {
+    const { data } = await supabase.from("services").select("slots_taken").eq("id", serviceId).single();
+    if (!data) return;
+    const { error } = await supabase
+      .from("services")
+      .update({ slots_taken: Math.max(0, (data.slots_taken ?? 0) + delta) })
+      .eq("id", serviceId);
+    if (error) console.error("[requests] slot count not updated:", error.message);
+    revalidatePath("/services");
+    revalidatePath("/services/[slug]", "page");
+  } catch (err) {
+    console.error("[requests] slot count not updated:", err instanceof Error ? err.message : err);
+  }
 }
 
-export async function acceptRequest(id: string, formData: FormData) {
+export async function acceptRequest(id: string, formData: FormData): Promise<State> {
+  return guard(() => acceptRequestNow(id, formData));
+}
+
+async function acceptRequestNow(id: string, formData: FormData) {
   const { supabase, req } = await load(id);
   if (req.status !== "pending") throw new Error("Only pending requests can be accepted.");
 
@@ -88,6 +125,7 @@ export async function acceptRequest(id: string, formData: FormData) {
     .select("id");
   if (error) throw new Error(paymentWriteMessage(error.message) ?? error.message);
   if (!updated || updated.length === 0) throw new Error("This request changed. Refresh and try again.");
+  refresh(id);
   await bumpSlots(supabase, req.service_id, 1);
 
   const mail = acceptEmailCopy({
@@ -100,7 +138,7 @@ export async function acceptRequest(id: string, formData: FormData) {
     paymentReady: Boolean(paymentUrl || safePaymentUrl(req.payment_url)),
     requestId: id,
   });
-  await sendEmail({ to: req.contact_email, subject: mail.subject, lines: mail.lines, cta: mail.cta });
+  emailLater({ to: req.contact_email, subject: mail.subject, lines: mail.lines, cta: mail.cta });
   refresh(id);
 }
 
@@ -113,7 +151,11 @@ function readPaymentUrl(formData: FormData) {
 }
 
 /** Paste, replace, or clear the PayPal link. Does not change status or price. */
-export async function setPaymentUrl(id: string, formData: FormData) {
+export async function setPaymentUrl(id: string, formData: FormData): Promise<State> {
+  return guard(() => setPaymentUrlNow(id, formData));
+}
+
+async function setPaymentUrlNow(id: string, formData: FormData) {
   const { supabase, req } = await load(id);
   if (req.status !== "pending" && req.status !== "awaiting_payment") {
     throw new Error("The payment link can only be changed while the request is pending or awaiting payment.");
@@ -132,12 +174,16 @@ export async function setPaymentUrl(id: string, formData: FormData) {
       priceLabel: amount === null ? null : formatUSD(amount),
       requestId: id,
     });
-    await sendEmail({ to: req.contact_email, subject: mail.subject, lines: mail.lines, cta: mail.cta });
+    emailLater({ to: req.contact_email, subject: mail.subject, lines: mail.lines, cta: mail.cta });
   }
   refresh(id);
 }
 
-export async function declineRequest(id: string, formData: FormData) {
+export async function declineRequest(id: string, formData: FormData): Promise<State> {
+  return guard(() => declineRequestNow(id, formData));
+}
+
+async function declineRequestNow(id: string, formData: FormData) {
   const { supabase, req } = await load(id);
   if (req.status !== "pending") throw new Error("Only pending requests can be declined.");
   const note = String(formData.get("artist_note") ?? "").trim();
@@ -145,7 +191,7 @@ export async function declineRequest(id: string, formData: FormData) {
   const { error } = await supabase.from("commission_requests").update({ status: "declined", artist_note: note }).eq("id", id);
   if (error) throw new Error(error.message);
 
-  await sendEmail({
+  emailLater({
     to: req.contact_email,
     subject: `About your request for ${req.service_title} (#${req.ref})`,
     lines: [
@@ -165,7 +211,11 @@ const NEXT_STATUS: Partial<Record<CommissionStatus, { to: CommissionStatus; stam
 };
 
 /** Move a request one step along the happy path. */
-export async function advanceRequest(id: string) {
+export async function advanceRequest(id: string): Promise<State> {
+  return guard(() => advanceRequestNow(id));
+}
+
+async function advanceRequestNow(id: string) {
   const { supabase, req } = await load(id);
   const step = NEXT_STATUS[req.status];
   if (!step) throw new Error("Nothing to advance.");
@@ -202,6 +252,7 @@ export async function advanceRequest(id: string) {
     }
   }
 
+  refresh(id);
   // A finished commission frees its slot.
   if (step.to === "completed") await bumpSlots(supabase, req.service_id, -1);
 
@@ -215,7 +266,7 @@ export async function advanceRequest(id: string) {
   };
   const [subject, line] = copy[step.to] ?? [];
   if (subject && line) {
-    await sendEmail({
+    emailLater({
       to: req.contact_email,
       subject,
       lines: [`Hi ${req.contact_name},`, line],
@@ -225,7 +276,11 @@ export async function advanceRequest(id: string) {
   refresh(id);
 }
 
-export async function cancelRequestAsAdmin(id: string) {
+export async function cancelRequestAsAdmin(id: string): Promise<State> {
+  return guard(() => cancelRequestAsAdminNow(id));
+}
+
+async function cancelRequestAsAdminNow(id: string) {
   const { supabase, req } = await load(id);
   if (["completed", "declined", "cancelled"].includes(req.status)) throw new Error("Already closed.");
   const { error } = await supabase.rpc("admin_cancel_commission_request", { p_request_id: id });
@@ -245,7 +300,11 @@ export async function cancelRequestAsAdmin(id: string) {
   refresh(id);
 }
 
-export async function saveArtistNote(id: string, formData: FormData) {
+export async function saveArtistNote(id: string, formData: FormData): Promise<State> {
+  return guard(() => saveArtistNoteNow(id, formData));
+}
+
+async function saveArtistNoteNow(id: string, formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("commission_requests")
@@ -255,7 +314,11 @@ export async function saveArtistNote(id: string, formData: FormData) {
   refresh(id);
 }
 
-export async function addDeliveryFiles(id: string, paths: string[]) {
+export async function addDeliveryFiles(id: string, paths: string[]): Promise<State> {
+  return guard(() => addDeliveryFilesNow(id, paths));
+}
+
+async function addDeliveryFilesNow(id: string, paths: string[]) {
   const { supabase, req } = await load(id);
   const valid = paths.filter((p) => p.startsWith(`${req.client_id}/deliveries/${id}/`) && !p.includes(".."));
   const { error } = await supabase
@@ -267,7 +330,11 @@ export async function addDeliveryFiles(id: string, paths: string[]) {
 }
 
 /** Paste, replace, or clear the drop link for finished files. */
-export async function setDeliveryUrl(id: string, formData: FormData) {
+export async function setDeliveryUrl(id: string, formData: FormData): Promise<State> {
+  return guard(() => setDeliveryUrlNow(id, formData));
+}
+
+async function setDeliveryUrlNow(id: string, formData: FormData) {
   let url: string | null;
   try {
     url = normalizeDeliveryUrl(String(formData.get("delivery_url") ?? ""));
@@ -285,7 +352,11 @@ export async function setDeliveryUrl(id: string, formData: FormData) {
   refresh(id);
 }
 
-export async function removeDeliveryFile(id: string, path: string) {
+export async function removeDeliveryFile(id: string, path: string): Promise<State> {
+  return guard(() => removeDeliveryFileNow(id, path));
+}
+
+async function removeDeliveryFileNow(id: string, path: string) {
   const { supabase, req } = await load(id);
   await supabase.storage.from("commissions").remove([path]);
   await supabase
@@ -302,7 +373,7 @@ export async function postAdminMessage(id: string, _prev: State, formData: FormD
   const { error } = await supabase.from("commission_messages").insert({ request_id: id, body });
   if (error) return { error: error.message };
 
-  await sendEmail({
+  emailLater({
     to: req.contact_email,
     subject: `New message about your request #${req.ref}`,
     lines: [`Hi ${req.contact_name},`, body],
