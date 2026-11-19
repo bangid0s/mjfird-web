@@ -1,6 +1,7 @@
 import Link from "next/link";
+import StatusChip, { STATUS_COLOR } from "@/components/commissions/StatusChip";
 import { cn } from "@/lib/cn";
-import { STATUS_FLOW, STATUS_SHORT, priceOf } from "@/lib/commissions/status";
+import { STATUS_FLOW, priceOf } from "@/lib/commissions/status";
 import { isFinished, stepIndex, type NextStep } from "@/lib/commissions/next-step";
 import { formatUSD } from "@/lib/services/storefront";
 import type { CommissionRequestRow } from "@/lib/supabase/types";
@@ -35,19 +36,23 @@ function Thumb({ url, title, className }: { url: string | null; title: string; c
   );
 }
 
-/** Five segments: where this request is on the way from sent to completed. */
+/** Five segments in the status colour: where this request is on the way from sent to completed. */
 function MiniProgress({ status }: { status: CommissionRequestRow["status"] }) {
   const at = stepIndex(status);
   return (
-    <span className="flex items-center gap-2.5">
+    <span className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+      <StatusChip status={status} size="sm" />
       <span className="flex gap-1" aria-hidden="true">
         {STATUS_FLOW.map((s, i) => (
-          <span key={s} className={cn("h-1 w-5", i <= at ? "bg-accent" : "bg-line")} />
+          <span
+            key={s}
+            className={cn("h-1 w-5", i > at && "bg-line")}
+            style={i <= at ? { background: STATUS_COLOR[status] } : undefined}
+          />
         ))}
       </span>
-      <span className="text-[13px] text-ink-muted">
-        {STATUS_SHORT[status]}
-        <span className="sr-only">, step {at + 1} of {STATUS_FLOW.length}</span>
+      <span className="sr-only">
+        Step {at + 1} of {STATUS_FLOW.length}
       </span>
     </span>
   );
@@ -136,7 +141,7 @@ function FinishedRow({ item }: { item: OverviewItem }) {
             #{req.ref}, {shortDate(req.created_at)}
           </span>
         </span>
-        <span className="shrink-0 text-body-sm text-ink-muted">{STATUS_SHORT[req.status]}</span>
+        <StatusChip status={req.status} size="sm" className="shrink-0" />
         <span className="hidden w-20 shrink-0 text-right text-body-sm text-ink-muted tabular-nums sm:block">
           {req.status === "completed" ? formatUSD(priceOf(req)) : ""}
         </span>

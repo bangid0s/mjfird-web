@@ -1,3 +1,4 @@
+import { STATUS_COLOR } from "@/components/commissions/StatusChip";
 import { cn } from "@/lib/cn";
 import { stepIndex } from "@/lib/commissions/next-step";
 import type { CommissionRequestRow } from "@/lib/supabase/types";
@@ -30,7 +31,7 @@ export default function RequestProgress({ req }: { req: Dates }) {
         const current = !stopped && i === at;
         return (
           <li key={step.label} className="flex min-w-0 flex-col gap-2" aria-current={current ? "step" : undefined}>
-            <span className={cn("h-1 w-full", done ? "bg-accent" : "bg-line")} />
+            <span className={cn("h-1 w-full", !done && "bg-line")} style={done ? { background: STATUS_COLOR[req.status] } : undefined} />
             <span className="flex flex-col">
               <span className={cn("truncate text-[12px] leading-tight sm:text-[13px]", done ? "font-medium text-ink" : "text-ink-faint")}>
                 {step.label}

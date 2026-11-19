@@ -2,7 +2,7 @@ import Link from "next/link";
 import FileLinks from "@/components/commissions/FileLinks";
 import MessageThread from "@/components/commissions/MessageThread";
 import OrderSummary from "@/components/commissions/OrderSummary";
-import StatusChip from "@/components/commissions/StatusChip";
+import StatusChip, { STATUS_COLOR } from "@/components/commissions/StatusChip";
 import CancelRequestButton from "@/components/commissions/CancelRequestButton";
 import ReviewForm from "@/components/commissions/ReviewForm";
 import RequestProgress from "@/components/account/RequestProgress";
@@ -31,13 +31,25 @@ function Section({ id, title, children, className }: { id?: string; title: strin
  * the accent colour and carries the action itself — including payment, which
  * used to sit at the very bottom of the page on phones.
  */
-function NextStepPanel({ step, note, payment }: { step: NextStep; note: string; payment: React.ReactNode }) {
+function NextStepPanel({
+  step,
+  note,
+  payment,
+  status,
+}: {
+  step: NextStep;
+  note: string;
+  payment: React.ReactNode;
+  status: CommissionRequestRow["status"];
+}) {
   const yours = step.owner === "yours";
   const showAction = step.action && !(payment && step.action.href === "#payment");
   return (
     <section
       aria-label="Next step"
-      className={cn("flex flex-col gap-4 p-5 sm:p-6", yours ? "bg-accent text-accent-ink" : "border border-line bg-bg-raised")}
+      // When it isn't the client's move, the panel carries the status colour on its edge.
+      style={yours ? undefined : { borderLeftColor: STATUS_COLOR[status] }}
+      className={cn("flex flex-col gap-4 p-5 sm:p-6", yours ? "bg-accent text-accent-ink" : "border border-l-4 border-line bg-bg-raised")}
     >
       <div className="flex flex-col gap-1.5">
         <p className={cn("text-body-sm", yours ? "opacity-80" : "text-ink-muted")}>{yours ? "Your next step" : step.owner === "ours" ? "Next up" : "Status"}</p>
@@ -137,7 +149,7 @@ export default function RequestDetail({
 
       <div className="grid gap-12 lg:grid-cols-[1fr_21rem] lg:gap-14">
         <div className="flex min-w-0 flex-col gap-12">
-          <NextStepPanel step={step} note={req.artist_note} payment={payment} />
+          <NextStepPanel step={step} note={req.artist_note} payment={payment} status={req.status} />
 
           {hasFiles && (
             <Section id="files" title="Your files">
