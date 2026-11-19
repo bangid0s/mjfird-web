@@ -1,4 +1,5 @@
 import { Field, FieldSection, fieldInputClasses } from "@/components/admin/Field";
+import { DEFAULT_WORK_STAGES } from "@/lib/commissions/work-stages";
 import ImageUploader from "@/components/admin/ImageUploader";
 import GalleryUploader from "@/components/admin/GalleryUploader";
 import { AddonsEditor, FaqEditor, LicensesEditor, PackagesEditor, QuestionsEditor } from "@/components/admin/ServiceBuilderEditors";
@@ -152,6 +153,21 @@ export default function ServiceForm({
             />
           </Field>
         </div>
+      </FieldSection>
+
+      <FieldSection
+        title="Work stages"
+        description="The steps an order goes through once it's paid. You share work-in-progress at each stage, and the client approves it or asks for changes before you move on. Leave empty to skip stages for this service."
+      >
+        <Field label="Stages — one per line, in order (up to 10)">
+          <textarea
+            name="work_stages"
+            rows={4}
+            defaultValue={(service?.work_stages ?? DEFAULT_WORK_STAGES).join("\n")}
+            className={`${fieldInputClasses} resize-y`}
+          />
+        </Field>
+        <p className="text-[13px] text-ink-faint">Changing this affects new orders only; orders already in progress keep their stages.</p>
       </FieldSection>
 
       <FieldSection title="Request form" description="Extra questions clients answer when they request this service.">

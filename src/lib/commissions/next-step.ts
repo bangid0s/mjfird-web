@@ -1,6 +1,7 @@
 import type { CommissionRequestRow, CommissionStatus } from "@/lib/supabase/types";
 import { STATUS_FLOW, priceOf } from "@/lib/commissions/status";
 import { formatUSD } from "@/lib/services/storefront";
+import { workStagesOf } from "@/lib/commissions/work-stages";
 
 /*
   What the client should do next on a request, in plain words. The account
@@ -17,7 +18,10 @@ export type NextStep = {
   action?: { label: string; href: string };
 };
 
-type Input = Pick<CommissionRequestRow, "status" | "final_price" | "estimated_total" | "payment_url"> & {
+type Input = Pick<
+  CommissionRequestRow,
+  "status" | "final_price" | "estimated_total" | "payment_url" | "work_stages" | "stage_index"
+> & {
   hasReview: boolean;
   /** True when PayPal checkout or a pay link is actually ready to use. */
   canPay: boolean;
@@ -45,13 +49,23 @@ export function nextStep(req: Input): NextStep {
             title: "Accepted. Payment link on its way",
             body: "Your request is accepted. I'll add the payment link here shortly.",
           };
-    case "in_progress":
+    case "in_progress": {
+      const work = workStagesOf(req);
+      if (!work) {
+        return {
+          owner: "ours",
+          title: "Work in progress",
+          body: "Sketches, questions and updates will show up in the messages.",
+          action: { label: "Open messages", href: "#messages" },
+        };
+      }
       return {
         owner: "ours",
-        title: "Work in progress",
-        body: "Sketches, questions and updates will show up in the messages.",
-        action: { label: "Open messages", href: "#messages" },
+        title: `Working on: ${work.current}`,
+        body: `Step ${work.index + 1} of ${work.stages.length}. Previews and feedback happen in your Discord ticket.`,
+        action: { label: "See progress", href: "#stages" },
       };
+    }
     case "delivered":
       return {
         owner: "yours",

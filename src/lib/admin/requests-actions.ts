@@ -382,3 +382,23 @@ export async function postAdminMessage(id: string, _prev: State, formData: FormD
   refresh(id);
   return undefined;
 }
+
+// ---------- work stages (0047_work_stages.sql) ----------
+
+/** Set which stage the order is at. Moving forward notifies the client (database trigger). */
+export async function setWorkStage(id: string, index: number): Promise<State> {
+  return guard(async () => {
+    const { supabase, req } = await load(id);
+    const stages = req.work_stages ?? [];
+    if (req.status !== "in_progress" || stages.length === 0) throw new Error("Stages are only used while a request is in progress.");
+    if (!Number.isInteger(index) || index < 0 || index >= stages.length) throw new Error("That stage doesn't exist.");
+    const { error } = await supabase.from("commission_requests").update({ stage_index: index }).eq("id", id).eq("status", "in_progress");
+    if (error) {
+      if (error.message.includes("stage_index")) {
+        throw new Error("Work stages need the database update: run supabase/migrations/0047_work_stages.sql, then try again.");
+      }
+      throw new Error(error.message);
+    }
+    refresh(id);
+  });
+}

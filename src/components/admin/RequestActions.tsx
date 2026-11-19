@@ -13,6 +13,7 @@ import {
   saveArtistNote,
   setDeliveryUrl,
   setPaymentUrl,
+  setWorkStage,
 } from "@/lib/admin/requests-actions";
 import type { CommissionStatus } from "@/lib/supabase/types";
 import { cn } from "@/lib/cn";
@@ -320,6 +321,60 @@ export function DeliveryUploader({
           )}
         </div>
       </form>
+    </div>
+  );
+}
+
+/*
+  Where the order is, as one tap per stage. Previews and feedback live in the
+  client's Discord ticket; this only moves the marker the client sees. Moving
+  forward sends the client a notification; tapping an earlier stage steps back.
+*/
+export function WorkStagesAdmin({ id, stages, index }: { id: string; stages: string[]; index: number }) {
+  const { pending, error, saved, run } = useRun();
+  const next = stages[index + 1];
+
+  return (
+    <div className="flex flex-col gap-4">
+      <ol className="flex flex-wrap gap-1.5" aria-label="Set the current stage">
+        {stages.map((name, i) => {
+          const current = i === index;
+          return (
+            <li key={`${i}-${name}`} className="min-w-[6.5rem] flex-1">
+              <button
+                type="button"
+                disabled={pending || current}
+                aria-current={current ? "step" : undefined}
+                onClick={() => run(() => setWorkStage(id, i))}
+                className={cn(
+                  "flex w-full flex-col gap-0.5 border px-3 py-2 text-left transition-colors disabled:cursor-default",
+                  i < index && "border-transparent bg-[color-mix(in_oklab,var(--color-status-progress)_10%,transparent)] hover:border-line-strong",
+                  current && "border-2 border-[var(--color-status-progress)] bg-bg",
+                  i > index && "border-dashed border-line hover:border-line-strong hover:bg-bg",
+                )}
+              >
+                <span className={cn("text-body-sm font-medium", i > index ? "text-ink-muted" : "text-ink")}>{name}</span>
+                <span className={cn("text-[12px]", current ? "font-medium text-[var(--color-status-progress)]" : "text-ink-faint")}>
+                  {i < index ? "Done" : current ? "Now" : `Step ${i + 1}`}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      <div className="flex flex-wrap items-center gap-3">
+        {next ? (
+          <button type="button" disabled={pending} onClick={() => run(() => setWorkStage(id, index + 1))} className={primary}>
+            {pending ? "Saving…" : `Move to ${next}`}
+          </button>
+        ) : (
+          <p className="text-[13px] text-ink-faint">Last stage. Upload the final files and mark it delivered.</p>
+        )}
+        <Feedback error={error} saved={saved} />
+      </div>
+      <p className="text-[13px] text-ink-faint">
+        The client sees this on their request page and gets a notification when you move forward. Tap an earlier stage to step back.
+      </p>
     </div>
   );
 }

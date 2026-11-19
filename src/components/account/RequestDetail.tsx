@@ -6,6 +6,8 @@ import StatusChip, { STATUS_COLOR } from "@/components/commissions/StatusChip";
 import CancelRequestButton from "@/components/commissions/CancelRequestButton";
 import ReviewForm from "@/components/commissions/ReviewForm";
 import RequestProgress from "@/components/account/RequestProgress";
+import { StageTrack } from "@/components/commissions/WorkStageView";
+import { workStagesOf } from "@/lib/commissions/work-stages";
 import { cn } from "@/lib/cn";
 import { deliveryHost } from "@/lib/commissions/delivery-link";
 import type { NextStep } from "@/lib/commissions/next-step";
@@ -111,6 +113,7 @@ export default function RequestDetail({
   postMessage: (prev: RequestState, formData: FormData) => Promise<RequestState>;
   submitReview: (prev: RequestState, formData: FormData) => Promise<RequestState>;
 }) {
+  const work = workStagesOf(req);
   const hasFiles = deliveries.length > 0 || Boolean(deliveryUrl);
   const canCancel = req.status === "pending" || req.status === "awaiting_payment";
   const sent = new Date(req.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
@@ -150,6 +153,15 @@ export default function RequestDetail({
       <div className="grid gap-12 lg:grid-cols-[1fr_21rem] lg:gap-14">
         <div className="flex min-w-0 flex-col gap-12">
           <NextStepPanel step={step} note={req.artist_note} payment={payment} status={req.status} />
+
+          {work && (
+            <Section id="stages" title="Progress">
+              <StageTrack stages={work.stages} index={work.index} />
+              <p className="text-body-sm text-ink-muted">
+                Previews and feedback for each stage happen in your Discord ticket. You&apos;ll get a notification here when your order moves to the next stage.
+              </p>
+            </Section>
+          )}
 
           {hasFiles && (
             <Section id="files" title="Your files">

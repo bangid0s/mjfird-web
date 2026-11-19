@@ -18,6 +18,7 @@ import {
   slugify,
   type Availability,
 } from "@/lib/services/storefront";
+import { parseWorkStages } from "@/lib/commissions/work-stages";
 
 function lines(raw: FormDataEntryValue | null) {
   return String(raw ?? "")
@@ -58,7 +59,19 @@ function parsePayload(formData: FormData) {
     will_draw: lines(formData.get("will_draw")),
     wont_draw: lines(formData.get("wont_draw")),
     terms: String(formData.get("terms") ?? ""),
+    work_stages: parseWorkStages(String(formData.get("work_stages") ?? "")),
   };
+}
+
+/** Before 0047_work_stages.sql there's no work_stages column; save everything else rather than failing. */
+function missingWorkStages(error: { message: string } | null) {
+  return Boolean(error && error.message.includes("work_stages"));
+}
+
+function withoutWorkStages(payload: ReturnType<typeof parsePayload>) {
+  const rest: Partial<ReturnType<typeof parsePayload>> = { ...payload };
+  delete rest.work_stages;
+  return rest;
 }
 
 function saveError(error: { code?: string; message: string }) {
@@ -79,7 +92,10 @@ function revalidateServices() {
 export async function createService(formData: FormData) {
   const supabase = await createClient();
   const payload = parsePayload(formData);
-  const { error } = await supabase.from("services").insert(payload);
+  let { error } = await supabase.from("services").insert(payload);
+  if (missingWorkStages(error)) {
+    ({ error } = await supabase.from("services").insert(withoutWorkStages(payload)));
+  }
   if (error) throw saveError(error);
   revalidateServices();
   redirect("/admin/services");
@@ -88,7 +104,10 @@ export async function createService(formData: FormData) {
 export async function updateService(id: string, formData: FormData) {
   const supabase = await createClient();
   const payload = parsePayload(formData);
-  const { error } = await supabase.from("services").update(payload).eq("id", id);
+  let { error } = await supabase.from("services").update(payload).eq("id", id);
+  if (missingWorkStages(error)) {
+    ({ error } = await supabase.from("services").update(withoutWorkStages(payload)).eq("id", id));
+  }
   if (error) throw saveError(error);
   revalidateServices();
   redirect("/admin/services");

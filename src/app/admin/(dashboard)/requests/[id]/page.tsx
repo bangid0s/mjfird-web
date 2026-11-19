@@ -6,7 +6,8 @@ import MessageThread from "@/components/commissions/MessageThread";
 import OrderSummary from "@/components/commissions/OrderSummary";
 import StatusChip from "@/components/commissions/StatusChip";
 import Timeline from "@/components/commissions/Timeline";
-import { DeliveryUploader, StatusActions } from "@/components/admin/RequestActions";
+import { DeliveryUploader, StatusActions, WorkStagesAdmin } from "@/components/admin/RequestActions";
+import { workStagesOf } from "@/lib/commissions/work-stages";
 import { postAdminMessage } from "@/lib/admin/requests-actions";
 import { formatDate } from "@/lib/admin/format";
 import { priceOf, toNumber } from "@/lib/commissions/status";
@@ -49,6 +50,7 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
       .eq("client_id", req.client_id)
       .maybeSingle(),
   ]);
+  const work = workStagesOf(req);
   const verifiedDiscord = discordRow as {
     discord_username: string;
     discord_user_id: string;
@@ -118,6 +120,12 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
           >
             <FileLinks files={refs} />
           </Panel>
+
+          {work && (
+            <Panel title="Work stages">
+              <WorkStagesAdmin id={req.id} stages={work.stages} index={work.index} />
+            </Panel>
+          )}
 
           <Panel title="Messages">
             <MessageThread
