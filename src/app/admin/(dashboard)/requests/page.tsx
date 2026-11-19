@@ -23,7 +23,11 @@ export default async function AdminRequestsPage({ searchParams }: { searchParams
   const filter = FILTERS.find((f) => f.value === status) ?? FILTERS[0];
 
   const supabase = await createClient();
-  const { data } = await supabase.from("commission_requests").select("*").order("created_at", { ascending: false });
+  const { data } = await supabase
+    .from("commission_requests")
+    // Only what the list shows: briefs, answers and file lists stay on the request page.
+    .select("id, ref, service_title, package_name, contact_name, status, waitlisted, addons, final_price, estimated_total, created_at")
+    .order("created_at", { ascending: false });
   const all = (data as CommissionRequestRow[]) ?? [];
   const rows = all.filter((r) => filter.match(r.status));
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { fieldInputClasses } from "@/components/admin/Field";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -22,19 +22,46 @@ const primary =
 const ghost =
   "inline-flex items-center justify-center border border-line px-4 py-2.5 text-body-sm text-ink-muted transition-colors hover:border-line-strong hover:text-ink disabled:opacity-50";
 
+type Result = { error?: string } | undefined | void;
+
+/*
+  Runs a request action and reports how it went. Actions return { error }
+  rather than throwing, because production builds replace thrown messages
+  with a generic one. A short "Saved" confirms the change landed, so a quiet
+  screen never leaves you wondering whether the click did anything.
+*/
 function useRun() {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const run = (fn: () => Promise<unknown>) =>
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!saved) return;
+    const timer = window.setTimeout(() => setSaved(false), 2500);
+    return () => window.clearTimeout(timer);
+  }, [saved]);
+
+  const run = (fn: () => Promise<Result>) =>
     start(async () => {
       setError(null);
+      setSaved(false);
       try {
-        await fn();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Something went wrong.");
+        const result = await fn();
+        if (result?.error) setError(result.error);
+        else setSaved(true);
+      } catch {
+        setError("Couldn't reach the server. Check your connection and try again.");
       }
     });
-  return { pending, error, run };
+  return { pending, error, saved, run };
+}
+
+function Feedback({ error, saved }: { error: string | null; saved: boolean }) {
+  return (
+    <p aria-live="polite" className={cn("text-body-sm", error ? "text-error" : "text-success", !error && !saved && "sr-only")}>
+      {error ?? (saved ? "Saved." : "")}
+    </p>
+  );
 }
 
 const ADVANCE_LABEL: Partial<Record<CommissionStatus, string>> = {
@@ -59,13 +86,13 @@ export function StatusActions({
   /** Shown under the price when the estimate already includes a past-client discount. */
   discountNote?: string | null;
 }) {
-  const { pending, error, run } = useRun();
+  const { pending, error, saved, run } = useRun();
   const [mode, setMode] = useState<"accept" | "decline" | null>(null);
 
   if (status === "pending") {
     return (
       <div className="flex flex-col gap-4">
-        {error && <p className="text-body-sm text-error">{error}</p>}
+        <Feedback error={error} saved={saved} />
         {mode === null && (
           <div className="flex flex-wrap gap-2">
             <button type="button" className={primary} onClick={() => setMode("accept")}>
@@ -137,7 +164,7 @@ export function StatusActions({
 
   return (
     <div className="flex flex-col gap-4">
-      {error && <p className="text-body-sm text-error">{error}</p>}
+      <Feedback error={error} saved={saved} />
       {status === "awaiting_payment" && (
         <form className="flex flex-col gap-3" action={(fd) => run(() => setPaymentUrl(id, fd))}>
           <label className="flex flex-col gap-1.5">
@@ -204,7 +231,7 @@ export function DeliveryUploader({
   files: { path: string; name: string; url: string }[];
   deliveryUrl: string | null;
 }) {
-  const { pending, error, run } = useRun();
+  const { pending, error, saved, run } = useRun();
   const [busy, setBusy] = useState(false);
 
   const upload = async (list: FileList) => {
@@ -225,7 +252,7 @@ export function DeliveryUploader({
 
   return (
     <div className="flex flex-col gap-3">
-      {error && <p className="text-body-sm text-error">{error}</p>}
+      <Feedback error={error} saved={saved} />
       {files.length > 0 && (
         <ul className="flex flex-col gap-1.5">
           {files.map((f) => (
