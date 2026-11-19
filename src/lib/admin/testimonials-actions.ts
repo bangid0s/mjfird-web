@@ -18,6 +18,8 @@ function parsePayload(formData: FormData) {
 function refreshPublic() {
   revalidatePath("/admin/testimonials");
   revalidatePath("/");
+  revalidatePath("/reviews");
+  revalidatePath("/resume");
   // Verified reviews also show on their service page.
   revalidatePath("/services", "layout");
 }
@@ -25,14 +27,14 @@ function refreshPublic() {
 function friendly(message: string) {
   if (message.includes("review_private")) return "The client asked to keep this review private, so it can't be published.";
   if (message.includes("verified_review_rpc_only")) return "Verified reviews can only be written by the client.";
+  if (message.includes("featured")) return "Pinning needs database migration 0048_review_feed.sql. Apply it in Supabase, then try again.";
   return message;
 }
 
 export async function createTestimonial(formData: FormData) {
   const supabase = await createClient();
   await supabase.from("testimonials").insert(parsePayload(formData));
-  revalidatePath("/admin/testimonials");
-  revalidatePath("/");
+  refreshPublic();
   redirect("/admin/testimonials");
 }
 
@@ -59,13 +61,17 @@ export async function deleteTestimonial(id: string) {
   refreshPublic();
 }
 
-export async function reorderTestimonials(orderedIds: string[]) {
+/**
+ * Pin one review to lead the home page, or unpin it. Only one can be pinned:
+ * pinning a review unpins whichever one was pinned before.
+ */
+export async function setFeaturedTestimonial(id: string, featured: boolean) {
   const supabase = await createClient();
-  await Promise.all(
-    orderedIds.map((id, index) =>
-      supabase.from("testimonials").update({ sort_order: index }).eq("id", id),
-    ),
-  );
-  revalidatePath("/admin/testimonials");
-  revalidatePath("/");
+  if (featured) {
+    const { error: clearError } = await supabase.from("testimonials").update({ featured: false }).eq("featured", true).neq("id", id);
+    if (clearError) throw new Error(friendly(clearError.message));
+  }
+  const { error } = await supabase.from("testimonials").update({ featured }).eq("id", id);
+  if (error) throw new Error(friendly(error.message));
+  refreshPublic();
 }

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import TestimonialsList from "@/components/admin/TestimonialsList";
 import PageHeader, { HeaderAction } from "@/components/admin/PageHeader";
 import EmptyState from "@/components/admin/EmptyState";
+import { newestFirst, postedAt } from "@/lib/reviews-order";
 import type { TestimonialRow } from "@/lib/supabase/types";
 
 export default async function AdminTestimonialsPage() {
@@ -11,14 +12,16 @@ export default async function AdminTestimonialsPage() {
     .select("*")
     .order("sort_order", { ascending: true });
 
-  const testimonials = (data as TestimonialRow[]) ?? [];
+  const testimonials = newestFirst(
+    ((data as TestimonialRow[]) ?? []).map((t) => ({ ...t, postedAt: postedAt(t) })),
+  );
   const awaiting = testimonials.filter((t) => t.request_id && t.public_consent && t.status === "draft").length;
 
   return (
     <div>
       <PageHeader
         title="Testimonials"
-        description="Client quotes shown on the homepage. Verified reviews come from clients after a completed commission and also show on their service page. Drag to reorder."
+        description="Client quotes, newest first — the same order the site uses. The homepage shows the latest five and links to /reviews for the rest. Pin one review to always lead the homepage. Verified reviews come from clients after a completed commission and also show on their service page."
         action={<HeaderAction href="/admin/testimonials/new">New testimonial</HeaderAction>}
       />
 
