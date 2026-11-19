@@ -79,6 +79,8 @@ export type TestimonialRow = {
   public_consent: boolean;
   submitted_at: string | null;
   updated_at: string | null;
+  /** Pinned to lead the home page. At most one (migration 0048). */
+  featured: boolean;
 };
 
 export type BlogPostRow = {

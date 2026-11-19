@@ -142,6 +142,10 @@ export type Testimonial = {
   verified?: boolean;
   serviceId?: string;
   serviceTitle?: string;
+  /** Pinned to lead the home page. */
+  featured?: boolean;
+  /** ISO time the review counts from, for newest-first order. */
+  postedAt?: string;
 };
 
 export const testimonials: Testimonial[] = [

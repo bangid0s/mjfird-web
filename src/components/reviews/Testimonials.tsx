@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Reveal from "@/components/motion/Reveal";
 import { ReviewAttribution, ReviewBody } from "@/components/reviews/ReviewCard";
 import Stars from "@/components/reviews/Stars";
@@ -6,8 +7,9 @@ import type { Testimonial } from "@/lib/placeholder-data";
 /*
   One voice leads, at reading size; up to four more follow as short cards. Six
   long quotes at equal weight read as a wall and nobody finishes any of them.
+  Items arrive pinned-first, then newest first; the rest live on /reviews.
 */
-export default function Testimonials({ items }: { items: Testimonial[] }) {
+export default function Testimonials({ items, showAllLink = true }: { items: Testimonial[]; showAllLink?: boolean }) {
   if (items.length === 0) return null;
   const [lead, ...rest] = items;
   const cards = rest.slice(0, 4);
@@ -39,6 +41,25 @@ export default function Testimonials({ items }: { items: Testimonial[] }) {
             </Reveal>
           ))}
         </div>
+      )}
+
+      {showAllLink && (
+        <Reveal className="flex justify-start pt-10">
+          <Link
+            href="/reviews"
+            data-cursor="view"
+            className="label group inline-flex items-center gap-3 border border-line px-5 py-3 transition-colors duration-[var(--duration-fast)] hover:border-ink hover:text-ink"
+          >
+            See all reviews
+            <span className="mono-meta">({items.length})</span>
+            <span
+              aria-hidden="true"
+              className="transition-transform duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:translate-x-1"
+            >
+              →
+            </span>
+          </Link>
+        </Reveal>
       )}
     </div>
   );
