@@ -17,10 +17,13 @@ import { parseStoredRoles } from "@/lib/discord/perks";
 import { markRequestNotificationsRead } from "@/lib/notifications/read";
 import type { CommissionMessageRow, CommissionRequestRow, TestimonialRow } from "@/lib/supabase/types";
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-4 border border-line bg-bg-raised p-5">
-      <h2 className="text-body font-semibold text-ink">{title}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-body font-semibold text-ink">{title}</h2>
+        {action}
+      </div>
       {children}
     </section>
   );
@@ -99,7 +102,20 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
             )}
           </Panel>
 
-          <Panel title={`References (${refs.length})`}>
+          <Panel
+            title={`References (${refs.length})`}
+            action={
+              refs.length > 0 && (
+                <a
+                  href={`/admin/requests/${id}/files?kind=references`}
+                  download
+                  className="text-body-sm font-medium text-ink-muted transition-colors hover:text-ink"
+                >
+                  Download all (.zip)
+                </a>
+              )
+            }
+          >
             <FileLinks files={refs} />
           </Panel>
 
@@ -129,7 +145,20 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
             <OrderSummary req={req} />
           </Panel>
           {["in_progress", "delivered", "completed"].includes(req.status) && (
-            <Panel title="Delivery">
+            <Panel
+              title="Delivery"
+              action={
+                deliveryFiles.length > 1 && (
+                  <a
+                    href={`/admin/requests/${id}/files?kind=deliveries`}
+                    download
+                    className="text-body-sm font-medium text-ink-muted transition-colors hover:text-ink"
+                  >
+                    Download all (.zip)
+                  </a>
+                )
+              }
+            >
               <DeliveryUploader id={req.id} clientId={req.client_id} files={deliveryFiles} deliveryUrl={safeDeliveryUrl(req.delivery_url)} />
             </Panel>
           )}
