@@ -1,9 +1,10 @@
-import type { CommissionRequestRow, StageStatus } from "@/lib/supabase/types";
+import type { CommissionRequestRow } from "@/lib/supabase/types";
 
 /*
-  Work stages (0047_work_stages.sql): the steps of a commission while it's in
-  progress. These helpers read them off a request row, which may come from a
-  database that hasn't had the migration yet, so every field is optional and
+  Work stages (0047_work_stages.sql): a progress marker for a commission
+  while it's in progress. Previews and feedback happen in the client's
+  Discord ticket; the site only shows where the order is. Rows may come
+  from a database without the migration, so every field is optional and
   "no stages" simply hides the feature.
 */
 
@@ -12,26 +13,16 @@ export const DEFAULT_WORK_STAGES = ["Sketch", "Lineart", "Colour", "Final"];
 export type WorkStages = {
   stages: string[];
   index: number;
-  status: StageStatus;
   current: string;
   isLast: boolean;
 };
 
-export function workStagesOf(
-  req: Pick<CommissionRequestRow, "status" | "work_stages" | "stage_index" | "stage_status">,
-): WorkStages | null {
+export function workStagesOf(req: Pick<CommissionRequestRow, "status" | "work_stages" | "stage_index">): WorkStages | null {
   const stages = req.work_stages ?? [];
   if (req.status !== "in_progress" || stages.length === 0) return null;
   const index = Math.min(Math.max(req.stage_index ?? 0, 0), stages.length - 1);
-  return {
-    stages,
-    index,
-    status: req.stage_status ?? "working",
-    current: stages[index],
-    isLast: index === stages.length - 1,
-  };
+  return { stages, index, current: stages[index], isLast: index === stages.length - 1 };
 }
-
 
 /** One stage name per line, trimmed, de-duplicated, at most 10 of up to 40 characters. */
 export function parseWorkStages(raw: string) {
@@ -46,9 +37,4 @@ export function parseWorkStages(raw: string) {
     if (out.length === 10) break;
   }
   return out;
-}
-
-/** Storage folder for work-in-progress previews; only the client and the admin can read it. */
-export function progressFolder(clientId: string, requestId: string) {
-  return `${clientId}/progress/${requestId}`;
 }

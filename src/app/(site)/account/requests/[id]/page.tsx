@@ -10,8 +10,7 @@ import { clientPaymentView } from "@/lib/commissions/payment-link";
 import { safeDeliveryUrl } from "@/lib/commissions/delivery-link";
 import { nextStep } from "@/lib/commissions/next-step";
 import { paypalButtonAvailable, readPaypalSandboxConfig } from "@/lib/payments/config";
-import { postClientMessage, reviewWorkStage, submitReview } from "@/lib/client/request-actions";
-import { loadStageEvents } from "@/lib/commissions/stage-events";
+import { postClientMessage, submitReview } from "@/lib/client/request-actions";
 import type { CommissionMessageRow, CommissionRequestRow, TestimonialRow } from "@/lib/supabase/types";
 
 export const metadata: Metadata = { title: "Request", robots: { index: false } };
@@ -43,7 +42,7 @@ export default async function ClientRequestPage({
     checkoutAvailable: paypalClientId !== null,
   });
 
-  const [{ data: msgs }, refs, deliveries, { data: reviewRow }, , stageEvents] = await Promise.all([
+  const [{ data: msgs }, refs, deliveries, { data: reviewRow }] = await Promise.all([
     supabase.from("commission_messages").select("*").eq("request_id", id).order("created_at"),
     signFiles(supabase, req.reference_paths),
     signFiles(supabase, req.delivery_paths),
@@ -55,7 +54,6 @@ export default async function ClientRequestPage({
           .maybeSingle()
       : Promise.resolve({ data: null }),
     markRequestNotificationsRead(supabase, id),
-    loadStageEvents(supabase, id),
   ]);
   const review = reviewRow as Pick<TestimonialRow, "quote" | "name" | "role" | "rating" | "public_consent" | "status"> | null;
   const canPay = paymentView.kind === "link" || paymentView.kind === "checkout";
@@ -80,8 +78,6 @@ export default async function ClientRequestPage({
       submitted={Boolean(submitted)}
       postMessage={postClientMessage.bind(null, id)}
       submitReview={submitReview.bind(null, id)}
-      stageEvents={stageEvents}
-      reviewStage={reviewWorkStage.bind(null, id)}
     />
   );
 }

@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -201,37 +200,5 @@ export async function submitReview(requestId: string, _prev: RequestState, formD
   // An edit unpublishes it until approved again.
   revalidatePath("/");
   revalidatePath("/services", "layout");
-  return { done: true };
-}
-
-/** The client approves the shared stage, or asks for changes with a note. */
-export async function reviewWorkStage(requestId: string, _prev: RequestState, formData: FormData): Promise<RequestState> {
-  const approve = formData.get("decision") === "approve";
-  const note = String(formData.get("note") ?? "").trim();
-  if (!approve && !note) return { error: "Tell me what to change, so I know what to fix." };
-  if (note.length > 2000) return { error: "That note is too long (2,000 characters max)." };
-
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("review_work_stage", { p_request_id: requestId, p_approve: approve, p_note: note });
-  if (error) return { error: friendlyRpcError(error.message) };
-
-  const { data } = await supabase
-    .from("commission_requests")
-    .select("ref, contact_name, contact_email, work_stages, stage_index")
-    .eq("id", requestId)
-    .single();
-  if (data) {
-    const stage = (data.work_stages as string[] | null)?.[data.stage_index as number] ?? "A stage";
-    // Sent after the response, so the client's button never waits on the mail API.
-    after(() => sendEmail({
-      to: COMMISSION_EMAIL,
-      subject: approve ? `${stage} approved on #${data.ref}` : `Changes requested on ${stage} (#${data.ref})`,
-      lines: [approve ? `${data.contact_name} approved the ${stage.toLowerCase()}.` : `${data.contact_name} asked for changes to the ${stage.toLowerCase()}:`, ...(note ? [note] : [])],
-      cta: { label: "Open request", path: `/admin/requests/${requestId}` },
-      replyTo: data.contact_email,
-    }));
-  }
-  revalidatePath(`/account/requests/${requestId}`);
-  revalidatePath("/account");
   return { done: true };
 }

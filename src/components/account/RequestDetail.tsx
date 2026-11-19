@@ -6,9 +6,7 @@ import StatusChip, { STATUS_COLOR } from "@/components/commissions/StatusChip";
 import CancelRequestButton from "@/components/commissions/CancelRequestButton";
 import ReviewForm from "@/components/commissions/ReviewForm";
 import RequestProgress from "@/components/account/RequestProgress";
-import StageReviewForm from "@/components/account/StageReviewForm";
-import { StageHistory, StagePreviews, StageTrack, latestShare } from "@/components/commissions/WorkStageView";
-import type { StageEventView } from "@/lib/commissions/stage-events";
+import { StageTrack } from "@/components/commissions/WorkStageView";
 import { workStagesOf } from "@/lib/commissions/work-stages";
 import { cn } from "@/lib/cn";
 import { deliveryHost } from "@/lib/commissions/delivery-link";
@@ -101,8 +99,6 @@ export default function RequestDetail({
   submitted,
   postMessage,
   submitReview,
-  stageEvents = [],
-  reviewStage,
 }: {
   req: CommissionRequestRow;
   step: NextStep;
@@ -116,12 +112,8 @@ export default function RequestDetail({
   submitted: boolean;
   postMessage: (prev: RequestState, formData: FormData) => Promise<RequestState>;
   submitReview: (prev: RequestState, formData: FormData) => Promise<RequestState>;
-  /** Work-stage history with signed previews (0047). Empty before the migration. */
-  stageEvents?: StageEventView[];
-  reviewStage?: (prev: RequestState, formData: FormData) => Promise<RequestState>;
 }) {
   const work = workStagesOf(req);
-  const share = work ? latestShare(stageEvents, work.index) : null;
   const hasFiles = deliveries.length > 0 || Boolean(deliveryUrl);
   const canCancel = req.status === "pending" || req.status === "awaiting_payment";
   const sent = new Date(req.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
@@ -164,44 +156,10 @@ export default function RequestDetail({
 
           {work && (
             <Section id="stages" title="Progress">
-              <StageTrack stages={work.stages} index={work.index} status={work.status} />
-
-              {work.status === "review" && (
-                <div className="flex flex-col gap-4 border border-line-strong bg-bg-raised p-5 sm:p-6">
-                  <div className="flex flex-col gap-1">
-                    <h3 className="text-body-lg font-semibold text-ink">{work.current} is ready for your review</h3>
-                    <p className="text-body-sm text-pretty text-ink-muted">
-                      Approve it and I&apos;ll move on, or tell me what to change first. Changes are easiest now, before the next stage.
-                    </p>
-                  </div>
-                  {share?.note && <p className="whitespace-pre-line text-body text-pretty text-ink">{share.note}</p>}
-                  {share && <StagePreviews previews={share.previews} large />}
-                  {reviewStage && <StageReviewForm stage={work.current} action={reviewStage} />}
-                </div>
-              )}
-              {work.status === "approved" && (
-                <p className="text-body-sm text-ink-muted">
-                  You approved the {work.current.toLowerCase()}.{" "}
-                  {work.isLast ? "I'm preparing your final files." : "I'll move on to the next stage."}
-                </p>
-              )}
-              {work.status === "changes" && (
-                <p className="text-body-sm text-ink-muted">
-                  Thanks for the notes on the {work.current.toLowerCase()}. I&apos;ll share an updated version here.
-                </p>
-              )}
-
-              {stageEvents.length > 0 && (
-                <details className="group">
-                  <summary className="label cursor-pointer list-none transition-colors hover:text-ink [&::-webkit-details-marker]:hidden">
-                    <span className="group-open:hidden">Show history ({stageEvents.length})</span>
-                    <span className="hidden group-open:inline">Hide history</span>
-                  </summary>
-                  <div className="pt-3">
-                    <StageHistory events={stageEvents} clientName={req.contact_name} />
-                  </div>
-                </details>
-              )}
+              <StageTrack stages={work.stages} index={work.index} />
+              <p className="text-body-sm text-ink-muted">
+                Previews and feedback for each stage happen in your Discord ticket. You&apos;ll get a notification here when your order moves to the next stage.
+              </p>
             </Section>
           )}
 

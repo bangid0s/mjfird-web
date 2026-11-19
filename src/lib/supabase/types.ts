@@ -389,23 +389,8 @@ export type CommissionRequestRow = {
   completed_at: string | null;
   /** Work stages copied from the service when work starts (0047_work_stages.sql). Missing before that migration. */
   work_stages?: string[];
-  /** 0-based index into work_stages. */
+  /** 0-based index into work_stages: the stage being worked on now. */
   stage_index?: number;
-  stage_status?: StageStatus;
-};
-
-export type StageStatus = "working" | "review" | "approved" | "changes";
-
-export type StageEventRow = {
-  id: string;
-  request_id: string;
-  stage_index: number;
-  stage_name: string;
-  kind: "shared" | "approved" | "changes" | "advanced";
-  note: string;
-  preview_paths: string[];
-  from_admin: boolean;
-  created_at: string;
 };
 
 export type CommissionMessageRow = {

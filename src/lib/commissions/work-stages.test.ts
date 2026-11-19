@@ -6,8 +6,8 @@ test("stages show only while in progress, and only when the request has some", (
   assert.equal(workStagesOf({ status: "in_progress" }), null, "before the migration");
   assert.equal(workStagesOf({ status: "in_progress", work_stages: [] }), null);
   assert.equal(workStagesOf({ status: "delivered", work_stages: ["Sketch"] }), null);
-  const s = workStagesOf({ status: "in_progress", work_stages: ["Sketch", "Final"], stage_index: 1, stage_status: "review" });
-  assert.deepEqual(s, { stages: ["Sketch", "Final"], index: 1, status: "review", current: "Final", isLast: true });
+  const s = workStagesOf({ status: "in_progress", work_stages: ["Sketch", "Final"], stage_index: 1 });
+  assert.deepEqual(s, { stages: ["Sketch", "Final"], index: 1, current: "Final", isLast: true });
 });
 
 test("an out-of-range index is clamped", () => {

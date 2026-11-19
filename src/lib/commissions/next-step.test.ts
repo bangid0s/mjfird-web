@@ -33,14 +33,11 @@ test("finished and step helpers", () => {
   assert.equal(stepIndex("declined"), -1);
 });
 
-test("work stages: a stage up for review is the client's move", () => {
-  const stages = { work_stages: ["Sketch", "Lineart"], stage_index: 0 } as const;
-  const review = nextStep({ ...base, ...stages, stage_status: "review", status: "in_progress" } as never);
-  assert.equal(review.owner, "yours");
-  assert.equal(review.title, "Sketch ready for your review");
-  assert.equal(review.action?.href, "#stages");
-  assert.equal(nextStep({ ...base, ...stages, stage_status: "changes", status: "in_progress" } as never).owner, "ours");
-  assert.equal(nextStep({ ...base, ...stages, stage_status: "working", status: "in_progress" } as never).title, "Working on: Sketch");
+test("work stages: the step names the current stage and stays the artist's move", () => {
+  const work = nextStep({ ...base, work_stages: ["Sketch", "Lineart"], stage_index: 1, status: "in_progress" } as never);
+  assert.equal(work.owner, "ours");
+  assert.equal(work.title, "Working on: Lineart");
+  assert.match(work.body, /^Step 2 of 2\./);
   // No stages (or no migration yet): the plain in-progress step.
   assert.equal(step("in_progress").title, "Work in progress");
 });

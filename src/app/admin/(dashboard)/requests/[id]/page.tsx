@@ -7,8 +7,6 @@ import OrderSummary from "@/components/commissions/OrderSummary";
 import StatusChip from "@/components/commissions/StatusChip";
 import Timeline from "@/components/commissions/Timeline";
 import { DeliveryUploader, StatusActions, WorkStagesAdmin } from "@/components/admin/RequestActions";
-import { StageHistory, latestChanges } from "@/components/commissions/WorkStageView";
-import { loadStageEvents } from "@/lib/commissions/stage-events";
 import { workStagesOf } from "@/lib/commissions/work-stages";
 import { postAdminMessage } from "@/lib/admin/requests-actions";
 import { formatDate } from "@/lib/admin/format";
@@ -40,7 +38,7 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
   const req = data as CommissionRequestRow;
   await markRequestNotificationsRead(supabase, id);
 
-  const [{ data: msgs }, refs, deliveries, { data: reviewRow }, { data: clientProfile }, { data: discordRow }, stageEvents] = await Promise.all([
+  const [{ data: msgs }, refs, deliveries, { data: reviewRow }, { data: clientProfile }, { data: discordRow }] = await Promise.all([
     supabase.from("commission_messages").select("*").eq("request_id", id).order("created_at"),
     signFiles(supabase, req.reference_paths),
     signFiles(supabase, req.delivery_paths),
@@ -51,7 +49,6 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
       .select("discord_username, discord_user_id, in_guild, past_client, synced_at, roles")
       .eq("client_id", req.client_id)
       .maybeSingle(),
-    loadStageEvents(supabase, id),
   ]);
   const work = workStagesOf(req);
   const verifiedDiscord = discordRow as {
@@ -125,26 +122,8 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
           </Panel>
 
           {work && (
-            <Panel title={`Work stages: ${work.current}`}>
-              <WorkStagesAdmin
-                id={req.id}
-                clientId={req.client_id}
-                stages={work.stages}
-                index={work.index}
-                status={work.status}
-                changesNote={latestChanges(stageEvents, work.index)?.note || null}
-              />
-              {stageEvents.length > 0 && (
-                <details className="group border-t border-line pt-4">
-                  <summary className="cursor-pointer list-none text-body-sm font-medium text-ink-muted hover:text-ink [&::-webkit-details-marker]:hidden">
-                    <span className="group-open:hidden">Show history ({stageEvents.length})</span>
-                    <span className="hidden group-open:inline">Hide history</span>
-                  </summary>
-                  <div className="pt-3">
-                    <StageHistory events={stageEvents} clientName={req.contact_name} />
-                  </div>
-                </details>
-              )}
+            <Panel title="Work stages">
+              <WorkStagesAdmin id={req.id} stages={work.stages} index={work.index} />
             </Panel>
           )}
 

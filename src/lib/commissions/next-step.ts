@@ -20,7 +20,7 @@ export type NextStep = {
 
 type Input = Pick<
   CommissionRequestRow,
-  "status" | "final_price" | "estimated_total" | "payment_url" | "work_stages" | "stage_index" | "stage_status"
+  "status" | "final_price" | "estimated_total" | "payment_url" | "work_stages" | "stage_index"
 > & {
   hasReview: boolean;
   /** True when PayPal checkout or a pay link is actually ready to use. */
@@ -59,28 +59,11 @@ export function nextStep(req: Input): NextStep {
           action: { label: "Open messages", href: "#messages" },
         };
       }
-      const step = `Step ${work.index + 1} of ${work.stages.length}`;
-      if (work.status === "review") {
-        return {
-          owner: "yours",
-          title: `${work.current} ready for your review`,
-          body: "I've shared a work-in-progress. Approve it, or tell me what to change before I move on.",
-          action: { label: "Review now", href: "#stages" },
-        };
-      }
-      if (work.status === "changes") {
-        return {
-          owner: "ours",
-          title: `Working on your changes: ${work.current}`,
-          body: "Thanks for the notes. I'll share an updated version here.",
-          action: { label: "See stages", href: "#stages" },
-        };
-      }
       return {
         owner: "ours",
         title: `Working on: ${work.current}`,
-        body: `${step}. I'll share it here for your review when it's ready.`,
-        action: { label: "See stages", href: "#stages" },
+        body: `Step ${work.index + 1} of ${work.stages.length}. Previews and feedback happen in your Discord ticket.`,
+        action: { label: "See progress", href: "#stages" },
       };
     }
     case "delivered":

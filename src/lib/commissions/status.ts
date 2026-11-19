@@ -69,13 +69,6 @@ const RPC_ERRORS: Record<string, string> = {
   invalid_rating: "Please pick a rating from 1 to 5 stars.",
   invalid_review: "Please write a few words (10 to 1,000 characters).",
   invalid_role: "Role or company is too long (80 characters max).",
-  stages_not_active: "Work stages start once the request is in progress.",
-  stage_not_in_review: "This stage isn't waiting for review anymore. Refresh to see the latest.",
-  note_required: "Tell me what to change, so I know what to fix.",
-  note_too_long: "That note is too long (2,000 characters max).",
-  nothing_to_share: "Add a preview image or a note before sharing.",
-  last_stage: "This is the last stage. Mark the request delivered when the files are ready.",
-  not_admin: "Only the studio admin can do that.",
 };
 
 export function manualAdvanceConflict(message: string) {
