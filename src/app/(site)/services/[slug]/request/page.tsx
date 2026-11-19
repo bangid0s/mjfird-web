@@ -38,17 +38,14 @@ export default async function RequestPage({
         </Link>
       </nav>
       <header className="mb-12 flex flex-col gap-4">
-        <p className="eyebrow eyebrow-accent">Request</p>
+        <p className="eyebrow eyebrow-accent">{service.packages.length === 0 ? "Request a quote" : "Request"}</p>
         <h1 className="display-lg text-balance">{service.title}</h1>
       </header>
 
-      {closed || service.packages.length === 0 ? (
+      {closed ? (
         <div className="flex max-w-xl flex-col items-start gap-5 border-t border-line pt-8">
           <p className="text-body-lg text-pretty text-ink-muted">
-            {closed
-              ? "This service is closed for new requests right now."
-              : "Packages for this service are still being set up."}{" "}
-            You can still reach me through the contact page.
+            This service is closed for new requests right now. You can still reach me through the contact page.
           </p>
           <Link href="/contact" className="spec bg-accent px-6 py-3.5 text-accent-ink hover:brightness-110">
             Contact me →

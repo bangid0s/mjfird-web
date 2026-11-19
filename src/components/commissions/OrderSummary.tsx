@@ -1,5 +1,6 @@
 import type { CommissionRequestRow } from "@/lib/supabase/types";
 import { priceOf, toNumber } from "@/lib/commissions/status";
+import { isQuoteRequest } from "@/lib/commissions/quote";
 import { formatUSD } from "@/lib/services/storefront";
 
 export default function OrderSummary({ req }: { req: CommissionRequestRow }) {
@@ -10,6 +11,22 @@ export default function OrderSummary({ req }: { req: CommissionRequestRow }) {
   const licensePercent = toNumber(req.license_percent) ?? 0;
   const licenseFee = toNumber(req.license_fee) ?? 0;
   const discount = toNumber(req.discount_amount ?? 0) ?? 0;
+  if (isQuoteRequest(req)) {
+    return (
+      <dl className="flex flex-col gap-3 text-body-sm">
+        <div className="flex justify-between gap-3">
+          <dt className="text-ink-muted">Custom quote</dt>
+          <dd className="text-ink">{finalPrice === null ? "Quote pending" : "Quoted"}</dd>
+        </div>
+        {finalPrice !== null && (
+          <div className="flex items-baseline justify-between gap-3 border-t border-line pt-3">
+            <dt className="font-medium text-ink">Final price</dt>
+            <dd className="display-sm">{formatUSD(finalPrice)}</dd>
+          </div>
+        )}
+      </dl>
+    );
+  }
   return (
     <dl className="flex flex-col gap-3 text-body-sm">
       <div className="flex justify-between gap-3">

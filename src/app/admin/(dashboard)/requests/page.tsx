@@ -5,8 +5,8 @@ import EmptyState from "@/components/admin/EmptyState";
 import StatusChip from "@/components/commissions/StatusChip";
 import { cn } from "@/lib/cn";
 import { timeAgo } from "@/lib/admin/format";
-import { OPEN_STATUSES, priceOf } from "@/lib/commissions/status";
-import { formatUSD } from "@/lib/services/storefront";
+import { OPEN_STATUSES } from "@/lib/commissions/status";
+import { priceLabel } from "@/lib/commissions/quote";
 import type { CommissionRequestRow, CommissionStatus } from "@/lib/supabase/types";
 
 const FILTERS: { value: string; label: string; match: (s: CommissionStatus) => boolean }[] = [
@@ -26,7 +26,7 @@ export default async function AdminRequestsPage({ searchParams }: { searchParams
   const { data } = await supabase
     .from("commission_requests")
     // Only what the list shows: briefs, answers and file lists stay on the request page.
-    .select("id, ref, service_title, package_name, contact_name, status, waitlisted, addons, final_price, estimated_total, created_at")
+    .select("id, ref, service_title, package_id, package_name, contact_name, status, waitlisted, addons, final_price, estimated_total, created_at")
     .order("created_at", { ascending: false });
   const all = (data as CommissionRequestRow[]) ?? [];
   const rows = all.filter((r) => filter.match(r.status));
@@ -90,7 +90,7 @@ export default async function AdminRequestsPage({ searchParams }: { searchParams
                         {r.waitlisted && " · waitlist"}
                       </span>
                     </span>
-                    <span className="text-body text-ink">{formatUSD(priceOf(r))}</span>
+                    <span className="text-body text-ink">{priceLabel(r)}</span>
                     <StatusChip status={r.status} className="justify-self-start" />
                   </Link>
                 </li>

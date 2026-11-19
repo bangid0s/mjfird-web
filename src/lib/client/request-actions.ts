@@ -10,6 +10,7 @@ import { mapStorefrontRow } from "@/lib/data/services";
 import type { CommissionAnswer, CommissionRequestRow, ServiceRow } from "@/lib/supabase/types";
 import { formatUSD } from "@/lib/services/storefront";
 import { refreshDiscountFor } from "@/lib/discord/sync";
+import { isQuoteRequest } from "@/lib/commissions/quote";
 
 export type RequestState = { error?: string; done?: boolean } | undefined;
 
@@ -61,23 +62,57 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
   // Re-check Discord roles so the database's discount trigger sees a fresh result.
   await refreshDiscountFor(supabase, user);
 
-  const { data: requestId, error } = await supabase.rpc("submit_commission_request", {
-    p_service_id: service.id,
-    p_package_id: String(formData.get("package_id") ?? ""),
-    p_addon_ids: formData.getAll("addon_ids").map(String),
-    p_license: String(formData.get("license_id") ?? "personal"),
-    p_background: String(formData.get("background_id") ?? "") || null,
-    p_extra_characters: Math.max(0, Number.parseInt(String(formData.get("extra_characters") ?? "0"), 10) || 0),
-    p_contact_name: String(formData.get("contact_name") ?? ""),
-    p_brief: String(formData.get("brief") ?? ""),
-    p_answers: cleanAnswers,
-    p_reference_paths: referencePaths,
-  });
+  // No packages → a custom quote, filed as a commission request the artist prices on accept.
+  const { data: requestId, error } = service.packages.length === 0
+    ? await supabase.rpc("submit_quote_request", {
+        p_service_id: service.id,
+        p_contact_name: String(formData.get("contact_name") ?? ""),
+        p_brief: String(formData.get("brief") ?? ""),
+        p_answers: cleanAnswers,
+        p_reference_paths: referencePaths,
+      })
+    : await supabase.rpc("submit_commission_request", {
+        p_service_id: service.id,
+        p_package_id: String(formData.get("package_id") ?? ""),
+        p_addon_ids: formData.getAll("addon_ids").map(String),
+        p_license: String(formData.get("license_id") ?? "personal"),
+        p_background: String(formData.get("background_id") ?? "") || null,
+        p_extra_characters: Math.max(0, Number.parseInt(String(formData.get("extra_characters") ?? "0"), 10) || 0),
+        p_contact_name: String(formData.get("contact_name") ?? ""),
+        p_brief: String(formData.get("brief") ?? ""),
+        p_answers: cleanAnswers,
+        p_reference_paths: referencePaths,
+      });
   if (error || !requestId) return { error: friendlyRpcError(error?.message ?? "") };
 
   const { data: created } = await supabase.from("commission_requests").select("*").eq("id", requestId).single();
   const req = created as CommissionRequestRow | null;
-  if (req) {
+  if (req && isQuoteRequest(req)) {
+    await Promise.all([
+      sendEmail({
+        to: COMMISSION_EMAIL,
+        subject: `New quote request #${req.ref}: ${req.service_title}`,
+        lines: [
+          `${req.contact_name} (${req.contact_email}) asked for a custom quote for ${req.service_title}.`,
+          ...(req.waitlisted ? ["Joined the waitlist."] : []),
+          req.brief,
+          "Set the price when you accept it.",
+        ],
+        cta: { label: "Review request", path: `/admin/requests/${req.id}` },
+        replyTo: req.contact_email,
+      }),
+      sendEmail({
+        to: req.contact_email,
+        subject: `Quote request received — ${req.service_title} (#${req.ref})`,
+        lines: [
+          `Hi ${req.contact_name},`,
+          `Thanks for your request for ${req.service_title}. I'll read your brief and reply with a price and timeline, or with questions if I need more detail.`,
+          "No payment is needed until you've seen the price and I've accepted.",
+        ],
+        cta: { label: "View your request", path: `/account/requests/${req.id}` },
+      }),
+    ]);
+  } else if (req) {
     const total = formatUSD(Number(req.estimated_total));
     const extra = req.extra_characters ?? 0;
     const characters = extra ? ` · ${extra + 1} characters` : "";

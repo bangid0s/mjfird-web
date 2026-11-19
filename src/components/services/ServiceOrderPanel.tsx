@@ -48,10 +48,10 @@ export default function ServiceOrderPanel({
   // The first background is the default, so only a different pick goes in the link.
   if (priced?.backgroundId && priced.backgroundId !== service.backgrounds[0]?.id) params.set("background", priced.backgroundId);
   if (priced && priced.licenseId !== "personal") params.set("license", priced.licenseId);
-  // No packages yet → nothing to price, so fall back to a plain inquiry.
-  const requestHref = service.packages.length
-    ? `/services/${service.slug}/request${params.size ? `?${params.toString()}` : ""}`
-    : `/contact?service=${encodeURIComponent(service.slug)}`;
+  // No packages → a custom quote. It's still a commission request (tracked,
+  // messaged, paid from the account), just priced by me after reading the brief.
+  const isQuote = service.packages.length === 0;
+  const requestHref = `/services/${service.slug}/request${!isQuote && params.size ? `?${params.toString()}` : ""}`;
 
   return (
     <div className="flex flex-col gap-6 border border-line bg-bg-raised/60 p-5 sm:p-6">
@@ -157,12 +157,19 @@ export default function ServiceOrderPanel({
         </fieldset>
       )}
 
-      <LicensePicker
-        licenses={service.licenses}
-        value={priced?.licenseId ?? "personal"}
-        onChange={setLicenseId}
-        base={priced ? priced.subtotal + priced.addonsTotal + priced.backgroundPrice : undefined}
-      />
+      {isQuote ? (
+        <div className="flex items-baseline justify-between border-t border-line pt-4">
+          <span className="text-body-sm text-ink-muted">Price</span>
+          <span className="text-body text-ink">Quoted for your brief</span>
+        </div>
+      ) : (
+        <LicensePicker
+          licenses={service.licenses}
+          value={priced?.licenseId ?? "personal"}
+          onChange={setLicenseId}
+          base={priced ? priced.subtotal + priced.addonsTotal + priced.backgroundPrice : undefined}
+        />
+      )}
 
       {priced && priced.licenseFee > 0 && (
         <div className="-mb-3 flex items-baseline justify-between border-t border-line pt-4 text-body-sm text-ink-muted">
@@ -184,7 +191,7 @@ export default function ServiceOrderPanel({
         </p>
       ) : (
         <MagneticButton href={requestHref} size="lg" arrow className="w-full justify-center">
-          {status === "waitlist" ? "Join the waitlist" : "Request this service"}
+          {status === "waitlist" ? "Join the waitlist" : isQuote ? "Request a quote" : "Request this service"}
         </MagneticButton>
       )}
 

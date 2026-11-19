@@ -270,6 +270,8 @@ export default function RequestForm({
   const license = service.licenses.find((l) => l.id === priced?.licenseId);
   const waitlist = effectiveAvailability(service.availability, service.slotsTotal, service.slotsTaken) === "waitlist";
   const hasFileQuestion = service.questions.some((q) => q.type === "file");
+  // No packages → a custom quote: same request, priced by the artist on accept.
+  const isQuote = service.packages.length === 0;
 
   const answerList: CommissionAnswer[] = service.questions
     .map((q) =>
@@ -365,7 +367,18 @@ export default function RequestForm({
         <div className="flex flex-col gap-6 border border-line bg-bg-raised/60 p-5 sm:p-6">
           <p className="eyebrow">Your order</p>
 
-          {priced && selected ? (
+          {isQuote ? (
+            <dl className="flex flex-col gap-3 text-body-sm">
+              <div className="flex justify-between gap-3">
+                <dt className="text-ink">Custom quote</dt>
+                <dd className="text-ink-muted">To be quoted</dd>
+              </div>
+              <p className="text-ink-muted">
+                Tell me what you need. I&apos;ll read the brief and reply with a price and timeline. Usage rights for
+                commercial work are part of the quote.
+              </p>
+            </dl>
+          ) : priced && selected ? (
             <dl className="flex flex-col gap-3 text-body-sm">
               <div className="flex justify-between gap-3">
                 <dt className="text-ink">{selected.name}</dt>
@@ -415,13 +428,15 @@ export default function RequestForm({
             <p className="text-body-sm text-ink-muted">Pick a package on the service page first.</p>
           )}
 
-          <Link href={`/services/${service.slug}`} className="spec self-start text-ink-muted hover:text-ink">
-            ← Change order
-          </Link>
+          {!isQuote && (
+            <Link href={`/services/${service.slug}`} className="spec self-start text-ink-muted hover:text-ink">
+              ← Change order
+            </Link>
+          )}
 
-          <SubmitButton label={waitlist ? "Join the waitlist" : "Send request"} />
+          <SubmitButton label={waitlist ? "Join the waitlist" : isQuote ? "Request a quote" : "Send request"} />
           <p className="text-[13px] leading-snug text-ink-faint">
-            No payment now. I&apos;ll review your request and either accept it with a final price or reply with questions.
+            No payment now. I&apos;ll review your request and either accept it with a {isQuote ? "quoted" : "final"} price or reply with questions.
             {waitlist && " This service is on a waitlist — you'll be contacted when a slot opens."}
           </p>
         </div>

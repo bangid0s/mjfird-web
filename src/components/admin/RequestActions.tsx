@@ -78,10 +78,13 @@ export function StatusActions({
   note,
   paymentUrl,
   discountNote = null,
+  quote = false,
 }: {
   id: string;
   status: CommissionStatus;
   estimate: number;
+  /** A custom quote: no estimate, so the price must be entered to accept. */
+  quote?: boolean;
   note: string;
   paymentUrl: string | null;
   /** Shown under the price when the estimate already includes a past-client discount. */
@@ -110,8 +113,14 @@ export function StatusActions({
             action={(fd) => run(() => acceptRequest(id, fd))}
           >
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-ink-muted">Final price (USD) — adjust if the brief needs more</span>
-              <input name="final_price" type="number" min={0} step="0.01" defaultValue={estimate} className={fieldInputClasses} />
+              <span className="text-[13px] font-medium text-ink-muted">
+                {quote ? "Your quote (USD) — the client sees this price" : "Final price (USD) — adjust if the brief needs more"}
+              </span>
+              {quote ? (
+                <input name="final_price" type="number" min={0.01} step="0.01" required placeholder="e.g. 250" className={fieldInputClasses} />
+              ) : (
+                <input name="final_price" type="number" min={0} step="0.01" defaultValue={estimate} className={fieldInputClasses} />
+              )}
               {discountNote && <span className="text-[13px] text-accent">{discountNote}</span>}
             </label>
             <label className="flex flex-col gap-1.5">
