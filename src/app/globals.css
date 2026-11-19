@@ -61,6 +61,19 @@
   --color-success: #12805a;
   --color-error: #c8352f;
 
+  /*
+    Order status colours. Each one means something: amber waits on the
+    artist, blue is work underway, violet is files ready, green is done, red is
+    declined, grey is cancelled. All pass 4.5:1 on their own 12% tint. Awaiting payment
+    uses the accent itself (see StatusChip).
+  */
+  --color-status-pending: #844704;
+  --color-status-progress: #1a45c4;
+  --color-status-delivered: #6425cc;
+  --color-status-completed: #0d5f43;
+  --color-status-declined: #a31f15;
+  --color-status-cancelled: #55555b;
+
   /* ---- Elevation ---- */
   --shadow-xs: none;
   --shadow-sm: none;
@@ -150,6 +163,13 @@
     --color-success: #3ddc84;
     --color-error: #ff6b63;
 
+    --color-status-pending: #f5b942;
+    --color-status-progress: #7aa7ff;
+    --color-status-delivered: #b79cff;
+    --color-status-completed: #3ddc84;
+    --color-status-declined: #ff6b63;
+    --color-status-cancelled: #9a9aa1;
+
     --shadow-xs: none;
     --shadow-sm: none;
     --shadow-md: none;
@@ -188,6 +208,13 @@
 
   --color-success: #3ddc84;
   --color-error: #ff6b63;
+
+  --color-status-pending: #f5b942;
+  --color-status-progress: #7aa7ff;
+  --color-status-delivered: #b79cff;
+  --color-status-completed: #3ddc84;
+  --color-status-declined: #ff6b63;
+  --color-status-cancelled: #9a9aa1;
 
   --shadow-xs: none;
   --shadow-sm: none;
