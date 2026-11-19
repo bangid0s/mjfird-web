@@ -1,6 +1,7 @@
 import type { CommissionRequestRow, CommissionStatus } from "@/lib/supabase/types";
 import { STATUS_FLOW, priceOf } from "@/lib/commissions/status";
 import { formatUSD } from "@/lib/services/storefront";
+import { workStagesOf } from "@/lib/commissions/work-stages";
 
 /*
   What the client should do next on a request, in plain words. The account
@@ -17,7 +18,10 @@ export type NextStep = {
   action?: { label: string; href: string };
 };
 
-type Input = Pick<CommissionRequestRow, "status" | "final_price" | "estimated_total" | "payment_url"> & {
+type Input = Pick<
+  CommissionRequestRow,
+  "status" | "final_price" | "estimated_total" | "payment_url" | "work_stages" | "stage_index" | "stage_status"
+> & {
   hasReview: boolean;
   /** True when PayPal checkout or a pay link is actually ready to use. */
   canPay: boolean;
@@ -45,13 +49,40 @@ export function nextStep(req: Input): NextStep {
             title: "Accepted. Payment link on its way",
             body: "Your request is accepted. I'll add the payment link here shortly.",
           };
-    case "in_progress":
+    case "in_progress": {
+      const work = workStagesOf(req);
+      if (!work) {
+        return {
+          owner: "ours",
+          title: "Work in progress",
+          body: "Sketches, questions and updates will show up in the messages.",
+          action: { label: "Open messages", href: "#messages" },
+        };
+      }
+      const step = `Step ${work.index + 1} of ${work.stages.length}`;
+      if (work.status === "review") {
+        return {
+          owner: "yours",
+          title: `${work.current} ready for your review`,
+          body: "I've shared a work-in-progress. Approve it, or tell me what to change before I move on.",
+          action: { label: "Review now", href: "#stages" },
+        };
+      }
+      if (work.status === "changes") {
+        return {
+          owner: "ours",
+          title: `Working on your changes: ${work.current}`,
+          body: "Thanks for the notes. I'll share an updated version here.",
+          action: { label: "See stages", href: "#stages" },
+        };
+      }
       return {
         owner: "ours",
-        title: "Work in progress",
-        body: "Sketches, questions and updates will show up in the messages.",
-        action: { label: "Open messages", href: "#messages" },
+        title: `Working on: ${work.current}`,
+        body: `${step}. I'll share it here for your review when it's ready.`,
+        action: { label: "See stages", href: "#stages" },
       };
+    }
     case "delivered":
       return {
         owner: "yours",

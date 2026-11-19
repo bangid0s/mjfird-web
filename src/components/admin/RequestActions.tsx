@@ -13,8 +13,12 @@ import {
   saveArtistNote,
   setDeliveryUrl,
   setPaymentUrl,
+  shareWorkStage,
+  advanceWorkStage,
 } from "@/lib/admin/requests-actions";
-import type { CommissionStatus } from "@/lib/supabase/types";
+import { progressFolder } from "@/lib/commissions/work-stages";
+import { StageTrack } from "@/components/commissions/WorkStageView";
+import type { CommissionStatus, StageStatus } from "@/lib/supabase/types";
 import { cn } from "@/lib/cn";
 
 const primary =
@@ -320,6 +324,133 @@ export function DeliveryUploader({
           )}
         </div>
       </form>
+    </div>
+  );
+}
+
+const STAGE_HINT: Record<StageStatus, string> = {
+  working: "Share a work-in-progress when it's ready. The client gets an email and can approve it or ask for changes.",
+  review: "Shared. Waiting for the client to approve it or ask for changes.",
+  approved: "The client approved this stage. Move on when you're ready.",
+  changes: "The client asked for changes. Share an updated version when it's done.",
+};
+
+/*
+  Work stages for a request in progress: share work-in-progress for review,
+  and move on to the next stage. Previews go to the request's own progress
+  folder, which only this client and the admin can open.
+*/
+export function WorkStagesAdmin({
+  id,
+  clientId,
+  stages,
+  index,
+  status,
+  changesNote,
+}: {
+  id: string;
+  clientId: string;
+  stages: string[];
+  index: number;
+  status: StageStatus;
+  /** The client's latest change request on this stage, if any. */
+  changesNote: string | null;
+}) {
+  const { pending, error, saved, run } = useRun();
+  const [busy, setBusy] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [note, setNote] = useState("");
+  const current = stages[index];
+  const next = stages[index + 1];
+  const disabled = pending || busy;
+
+  const share = async () => {
+    setBusy(true);
+    const supabase = createClient();
+    const paths: string[] = [];
+    let failed = 0;
+    for (const file of files) {
+      const clean = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 80);
+      const path = `${progressFolder(clientId, id)}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${clean}`;
+      const { error: err } = await supabase.storage.from("commissions").upload(path, file, {
+        contentType: file.type || "application/octet-stream",
+      });
+      if (err) failed += 1;
+      else paths.push(path);
+    }
+    setBusy(false);
+    if (failed > 0 && paths.length === 0) {
+      run(async () => ({ error: "The images didn't upload. Check your connection and try again." }));
+      return;
+    }
+    run(async () => {
+      const result = await shareWorkStage(id, note, paths);
+      if (!result?.error) {
+        setFiles([]);
+        setNote("");
+      }
+      return result;
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-5">
+      <StageTrack stages={stages} index={index} status={status} />
+      <p className="text-body-sm text-ink-muted">{STAGE_HINT[status]}</p>
+      {status === "changes" && changesNote && (
+        <blockquote className="whitespace-pre-line border-l-2 border-[var(--color-status-pending)] pl-4 text-body-sm text-ink">
+          {changesNote}
+        </blockquote>
+      )}
+      <Feedback error={error} saved={saved} />
+
+      <div className="flex flex-col gap-3 border-t border-line pt-4">
+        <p className="text-body-sm font-medium text-ink">Share {current.toLowerCase()} for review</p>
+        <label className={cn(ghost, "cursor-pointer self-start", disabled && "opacity-50")}>
+          {files.length > 0 ? `${files.length} image${files.length === 1 ? "" : "s"} chosen` : "Choose preview images"}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="sr-only"
+            disabled={disabled}
+            onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 12))}
+          />
+        </label>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={3}
+          maxLength={2000}
+          placeholder="A note for the client (optional): what to look at, what's still rough…"
+          className={cn(fieldInputClasses, "resize-y")}
+        />
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={disabled || (files.length === 0 && !note.trim())}
+            onClick={share}
+            className={primary}
+          >
+            {busy ? "Uploading…" : pending ? "Sharing…" : status === "review" ? "Share an update" : "Share for review"}
+          </button>
+          {next ? (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() =>
+                (status === "approved" || confirm(`Move on to ${next} without the client's approval of ${current}?`)) &&
+                run(() => advanceWorkStage(id))
+              }
+              className={ghost}
+            >
+              Move to {next}
+            </button>
+          ) : (
+            <p className="self-center text-[13px] text-ink-faint">Last stage. Upload the final files and mark it delivered.</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

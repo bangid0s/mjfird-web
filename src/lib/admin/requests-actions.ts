@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email";
-import { manualAdvanceConflict, manualWritePlan, priceOf, toNumber } from "@/lib/commissions/status";
+import { friendlyRpcError, manualAdvanceConflict, manualWritePlan, priceOf, toNumber } from "@/lib/commissions/status";
 import {
   PaymentUrlError,
   acceptEmailCopy,
@@ -381,4 +381,46 @@ export async function postAdminMessage(id: string, _prev: State, formData: FormD
   });
   refresh(id);
   return undefined;
+}
+
+// ---------- work stages (0047_work_stages.sql) ----------
+
+function stageError(message: string) {
+  if (message.includes("share_work_stage") || message.includes("advance_work_stage") || message.includes("commission_stage_events")) {
+    if (message.includes("does not exist") || message.includes("schema cache")) {
+      return "Work stages need the database update: run supabase/migrations/0047_work_stages.sql, then try again.";
+    }
+  }
+  return friendlyRpcError(message);
+}
+
+/** Share work-in-progress for the client to approve. Previews were uploaded to the request's progress folder. */
+export async function shareWorkStage(id: string, note: string, paths: string[]): Promise<State> {
+  return guard(async () => {
+    const { supabase, req } = await load(id);
+    const { error } = await supabase.rpc("share_work_stage", { p_request_id: id, p_note: note, p_paths: paths });
+    if (error) throw new Error(stageError(error.message));
+    refresh(id);
+    const stage = req.work_stages?.[req.stage_index ?? 0] ?? "Work-in-progress";
+    emailLater({
+      to: req.contact_email,
+      subject: `${stage} ready for your review (#${req.ref})`,
+      lines: [
+        `Hi ${req.contact_name},`,
+        `The ${stage.toLowerCase()} for your ${req.service_title} is ready. Have a look and approve it, or tell me what to change.`,
+        ...(note.trim() ? [note.trim()] : []),
+      ],
+      cta: { label: "Review it", path: `/account/requests/${id}#stages` },
+    });
+  });
+}
+
+/** Move on to the next stage. */
+export async function advanceWorkStage(id: string): Promise<State> {
+  return guard(async () => {
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("advance_work_stage", { p_request_id: id });
+    if (error) throw new Error(stageError(error.message));
+    refresh(id);
+  });
 }

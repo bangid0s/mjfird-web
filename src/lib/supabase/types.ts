@@ -58,6 +58,8 @@ export type ServiceRow = {
   licenses?: unknown;
   /** [{ id, name, description, price }] — pick exactly one; the first is the default. */
   backgrounds?: unknown;
+  /** Steps of work while in progress, e.g. Sketch, Lineart, Colour, Final (0047_work_stages.sql). */
+  work_stages?: string[];
 };
 
 export type TestimonialRow = {
@@ -385,6 +387,25 @@ export type CommissionRequestRow = {
   paid_at: string | null;
   delivered_at: string | null;
   completed_at: string | null;
+  /** Work stages copied from the service when work starts (0047_work_stages.sql). Missing before that migration. */
+  work_stages?: string[];
+  /** 0-based index into work_stages. */
+  stage_index?: number;
+  stage_status?: StageStatus;
+};
+
+export type StageStatus = "working" | "review" | "approved" | "changes";
+
+export type StageEventRow = {
+  id: string;
+  request_id: string;
+  stage_index: number;
+  stage_name: string;
+  kind: "shared" | "approved" | "changes" | "advanced";
+  note: string;
+  preview_paths: string[];
+  from_admin: boolean;
+  created_at: string;
 };
 
 export type CommissionMessageRow = {
