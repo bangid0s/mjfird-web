@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email";
 import { manualAdvanceConflict, manualWritePlan, priceOf, toNumber } from "@/lib/commissions/status";
+import { isQuoteRequest } from "@/lib/commissions/quote";
 import {
   PaymentUrlError,
   acceptEmailCopy,
@@ -100,6 +101,7 @@ async function acceptRequestNow(id: string, formData: FormData) {
 
   const raw = Number.parseFloat(String(formData.get("final_price") ?? ""));
   const finalPrice = Number.isFinite(raw) && raw >= 0 ? Math.round(raw * 100) / 100 : priceOf(req);
+  if (isQuoteRequest(req) && !(finalPrice > 0)) throw new Error("This is a custom quote. Enter the price before accepting.");
   const note = String(formData.get("artist_note") ?? "").trim();
   const paymentUrl = readPaymentUrl(formData);
 

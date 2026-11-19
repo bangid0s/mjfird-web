@@ -2,6 +2,7 @@ import Link from "next/link";
 import StatusChip, { STATUS_COLOR } from "@/components/commissions/StatusChip";
 import { cn } from "@/lib/cn";
 import { STATUS_FLOW, priceOf } from "@/lib/commissions/status";
+import { priceLabel } from "@/lib/commissions/quote";
 import { isFinished, stepIndex, type NextStep } from "@/lib/commissions/next-step";
 import { formatUSD } from "@/lib/services/storefront";
 import type { CommissionRequestRow } from "@/lib/supabase/types";
@@ -9,7 +10,7 @@ import type { CommissionRequestRow } from "@/lib/supabase/types";
 export type OverviewItem = {
   req: Pick<
     CommissionRequestRow,
-    "id" | "ref" | "service_title" | "package_name" | "status" | "created_at" | "final_price" | "estimated_total" | "waitlisted"
+    "id" | "ref" | "service_title" | "package_id" | "package_name" | "status" | "created_at" | "final_price" | "estimated_total" | "waitlisted"
   >;
   step: NextStep;
   /** Unread notifications for this request. */
@@ -121,7 +122,7 @@ function OpenRow({ item }: { item: OverviewItem }) {
           <span className="text-body-sm text-ink-faint sm:hidden">{step.title}</span>
         </span>
         <span className="hidden shrink-0 flex-col items-end gap-1 text-right sm:flex">
-          <span className="text-body font-medium text-ink tabular-nums">{formatUSD(priceOf(req))}</span>
+          <span className="text-body font-medium text-ink tabular-nums">{priceLabel(req)}</span>
           <span className="max-w-[14rem] text-[13px] text-ink-faint">{step.title}</span>
         </span>
       </Link>

@@ -52,6 +52,7 @@ const RPC_ERRORS: Record<string, string> = {
   service_not_found: "That service isn't available anymore.",
   service_closed: "This service is closed for new requests right now.",
   package_not_found: "Please pick a package.",
+  quote_not_offered: "This service has fixed packages now. Please pick one on the service page.",
   invalid_name: "Please enter your name.",
   invalid_background: "That background option isn't offered for this service. Please pick another.",
   invalid_license: "That usage license isn't offered for this service. Please pick another.",
