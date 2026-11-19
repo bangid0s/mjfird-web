@@ -204,6 +204,9 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
             <a href={`mailto:${req.contact_email}?subject=${encodeURIComponent(`Your request #${req.ref}`)}`} className="text-body-sm text-ink-muted hover:text-accent">
               {req.contact_email}
             </a>
+            <Link href={`/admin/clients/${req.client_id}`} className="text-body-sm font-medium text-ink-muted transition-colors hover:text-ink">
+              View client profile &amp; history →
+            </Link>
             {verifiedDiscord && (
               <dl className="flex flex-col gap-1.5 border-t border-line pt-3 text-body-sm">
                 <div className="flex gap-2">

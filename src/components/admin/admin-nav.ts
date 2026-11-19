@@ -14,6 +14,7 @@ import {
   GalleryIcon,
   PlusIcon,
   RequestsIcon,
+  ClientsIcon,
   HomeIcon,
   AboutIcon,
   PageTextIcon,
@@ -42,6 +43,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { href: "/admin", label: "Dashboard", icon: DashboardIcon, keywords: "home overview stats" },
       { href: "/admin/requests", label: "Requests", icon: RequestsIcon, keywords: "commissions orders clients quotes" },
+      { href: "/admin/clients", label: "Clients", icon: ClientsIcon, keywords: "users accounts customers emails profiles order history export csv leads" },
       { href: "/admin/inquiries", label: "Inquiries", icon: InquiriesIcon, keywords: "leads inbox clients contact" },
     ],
   },
