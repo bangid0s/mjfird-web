@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import AuthShell from "@/components/auth/AuthShell";
+import AccountShell from "@/components/account/AccountShell";
 import ProfileForm from "@/components/account/ProfileForm";
 import DiscordLinkPanel from "@/components/account/DiscordLinkPanel";
 import { requireUser } from "@/lib/auth/session";
+import { accountShellData } from "@/lib/account/shell";
 import { readDiscordConfig } from "@/lib/discord/config";
 import { discordIdentityOf, parseStoredRoles } from "@/lib/discord/perks";
 
@@ -13,7 +13,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const { supabase, user } = await requireUser("/account/profile");
   const { discord: notice } = await searchParams;
   const discordConfig = readDiscordConfig();
-  const [{ data }, { data: linkRow }] = await Promise.all([
+  const [shell, { data }, { data: linkRow }] = await Promise.all([
+    accountShellData(supabase, user),
     supabase.from("client_profiles").select("display_name, region, discord, x_handle, social_url").eq("id", user.id).maybeSingle(),
     discordConfig
       ? supabase
@@ -26,16 +27,18 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const identity = discordIdentityOf(user);
 
   return (
-    <AuthShell
-      eyebrow="Account"
-      title="My profile"
-      footer={
-        <Link href="/account" className="text-ink underline underline-offset-4 hover:text-accent">
-          Back to my requests
-        </Link>
-      }
-    >
-      <ProfileForm
+    <AccountShell active="profile" {...shell}>
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,36rem)_minmax(0,24rem)] lg:justify-between lg:gap-16">
+        <section aria-labelledby="profile-heading" className="flex flex-col gap-6">
+          <div className="flex flex-col gap-1">
+            <h2 id="profile-heading" className="text-body-lg font-semibold text-ink">
+              Your details
+            </h2>
+            <p className="text-body-sm text-pretty text-ink-muted">
+              Used on your requests, so I know who I&apos;m drawing for and how to reach you.
+            </p>
+          </div>
+          <ProfileForm
         email={user.email ?? ""}
         initial={{
           display_name: data?.display_name ?? "",
@@ -45,7 +48,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           social_url: data?.social_url ?? "",
         }}
       />
-      {discordConfig && (
+        </section>
+        {discordConfig && (
         <DiscordLinkPanel
           linked={Boolean(identity)}
           link={
@@ -63,7 +67,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           inviteUrl={discordConfig.inviteUrl}
           notice={notice}
         />
-      )}
-    </AuthShell>
+        )}
+      </div>
+    </AccountShell>
   );
 }
