@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/admin/auth-actions";
@@ -17,6 +17,25 @@ import { ExternalIcon, SearchIcon, SignOutIcon } from "@/components/admin/AdminI
   in 12px spaced capitals is a wall to scan. The sheet, the hairlines and the
   single accent stay, so it still reads as the same studio.
 */
+
+/*
+  The mobile bar and the desktop header each had a bell, and both were live:
+  two auth listeners, two Realtime channels, and four notification queries on
+  every navigation. Only the header that is actually showing gets one now.
+*/
+const DESKTOP = "(min-width: 1024px)";
+function subscribeDesktop(onChange: () => void) {
+  const query = window.matchMedia(DESKTOP);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+function useIsDesktop() {
+  return useSyncExternalStore(
+    subscribeDesktop,
+    () => window.matchMedia(DESKTOP).matches,
+    () => null,
+  );
+}
 
 function BrandMark() {
   return (
@@ -176,6 +195,7 @@ export default function AdminShell({
   userEmail?: string | null;
 }) {
   const pathname = usePathname();
+  const isDesktop = useIsDesktop();
   const [open, setOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const crumb = findNavItem(pathname);
@@ -222,7 +242,7 @@ export default function AdminShell({
       <div className="fixed inset-x-0 top-0 z-[var(--z-nav)] flex h-14 items-center justify-between gap-3 border-b border-line bg-bg/90 px-4 backdrop-blur-md lg:hidden">
         <BrandMark />
         <div className="flex items-center gap-1">
-          <NotificationBell allHref="/admin/requests" />
+          {isDesktop === false && <NotificationBell allHref="/admin/requests" />}
           <button
             type="button"
             aria-label="Search admin"
@@ -308,7 +328,7 @@ export default function AdminShell({
           </nav>
           <div className="flex items-center gap-2">
             <LiveSiteLink />
-            <NotificationBell allHref="/admin/requests" />
+            {isDesktop && <NotificationBell allHref="/admin/requests" />}
             <SearchTrigger onOpen={() => setPaletteOpen(true)} className="w-56" />
           </div>
         </header>

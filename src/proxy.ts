@@ -34,9 +34,12 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims verifies the session JWT locally against the project's signing
+  // key (ES256, JWKS cached in memory) instead of a round trip to Supabase
+  // Auth on every request — this runs before every admin page and prefetch.
+  // It still refreshes an expired session, so cookies stay fresh.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims?.sub ? claimsData.claims : null;
 
   const path = request.nextUrl.pathname;
   const isAdminRoute = path.startsWith("/admin");

@@ -3,11 +3,9 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/data/config";
 import { badgeLabel, safeHref, timeAgo } from "@/lib/notifications/format";
-import { easeFreeze } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 import type { NotificationRow } from "@/lib/supabase/types";
 
@@ -200,83 +198,80 @@ export default function NotificationBell({
         )}
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            id={panelId}
-            role="dialog"
-            aria-label="Notifications"
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2, ease: easeFreeze }}
-            className={cn(
-              // Full width under the bar on phones, a dropdown from sm up.
-              "fixed inset-x-4 top-[calc(var(--nav-h,3.5rem)+0.5rem)] z-[var(--z-modal)] flex max-h-[min(32rem,75svh)] flex-col border border-line bg-bg shadow-[0_18px_50px_-20px_rgba(0,0,0,0.45)]",
-              "sm:absolute sm:inset-x-auto sm:top-full sm:mt-2 sm:w-[22rem]",
-              align === "right" ? "sm:right-0" : "sm:left-0",
+      {/* A CSS entrance instead of framer-motion: the bell sits in every admin
+          and site header, and the animation library was most of its weight. */}
+      {open && (
+        <div
+          id={panelId}
+          role="dialog"
+          aria-label="Notifications"
+          className={cn(
+            "animate-[drop-in_200ms_var(--ease-freeze)_both] motion-reduce:animate-none",
+            // Full width under the bar on phones, a dropdown from sm up.
+            "fixed inset-x-4 top-[calc(var(--nav-h,3.5rem)+0.5rem)] z-[var(--z-modal)] flex max-h-[min(32rem,75svh)] flex-col border border-line bg-bg shadow-[0_18px_50px_-20px_rgba(0,0,0,0.45)]",
+            "sm:absolute sm:inset-x-auto sm:top-full sm:mt-2 sm:w-[22rem]",
+            align === "right" ? "sm:right-0" : "sm:left-0",
+          )}
+        >
+          <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-3">
+            <p className="text-body-sm font-semibold text-ink">Notifications</p>
+            {unread > 0 && (
+              <button
+                type="button"
+                onClick={() => void markRead(null)}
+                className="text-body-sm text-ink-muted transition-colors hover:text-accent"
+              >
+                Mark all read
+              </button>
             )}
-          >
-            <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-3">
-              <p className="text-body-sm font-semibold text-ink">Notifications</p>
-              {unread > 0 && (
-                <button
-                  type="button"
-                  onClick={() => void markRead(null)}
-                  className="text-body-sm text-ink-muted transition-colors hover:text-accent"
-                >
-                  Mark all read
-                </button>
-              )}
-            </div>
+          </div>
 
-            {items.length === 0 ? (
-              <p className="px-4 py-10 text-center text-body-sm text-pretty text-ink-muted">
-                Nothing yet. Updates on your orders and messages will show up here.
-              </p>
-            ) : (
-              <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                {items.map((n) => (
-                  <li key={n.id} className="border-b border-line last:border-b-0">
-                    <Link
-                      href={safeHref(n.href)}
-                      onClick={() => {
-                        setOpen(false);
-                        if (!n.read_at) void markRead([n.id]);
-                      }}
-                      className={cn(
-                        "flex gap-3 px-4 py-3 transition-colors hover:bg-bg-raised",
-                        !n.read_at && "bg-accent-soft/60",
-                      )}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", n.read_at ? "bg-transparent" : "bg-accent")}
-                      />
-                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className={cn("text-body-sm text-ink", !n.read_at && "font-semibold")}>
-                          {!n.read_at && <span className="sr-only">Unread: </span>}
-                          {n.title}
-                        </span>
-                        {n.body && <span className="line-clamp-2 text-body-sm text-ink-muted">{n.body}</span>}
-                        <span className="mono-meta text-ink-faint">{timeAgo(n.created_at, now)}</span>
+          {items.length === 0 ? (
+            <p className="px-4 py-10 text-center text-body-sm text-pretty text-ink-muted">
+              Nothing yet. Updates on your orders and messages will show up here.
+            </p>
+          ) : (
+            <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              {items.map((n) => (
+                <li key={n.id} className="border-b border-line last:border-b-0">
+                  <Link
+                    href={safeHref(n.href)}
+                    onClick={() => {
+                      setOpen(false);
+                      if (!n.read_at) void markRead([n.id]);
+                    }}
+                    className={cn(
+                      "flex gap-3 px-4 py-3 transition-colors hover:bg-bg-raised",
+                      !n.read_at && "bg-accent-soft/60",
+                    )}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", n.read_at ? "bg-transparent" : "bg-accent")}
+                    />
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className={cn("text-body-sm text-ink", !n.read_at && "font-semibold")}>
+                        {!n.read_at && <span className="sr-only">Unread: </span>}
+                        {n.title}
                       </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+                      {n.body && <span className="line-clamp-2 text-body-sm text-ink-muted">{n.body}</span>}
+                      <span className="mono-meta text-ink-faint">{timeAgo(n.created_at, now)}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
 
-            <Link
-              href={allHref}
-              onClick={() => setOpen(false)}
-              className="border-t border-line px-4 py-3 text-center text-body-sm text-ink-muted transition-colors hover:text-accent"
-            >
-              {allHref.startsWith("/admin") ? "Open requests →" : "View my requests →"}
-            </Link>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          <Link
+            href={allHref}
+            onClick={() => setOpen(false)}
+            className="border-t border-line px-4 py-3 text-center text-body-sm text-ink-muted transition-colors hover:text-accent"
+          >
+            {allHref.startsWith("/admin") ? "Open requests →" : "View my requests →"}
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
