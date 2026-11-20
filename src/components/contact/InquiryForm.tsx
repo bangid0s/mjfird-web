@@ -3,6 +3,7 @@
 import { useState } from "react";
 import MagneticButton from "@/components/ui/MagneticButton";
 import { BUDGETS, PROJECT_TYPES, validateInquiry, type InquiryErrors } from "@/lib/inquiry-options";
+import { FOUND_VIA, FOUND_VIA_QUESTION } from "@/lib/found-via";
 import { cn } from "@/lib/cn";
 
 type FormState = "idle" | "loading" | "success" | "error";
@@ -156,6 +157,25 @@ export default function InquiryForm({
           </select>
         </Field>
       </div>
+
+      <Field label={FOUND_VIA_QUESTION} error={errors.foundVia}>
+        <select
+          name="foundVia"
+          defaultValue=""
+          className={selectClasses}
+          style={{ backgroundImage: CHEVRON }}
+          disabled={state === "loading"}
+        >
+          <option value="" disabled>
+            Select one
+          </option>
+          {FOUND_VIA.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </Field>
 
       <Field label="Tell me about the project" error={errors.message}>
         <textarea

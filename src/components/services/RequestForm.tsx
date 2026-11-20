@@ -12,6 +12,7 @@ import { discountOn } from "@/lib/discord/perks";
 import type { CommissionAnswer } from "@/lib/supabase/types";
 import { authInput } from "@/components/auth/AuthForms";
 import { cn } from "@/lib/cn";
+import { FOUND_VIA, FOUND_VIA_QUESTION } from "@/lib/found-via";
 
 type Uploaded = { path: string; name: string };
 
@@ -331,6 +332,21 @@ export default function RequestForm({
             <label className="flex flex-col gap-2">
               <span className="text-body-sm font-medium text-ink">Email</span>
               <input value={email} disabled className={authInput} />
+            </label>
+            <label className="flex flex-col gap-2 sm:col-span-2">
+              <span className="text-body-sm font-medium text-ink">
+                {FOUND_VIA_QUESTION} <span className="text-accent">*</span>
+              </span>
+              <select name="found_via" required defaultValue="" className={authInput}>
+                <option value="" disabled>
+                  Select one
+                </option>
+                {FOUND_VIA.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
         </section>

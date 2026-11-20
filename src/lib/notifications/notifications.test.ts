@@ -8,6 +8,7 @@ const inquiry = {
   email: "rina@example.com",
   projectType: "retainer",
   budget: "500-2k",
+  foundVia: "instagram",
   message: "I'd like a monthly character art retainer for our game.",
 };
 
@@ -16,6 +17,8 @@ test("inquiry emails use readable labels and keep the subject on one line", () =
   assert.equal(admin.subject, "New inquiry: Monthly retainer — Rina Injected: header");
   assert.ok(!admin.subject.includes("\n"));
   assert.ok(admin.lines.some((l) => l.includes("Budget: $500 – $2,000")));
+  assert.ok(admin.lines.some((l) => l.includes("Found me via: Instagram")));
+  assert.ok(inquiryAdminEmail({ ...inquiry, foundVia: undefined }).lines.some((l) => l.includes("Found me via: not given")));
   assert.ok(admin.lines.includes(inquiry.message));
   assert.equal(admin.cta?.path, "/admin/inquiries");
 

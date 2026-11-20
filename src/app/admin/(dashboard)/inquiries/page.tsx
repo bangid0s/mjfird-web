@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { setInquiryStatus, deleteInquiry } from "@/lib/admin/inquiries-actions";
 import { cn } from "@/lib/cn";
+import { foundViaLabel } from "@/lib/found-via";
 import { formatDate, initials, timeAgo } from "@/lib/admin/format";
 import PageHeader from "@/components/admin/PageHeader";
 import EmptyState from "@/components/admin/EmptyState";
@@ -143,7 +144,7 @@ export default async function AdminInquiriesPage({
                           {inquiry.email}
                         </a>
 
-                        {(inquiry.project_type || inquiry.budget) && (
+                        {(inquiry.project_type || inquiry.budget || inquiry.found_via) && (
                           <dl className="mt-4 flex flex-wrap gap-2">
                             {inquiry.project_type && (
                               <div className="border border-line bg-bg px-2.5 py-1 text-[12px]">
@@ -155,6 +156,12 @@ export default async function AdminInquiriesPage({
                               <div className="border border-line bg-bg px-2.5 py-1 text-[12px]">
                                 <dt className="sr-only">Budget</dt>
                                 <dd className="font-mono text-ink">{inquiry.budget}</dd>
+                              </div>
+                            )}
+                            {inquiry.found_via && (
+                              <div className="border border-line bg-bg px-2.5 py-1 text-[12px]">
+                                <dt className="sr-only">Found via</dt>
+                                <dd className="text-ink-muted">via {foundViaLabel(inquiry.found_via)}</dd>
                               </div>
                             )}
                           </dl>

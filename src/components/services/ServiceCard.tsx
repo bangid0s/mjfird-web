@@ -72,7 +72,12 @@ export default function ServiceCard({
             )}
           </span>
           {fastest !== null && Number.isFinite(fastest) && (
-            <span className="label">{fastest}+ days</span>
+            <span className="label">
+              {/* Spans in a flex row carry no space between them, so text readers
+                  (Google, AI search, screen readers) saw "$357+ days". */}
+              <span className="sr-only">, delivery in </span>
+              {fastest}+ days
+            </span>
           )}
         </div>
         {service.hasGalleryWorks && (
