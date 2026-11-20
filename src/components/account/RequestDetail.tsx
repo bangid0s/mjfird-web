@@ -183,6 +183,9 @@ export default function RequestDetail({
                 </a>
               )}
               {deliveries.length > 0 && <FileLinks files={deliveries} />}
+              <p className="text-body-sm text-ink-muted">
+                Your files stay available here. Just log in to download again anytime.
+              </p>
             </Section>
           )}
 
