@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { submitRequest } from "@/lib/client/request-actions";
+import { shrinkImage } from "@/lib/client/shrink-image";
 import type { StorefrontService } from "@/lib/data/services";
 import Link from "next/link";
 import { effectiveAvailability, formatUSD, quote, type ServiceQuestion } from "@/lib/services/storefront";
@@ -44,9 +45,16 @@ function FileDrop({
     const supabase = createClient();
     const added: Uploaded[] = [];
     try {
-      for (const file of Array.from(list).slice(0, max - files.length)) {
+      for (const picked of Array.from(list).slice(0, max - files.length)) {
+        // Big photos are resized first, so a 25 MB phone shot still fits under
+        // the limit. Anything far beyond it isn't worth decoding in the browser.
+        if (picked.size > MAX_BYTES * 3) {
+          setError(`${picked.name} is over 20 MB.`);
+          continue;
+        }
+        const file = await shrinkImage(picked);
         if (file.size > MAX_BYTES) {
-          setError(`${file.name} is over 20 MB.`);
+          setError(`${picked.name} is over 20 MB.`);
           continue;
         }
         const path = `${userId}/refs/${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${safeName(file.name)}`;
@@ -54,7 +62,7 @@ function FileDrop({
           contentType: file.type || "application/octet-stream",
         });
         if (err) {
-          setError(`Couldn't upload ${file.name}: ${err.message}`);
+          setError(`Couldn't upload ${picked.name}: ${err.message}`);
           continue;
         }
         added.push({ path, name: file.name });
@@ -78,8 +86,8 @@ function FileDrop({
           if (e.dataTransfer.files.length) upload(e.dataTransfer.files);
         }}
       >
-        <span className="text-body-sm text-ink">{busy ? "Uploading…" : "Drop images here, or click to browse"}</span>
-        <span className="mono-meta">PNG, JPG, WEBP, PDF · up to 20 MB each · {max} max</span>
+        <span className="text-body-sm text-ink">{busy ? "Preparing & uploading…" : "Drop images here, or click to browse"}</span>
+        <span className="mono-meta">PNG, JPG, WEBP, PDF · up to 20 MB each · {max} max · large photos are resized</span>
         <input
           type="file"
           multiple

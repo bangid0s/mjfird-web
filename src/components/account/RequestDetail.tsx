@@ -9,6 +9,7 @@ import RequestProgress from "@/components/account/RequestProgress";
 import { StageTrack } from "@/components/commissions/WorkStageView";
 import { workStagesOf } from "@/lib/commissions/work-stages";
 import { cn } from "@/lib/cn";
+import { purgedReferencesNote } from "@/lib/commissions/reference-cleanup";
 import { deliveryHost } from "@/lib/commissions/delivery-link";
 import type { NextStep } from "@/lib/commissions/next-step";
 import type { RequestState } from "@/lib/client/request-actions";
@@ -220,6 +221,7 @@ export default function RequestDetail({
                 </dl>
               )}
               {refs.length > 0 && <FileLinks files={refs} />}
+              {purgedReferencesNote(req) && <p className="text-body-sm text-ink-faint">{purgedReferencesNote(req)}</p>}
             </div>
           </details>
         </div>
