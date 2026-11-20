@@ -8,6 +8,10 @@ import StatusChip from "@/components/commissions/StatusChip";
 import { fieldInputClasses } from "@/components/admin/Field";
 import { formatDate } from "@/lib/admin/format";
 import { clientFileName, parseClientFilePath } from "@/lib/commissions/client-files";
+import CleanupButton from "@/components/admin/CleanupButton";
+import { cleanUpReferences } from "@/lib/admin/reference-cleanup-actions";
+import { previewReferenceCleanup } from "@/lib/commissions/reference-cleanup-run";
+import { formatBytes, GRACE_DAYS, ORPHAN_HOURS, type CleanupPlan } from "@/lib/commissions/reference-cleanup";
 import type { CommissionRequestRow } from "@/lib/supabase/types";
 
 const BUCKET = "commissions";
@@ -61,9 +65,9 @@ function matches(request: RequestLite, q: string) {
 export default async function AdminClientFilesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; renamed?: string; deleted?: string; q?: string }>;
+  searchParams: Promise<{ error?: string; renamed?: string; deleted?: string; cleaned?: string; q?: string }>;
 }) {
-  const { error, renamed, deleted, q: rawQ } = await searchParams;
+  const { error, renamed, deleted, cleaned, q: rawQ } = await searchParams;
   const q = (rawQ ?? "").trim().toLowerCase();
   const supabase = await createClient();
 
@@ -73,6 +77,14 @@ export default async function AdminClientFilesPage({
     stored = await listAllClientFiles(supabase);
   } catch (err) {
     listError = err instanceof Error ? err.message : "Couldn't list client files.";
+  }
+
+  // What the daily cleanup would remove right now. Shown, never run, on load.
+  let cleanup: CleanupPlan | null = null;
+  try {
+    cleanup = await previewReferenceCleanup(supabase);
+  } catch {
+    // Migration 0051 not applied yet, or storage unreachable: hide the panel.
   }
 
   const { data: requestRows } = await supabase
@@ -137,6 +149,10 @@ export default async function AdminClientFilesPage({
           Renamed to {renamed}. The request now points at the new name.
         </p>
       )}
+      {cleaned && (
+        <p className="mb-8 border border-success px-4 py-3 font-mono text-label text-success">{cleaned}</p>
+      )}
+      {cleanup && <CleanupPanel plan={cleanup} />}
       {deleted && (
         <p className="mb-8 border border-line px-4 py-3 font-mono text-label text-ink-muted">
           File deleted and removed from its request.
@@ -225,5 +241,42 @@ export default async function AdminClientFilesPage({
         </>
       )}
     </div>
+  );
+}
+
+function CleanupPanel({ plan }: { plan: CleanupPlan }) {
+  const closed = plan.files.filter((f) => f.reason === "closed");
+  const orphans = plan.files.filter((f) => f.reason === "orphan");
+  const size = (list: { size: number }[]) => formatBytes(list.reduce((s, f) => s + f.size, 0));
+  return (
+    <section className="mb-10 flex flex-col gap-4 border border-line bg-bg-raised p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 flex-col gap-1">
+        <h2 className="text-body font-semibold text-ink">Storage cleanup</h2>
+        <p className="max-w-xl text-body-sm text-pretty text-ink-muted">
+          Runs every night. Client references are removed {GRACE_DAYS} days after an order is completed, declined or
+          cancelled, and uploads never attached to an order after {ORPHAN_HOURS} hours. Deliveries, briefs and messages are
+          kept.
+        </p>
+        <p className="font-mono text-label text-ink-faint">
+          {plan.files.length === 0
+            ? "Nothing to remove right now."
+            : [
+                closed.length ? `${closed.length} from closed orders (${size(closed)})` : null,
+                orphans.length ? `${orphans.length} never attached (${size(orphans)})` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ") + " ready to remove"}
+        </p>
+      </div>
+      {plan.files.length > 0 && (
+        <form action={cleanUpReferences} className="shrink-0">
+          <CleanupButton
+            confirmText={`Permanently delete ${plan.files.length} reference file${plan.files.length === 1 ? "" : "s"} (${formatBytes(plan.bytes)})? This can't be undone.`}
+          >
+            Clean up now · {formatBytes(plan.bytes)}
+          </CleanupButton>
+        </form>
+      )}
+    </section>
   );
 }

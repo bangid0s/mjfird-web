@@ -12,6 +12,7 @@ import { postAdminMessage } from "@/lib/admin/requests-actions";
 import { formatDate } from "@/lib/admin/format";
 import { priceOf, toNumber } from "@/lib/commissions/status";
 import { isQuoteRequest } from "@/lib/commissions/quote";
+import { purgedReferencesNote } from "@/lib/commissions/reference-cleanup";
 import { formatUSD } from "@/lib/services/storefront";
 import { safeDeliveryUrl } from "@/lib/commissions/delivery-link";
 import Link from "next/link";
@@ -119,7 +120,8 @@ export default async function AdminRequestPage({ params }: { params: Promise<{ i
               )
             }
           >
-            <FileLinks files={refs} />
+            {purgedReferencesNote(req) && <p className="text-body-sm text-ink-faint">{purgedReferencesNote(req)}</p>}
+            {(refs.length > 0 || !req.references_purged_at) && <FileLinks files={refs} />}
           </Panel>
 
           {work && (

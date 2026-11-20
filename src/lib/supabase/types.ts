@@ -383,6 +383,11 @@ export type CommissionRequestRow = {
   artist_note: string;
   created_at: string;
   updated_at: string;
+  /** When it became completed / declined / cancelled (migration 0051). */
+  closed_at?: string | null;
+  /** Set when the reference cleanup removed this request's references (migration 0051). */
+  references_purged_at?: string | null;
+  references_purged_count?: number;
   accepted_at: string | null;
   payment_url: string | null;
   payment_url_set_at: string | null;
