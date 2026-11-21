@@ -1,7 +1,7 @@
 import type { CommissionRequestRow } from "@/lib/supabase/types";
 import { priceOf, toNumber } from "@/lib/commissions/status";
 import { isQuoteRequest } from "@/lib/commissions/quote";
-import { formatUSD } from "@/lib/services/storefront";
+import { formatUSD, sharingLabel } from "@/lib/services/storefront";
 
 export default function OrderSummary({ req }: { req: CommissionRequestRow }) {
   const finalPrice = toNumber(req.final_price);
@@ -11,6 +11,14 @@ export default function OrderSummary({ req }: { req: CommissionRequestRow }) {
   const licensePercent = toNumber(req.license_percent) ?? 0;
   const licenseFee = toNumber(req.license_fee) ?? 0;
   const discount = toNumber(req.discount_amount ?? 0) ?? 0;
+  const privacyFee = toNumber(req.privacy_fee ?? 0) ?? 0;
+  const sharing = sharingLabel(req.sharing);
+  const sharingRow = sharing && (
+    <div className="flex justify-between gap-3">
+      <dt className="text-ink-muted">Sharing</dt>
+      <dd className="text-right text-ink">{sharing}</dd>
+    </div>
+  );
   if (isQuoteRequest(req)) {
     return (
       <dl className="flex flex-col gap-3 text-body-sm">
@@ -18,6 +26,7 @@ export default function OrderSummary({ req }: { req: CommissionRequestRow }) {
           <dt className="text-ink-muted">Custom quote</dt>
           <dd className="text-ink">{finalPrice === null ? "Quote pending" : "Quoted"}</dd>
         </div>
+        {sharingRow}
         {finalPrice !== null && (
           <div className="flex items-baseline justify-between gap-3 border-t border-line pt-3">
             <dt className="font-medium text-ink">Final price</dt>
@@ -62,6 +71,13 @@ export default function OrderSummary({ req }: { req: CommissionRequestRow }) {
         </dt>
         <dd className="text-ink">{licenseFee > 0 ? formatUSD(licenseFee) : "Included"}</dd>
       </div>
+      {privacyFee > 0 && (
+        <div className="flex justify-between gap-3">
+          <dt className="text-ink-muted">NDA / privacy fee</dt>
+          <dd className="text-ink">{formatUSD(privacyFee)}</dd>
+        </div>
+      )}
+      {privacyFee === 0 && sharingRow}
       {discount > 0 && (
         <div className="flex justify-between gap-3">
           <dt className="text-accent">

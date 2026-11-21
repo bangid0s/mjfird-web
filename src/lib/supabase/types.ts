@@ -58,6 +58,8 @@ export type ServiceRow = {
   licenses?: unknown;
   /** [{ id, name, description, price }] — pick exactly one; the first is the default. */
   backgrounds?: unknown;
+  /** Flat fee for "NDA required" on the sharing question (0053_sharing_privacy.sql). */
+  nda_fee?: number | string | null;
   /** Steps of work while in progress, e.g. Sketch, Lineart, Colour, Final (0047_work_stages.sql). */
   work_stages?: string[];
 };
@@ -364,6 +366,10 @@ export type CommissionRequestRow = {
   license_percent: number | string;
   /** license_percent of (package × characters + add-ons + background). */
   license_fee: number | string;
+  /** "May I share / stream it?" — public | final_only | nda; null on older requests. */
+  sharing?: string | null;
+  /** Flat NDA fee, charged once, outside the license base. Included in estimated_total. */
+  privacy_fee?: number | string | null;
   /** After any discount below. Undiscounted = estimated_total + discount_amount. */
   estimated_total: number | string;
   /** Past-client discount from a verified Discord role (migration 0043). */

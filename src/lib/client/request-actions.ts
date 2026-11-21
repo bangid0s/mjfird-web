@@ -8,7 +8,7 @@ import { friendlyRpcError } from "@/lib/commissions/status";
 import { COMMISSION_EMAIL, sendEmail } from "@/lib/email";
 import { mapStorefrontRow } from "@/lib/data/services";
 import type { CommissionAnswer, CommissionRequestRow, ServiceRow } from "@/lib/supabase/types";
-import { formatUSD } from "@/lib/services/storefront";
+import { formatUSD, isSharingId, SHARING_QUESTION, sharingLabel } from "@/lib/services/storefront";
 import { refreshDiscountFor } from "@/lib/discord/sync";
 import { isQuoteRequest } from "@/lib/commissions/quote";
 import { FOUND_VIA_ANSWER_ID, FOUND_VIA_QUESTION, foundViaLabel, isFoundVia } from "@/lib/found-via";
@@ -66,30 +66,40 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
     cleanAnswers.push({ id: FOUND_VIA_ANSWER_ID, label: FOUND_VIA_QUESTION, value: foundViaLabel(foundVia)! });
   }
 
+  const sharing = formData.get("sharing");
+  if (!isSharingId(sharing)) return { error: `Please answer: ${SHARING_QUESTION}` };
+
   // Re-check Discord roles so the database's discount trigger sees a fresh result.
   await refreshDiscountFor(supabase, user);
 
   // No packages → a custom quote, filed as a commission request the artist prices on accept.
-  const { data: requestId, error } = service.packages.length === 0
-    ? await supabase.rpc("submit_quote_request", {
-        p_service_id: service.id,
-        p_contact_name: String(formData.get("contact_name") ?? ""),
-        p_brief: String(formData.get("brief") ?? ""),
-        p_answers: cleanAnswers,
-        p_reference_paths: referencePaths,
-      })
-    : await supabase.rpc("submit_commission_request", {
-        p_service_id: service.id,
-        p_package_id: String(formData.get("package_id") ?? ""),
-        p_addon_ids: formData.getAll("addon_ids").map(String),
-        p_license: String(formData.get("license_id") ?? "personal"),
-        p_background: String(formData.get("background_id") ?? "") || null,
-        p_extra_characters: Math.max(0, Number.parseInt(String(formData.get("extra_characters") ?? "0"), 10) || 0),
-        p_contact_name: String(formData.get("contact_name") ?? ""),
-        p_brief: String(formData.get("brief") ?? ""),
-        p_answers: cleanAnswers,
-        p_reference_paths: referencePaths,
-      });
+  const isQuote = service.packages.length === 0;
+  const rpcName = isQuote ? "submit_quote_request" : "submit_commission_request";
+  const args = (withSharing: boolean, answers: typeof cleanAnswers) => ({
+    p_service_id: service.id,
+    ...(isQuote
+      ? {}
+      : {
+          p_package_id: String(formData.get("package_id") ?? ""),
+          p_addon_ids: formData.getAll("addon_ids").map(String),
+          p_license: String(formData.get("license_id") ?? "personal"),
+          p_background: String(formData.get("background_id") ?? "") || null,
+          p_extra_characters: Math.max(0, Number.parseInt(String(formData.get("extra_characters") ?? "0"), 10) || 0),
+        }),
+    p_contact_name: String(formData.get("contact_name") ?? ""),
+    p_brief: String(formData.get("brief") ?? ""),
+    p_answers: answers,
+    p_reference_paths: referencePaths,
+    ...(withSharing ? { p_sharing: sharing } : {}),
+  });
+  let { data: requestId, error } = await supabase.rpc(rpcName, args(true, cleanAnswers));
+  if (error && isMissingSharingParam(error)) {
+    // 0053_sharing_privacy.sql not applied yet: file the request the old way and
+    // keep the answer readable. No NDA fee is added here (the old NDA add-on
+    // still exists until the migration runs), so it can't be charged twice.
+    const withAnswer = [...cleanAnswers, { id: "sharing", label: SHARING_QUESTION, value: sharingLabel(sharing)! }];
+    ({ data: requestId, error } = await supabase.rpc(rpcName, args(false, withAnswer)));
+  }
   if (error || !requestId) return { error: friendlyRpcError(error?.message ?? "") };
 
   const { data: created } = await supabase.from("commission_requests").select("*").eq("id", requestId).single();
@@ -103,6 +113,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
           `${req.contact_name} (${req.contact_email}) asked for a custom quote for ${req.service_title}.`,
           ...(req.waitlisted ? ["Joined the waitlist."] : []),
           ...(isFoundVia(foundVia) ? [`Found me via: ${foundViaLabel(foundVia)}`] : []),
+          `Sharing: ${sharingLabel(sharing)}`,
           req.brief,
           "Set the price when you accept it.",
         ],
@@ -129,6 +140,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
       : null;
     const license = `${req.license_name ?? "Personal use"}${Number(req.license_percent) > 0 ? ` (+${Number(req.license_percent)}%)` : ""}`;
     const discountAmount = Number(req.discount_amount ?? 0);
+    const privacyFee = Number(req.privacy_fee ?? 0);
     const discount =
       discountAmount > 0 ? `${req.discount_label ?? "Discount"} (${Number(req.discount_percent)}%): −${formatUSD(discountAmount)}` : null;
     await Promise.all([
@@ -139,9 +151,11 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
           `${req.contact_name} (${req.contact_email}) requested ${req.service_title} — ${req.package_name}${characters}.`,
           ...(background ? [`Background: ${background}`] : []),
           `License: ${license}`,
+          ...(privacyFee > 0 ? [`NDA / privacy fee: +${formatUSD(privacyFee)}`] : []),
           ...(discount ? [`${discount} — verified Discord role`] : []),
           `Estimated total: ${total}${req.waitlisted ? " · joined the waitlist" : ""}`,
           ...(isFoundVia(foundVia) ? [`Found me via: ${foundViaLabel(foundVia)}`] : []),
+          `Sharing: ${sharingLabel(sharing)}`,
           req.brief,
         ],
         cta: { label: "Review request", path: `/admin/requests/${req.id}` },
@@ -155,6 +169,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
           `Thanks for your request for ${req.service_title} — ${req.package_name}${characters}. I review every request myself and will get back to you soon.`,
           ...(background ? [`Background: ${background}.`] : []),
           `License: ${license}.`,
+          ...(privacyFee > 0 ? [`NDA / privacy fee: +${formatUSD(privacyFee)}. I won't post or stream this piece.`] : []),
           ...(discount ? [`${discount}. Thanks for coming back!`] : []),
           `Estimated total: ${total}. No payment is needed until I accept.`,
         ],
@@ -245,4 +260,9 @@ export async function submitReview(requestId: string, _prev: RequestState, formD
   revalidatePath("/");
   revalidatePath("/services", "layout");
   return { done: true };
+}
+
+/** PostgREST can't find a function taking p_sharing: the migration hasn't run yet. */
+function isMissingSharingParam(error: { code?: string; message?: string }) {
+  return error.code === "PGRST202" && /p_sharing/.test(error.message ?? "");
 }

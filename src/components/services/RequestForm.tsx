@@ -7,7 +7,7 @@ import { submitRequest } from "@/lib/client/request-actions";
 import { shrinkImage } from "@/lib/client/shrink-image";
 import type { StorefrontService } from "@/lib/data/services";
 import Link from "next/link";
-import { effectiveAvailability, formatUSD, quote, type ServiceQuestion } from "@/lib/services/storefront";
+import { SHARING_OPTIONS, SHARING_QUESTION, effectiveAvailability, formatUSD, quote, type ServiceQuestion } from "@/lib/services/storefront";
 import { discountOn } from "@/lib/discord/perks";
 import type { CommissionAnswer } from "@/lib/supabase/types";
 import { authInput } from "@/components/auth/AuthForms";
@@ -259,6 +259,7 @@ export default function RequestForm({
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [questionFiles, setQuestionFiles] = useState<Record<string, Uploaded[]>>({});
   const [refs, setRefs] = useState<Uploaded[]>([]);
+  const [sharing, setSharing] = useState("");
 
   const selected = service.packages.find((p) => p.id === packageId);
   const priced = quote(
@@ -271,6 +272,8 @@ export default function RequestForm({
     initialLicense,
     service.backgrounds,
     initialBackground ?? "",
+    sharing || null,
+    service.ndaFee,
   );
   const extra = priced?.extraCharacters ?? 0;
   const discounted = discountOn(priced?.total ?? 0, discountPercent);
@@ -385,6 +388,36 @@ export default function RequestForm({
             </div>
           )}
         </section>
+
+        <section className="flex flex-col gap-5 border-t border-line pt-8">
+          <h2 className="eyebrow">Sharing</h2>
+          <fieldset className="flex flex-col gap-3">
+            <legend className="mb-3 text-body font-medium text-ink">
+              {SHARING_QUESTION} <span className="text-accent">*</span>
+            </legend>
+            {SHARING_OPTIONS.map((o) => (
+              <label key={o.id} className="flex items-center justify-between gap-3 text-body-sm text-ink">
+                <span className="flex items-center gap-2.5">
+                  <input
+                    type="radio"
+                    name="sharing"
+                    value={o.id}
+                    required
+                    checked={sharing === o.id}
+                    onChange={() => setSharing(o.id)}
+                    className="h-4 w-4 accent-[var(--color-accent)]"
+                  />
+                  {o.label}
+                </span>
+                {o.id === "nda" && service.ndaFee > 0 && (
+                  <span className="whitespace-nowrap text-ink-muted">
+                    <span className="sr-only">: </span>+{formatUSD(service.ndaFee)}
+                  </span>
+                )}
+              </label>
+            ))}
+          </fieldset>
+        </section>
       </div>
 
       <aside className="lg:sticky lg:top-[calc(var(--nav-h)+2rem)] lg:self-start">
@@ -401,6 +434,9 @@ export default function RequestForm({
                 Tell me what you need. I&apos;ll read the brief and reply with a price and timeline. Usage rights for
                 commercial work are part of the quote.
               </p>
+              {sharing === "nda" && service.ndaFee > 0 && (
+                <p className="text-ink-muted">The NDA fee ({formatUSD(service.ndaFee)}) is included in the quoted price.</p>
+              )}
             </dl>
           ) : priced && selected ? (
             <dl className="flex flex-col gap-3 text-body-sm">
@@ -435,6 +471,12 @@ export default function RequestForm({
                 </dt>
                 <dd className="text-ink">{priced.licenseFee > 0 ? `+${formatUSD(priced.licenseFee)}` : "Included"}</dd>
               </div>
+              {priced.privacyFee > 0 && (
+                <div className="flex justify-between gap-3">
+                  <dt className="text-ink-muted">NDA / privacy fee</dt>
+                  <dd className="text-ink">+{formatUSD(priced.privacyFee)}</dd>
+                </div>
+              )}
               {discounted.cut > 0 && (
                 <div className="flex justify-between gap-3">
                   <dt className="text-accent">
