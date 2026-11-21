@@ -5,7 +5,7 @@ import GalleryUploader from "@/components/admin/GalleryUploader";
 import { AddonsEditor, FaqEditor, LicensesEditor, PackagesEditor, QuestionsEditor } from "@/components/admin/ServiceBuilderEditors";
 import type { ServiceRow } from "@/lib/supabase/types";
 import { mapStorefrontRow } from "@/lib/data/services";
-import { DEFAULT_LICENSES } from "@/lib/services/storefront";
+import { DEFAULT_LICENSES, DEFAULT_NDA_FEE } from "@/lib/services/storefront";
 import SubmitButton, { FormActions } from "@/components/admin/SubmitButton";
 
 export default function ServiceForm({
@@ -132,6 +132,22 @@ export default function ServiceForm({
         description="How the client may use the art. Personal use is the default and always offered; the others add a percentage of the order total (package × characters + add-ons + background)."
       >
         <LicensesEditor initial={store?.licenses ?? DEFAULT_LICENSES} />
+      </FieldSection>
+
+      <FieldSection
+        title="NDA / privacy fee"
+        description="Every request asks “May I publicly stream / share the work with credit?”. Clients who answer “NDA required” pay this flat fee once: not multiplied by characters and not part of the license percentage. Don't also add an NDA add-on, or NDA would be charged twice. 0 makes NDA free."
+      >
+        <Field label="NDA fee (USD)">
+          <input
+            name="nda_fee"
+            type="number"
+            min={0}
+            step="0.01"
+            defaultValue={store?.ndaFee ?? DEFAULT_NDA_FEE}
+            className={fieldInputClasses}
+          />
+        </Field>
       </FieldSection>
 
       <FieldSection title="Will / won't draw" description="Set expectations before anyone requests.">

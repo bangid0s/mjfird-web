@@ -10,6 +10,7 @@ import {
   faqSchema,
   packageSchema,
   DEFAULT_LICENSES,
+  DEFAULT_NDA_FEE,
   parseLicenses,
   parseList,
   questionSchema,
@@ -65,6 +66,8 @@ export type StorefrontService = {
   addons: ServiceAddon[];
   backgrounds: ServiceBackground[];
   licenses: ServiceLicense[];
+  /** Flat fee when the client picks "NDA required" on the sharing question. */
+  ndaFee: number;
   samples: { url: string; alt: string }[];
   /** Has gallery images filed under it — worth a "See works" link to /gallery. */
   hasGalleryWorks: boolean;
@@ -97,6 +100,7 @@ export function mapStorefrontRow(row: ServiceRow, galleryCover?: string): Storef
     addons: parseList(addonSchema, row.addons),
     backgrounds: parseList(backgroundSchema, row.backgrounds),
     licenses: parseLicenses(row.licenses),
+    ndaFee: ndaFeeOf(row.nda_fee),
     samples,
     hasGalleryWorks: Boolean(galleryCover),
     willDraw: row.will_draw ?? [],
@@ -105,6 +109,12 @@ export function mapStorefrontRow(row: ServiceRow, galleryCover?: string): Storef
     terms: row.terms ?? "",
     questions: parseList(questionSchema, row.questions),
   };
+}
+
+/** Before 0053_sharing_privacy.sql there's no nda_fee column: use the default. */
+function ndaFeeOf(raw: unknown): number {
+  const n = Number(raw);
+  return raw !== null && raw !== undefined && raw !== "" && Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : DEFAULT_NDA_FEE;
 }
 
 export async function getStorefrontServices(): Promise<StorefrontService[]> {
@@ -169,6 +179,7 @@ const placeholderStorefront: StorefrontService[] = [
       { id: "detailed", name: "Detailed background", description: "A painted scene instead of a flat backdrop.", price: 40 },
     ],
     licenses: DEFAULT_LICENSES,
+    ndaFee: DEFAULT_NDA_FEE,
     samples: [],
     hasGalleryWorks: false,
     willDraw: ["Original characters", "Fan art", "Armor & mecha", "Fantasy creatures"],
@@ -200,6 +211,7 @@ const placeholderStorefront: StorefrontService[] = [
     addons: [{ id: "rush", name: "Rush delivery", description: "Halves the timeline.", price: 300 }],
     backgrounds: [],
     licenses: DEFAULT_LICENSES,
+    ndaFee: DEFAULT_NDA_FEE,
     samples: [],
     hasGalleryWorks: false,
     willDraw: [],

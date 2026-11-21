@@ -8,9 +8,11 @@ import type { ContentStatus } from "@/lib/supabase/types";
 import { parseGallery } from "@/lib/admin/form-parse";
 import {
   AVAILABILITY,
+  DEFAULT_NDA_FEE,
   addonSchema,
   backgroundSchema,
   faqSchema,
+  isNdaAddonName,
   packageSchema,
   parseList,
   parseLicenses,
@@ -34,7 +36,19 @@ function optionalInt(raw: FormDataEntryValue | null) {
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
+function ndaFee(raw: FormDataEntryValue | null) {
+  const n = Number(String(raw ?? "").trim());
+  return String(raw ?? "").trim() !== "" && Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : DEFAULT_NDA_FEE;
+}
+
 function parsePayload(formData: FormData) {
+  const addons = parseList(addonSchema, String(formData.get("addons") ?? ""));
+  const ndaAddon = addons.find((a) => isNdaAddonName(a.name));
+  if (ndaAddon) {
+    throw new Error(
+      `Could not save service: remove the add-on “${ndaAddon.name}”. NDA is charged through the NDA / privacy fee field; keeping both would charge clients twice.`,
+    );
+  }
   const title = String(formData.get("title") ?? "").trim();
   const availability = String(formData.get("availability") ?? "open") as Availability;
   return {
@@ -51,7 +65,8 @@ function parsePayload(formData: FormData) {
     slots_taken: optionalInt(formData.get("slots_taken")) ?? 0,
     samples: parseGallery(String(formData.get("samples") ?? "")),
     packages: parseList(packageSchema, String(formData.get("packages") ?? "")),
-    addons: parseList(addonSchema, String(formData.get("addons") ?? "")),
+    addons,
+    nda_fee: ndaFee(formData.get("nda_fee")),
     backgrounds: parseList(backgroundSchema, String(formData.get("backgrounds") ?? "")),
     licenses: parseLicenses(String(formData.get("licenses") ?? "")),
     faq: parseList(faqSchema, String(formData.get("faq") ?? "")),
@@ -63,15 +78,25 @@ function parsePayload(formData: FormData) {
   };
 }
 
-/** Before 0047_work_stages.sql there's no work_stages column; save everything else rather than failing. */
-function missingWorkStages(error: { message: string } | null) {
-  return Boolean(error && error.message.includes("work_stages"));
-}
+/**
+ * Columns added by later migrations (0047 work_stages, 0053 nda_fee). If the
+ * database doesn't have one yet, save everything else rather than failing.
+ */
+const OPTIONAL_COLUMNS = ["work_stages", "nda_fee"] as const;
 
-function withoutWorkStages(payload: ReturnType<typeof parsePayload>) {
+async function saveTolerant(
+  payload: ReturnType<typeof parsePayload>,
+  write: (p: Partial<ReturnType<typeof parsePayload>>) => PromiseLike<{ error: { code?: string; message: string } | null }>,
+) {
   const rest: Partial<ReturnType<typeof parsePayload>> = { ...payload };
-  delete rest.work_stages;
-  return rest;
+  let { error } = await write(rest);
+  for (let i = 0; error && i < OPTIONAL_COLUMNS.length; i++) {
+    const missing = OPTIONAL_COLUMNS.find((c) => c in rest && error!.message.includes(c));
+    if (!missing) break;
+    delete rest[missing];
+    ({ error } = await write(rest));
+  }
+  return error;
 }
 
 function saveError(error: { code?: string; message: string }) {
@@ -92,10 +117,7 @@ function revalidateServices() {
 export async function createService(formData: FormData) {
   const supabase = await createClient();
   const payload = parsePayload(formData);
-  let { error } = await supabase.from("services").insert(payload);
-  if (missingWorkStages(error)) {
-    ({ error } = await supabase.from("services").insert(withoutWorkStages(payload)));
-  }
+  const error = await saveTolerant(payload, (p) => supabase.from("services").insert(p));
   if (error) throw saveError(error);
   revalidateServices();
   redirect("/admin/services");
@@ -104,10 +126,7 @@ export async function createService(formData: FormData) {
 export async function updateService(id: string, formData: FormData) {
   const supabase = await createClient();
   const payload = parsePayload(formData);
-  let { error } = await supabase.from("services").update(payload).eq("id", id);
-  if (missingWorkStages(error)) {
-    ({ error } = await supabase.from("services").update(withoutWorkStages(payload)).eq("id", id));
-  }
+  const error = await saveTolerant(payload, (p) => supabase.from("services").update(p).eq("id", id));
   if (error) throw saveError(error);
   revalidateServices();
   redirect("/admin/services");

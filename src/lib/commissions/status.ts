@@ -55,6 +55,7 @@ const RPC_ERRORS: Record<string, string> = {
   quote_not_offered: "This service has fixed packages now. Please pick one on the service page.",
   invalid_name: "Please enter your name.",
   invalid_background: "That background option isn't offered for this service. Please pick another.",
+  invalid_sharing: "Please answer whether I may share or stream the work.",
   invalid_license: "That usage license isn't offered for this service. Please pick another.",
   invalid_characters: "That package doesn't allow that many characters. Please adjust and try again.",
   invalid_brief: "Please describe what you'd like (at least a sentence).",

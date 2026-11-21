@@ -115,6 +115,47 @@ export function offeredLicenses(licenses: ServiceLicense[]) {
   return licenses.filter((l) => l.enabled);
 }
 
+/*
+  "May I publicly stream / share the work with credit?" — asked on every
+  request. NDA carries the service's privacy fee: a flat amount, charged once.
+  It is not multiplied by characters and not part of the usage-license base,
+  so a commercial license doesn't double it. This replaces the old
+  "Private / NDA" add-on (moved here by 0053_sharing_privacy.sql); the two must
+  never both exist, or NDA would be charged twice.
+*/
+export const SHARING_OPTIONS = [
+  { id: "public", label: "Yes" },
+  { id: "final_only", label: "Not while it's a work in progress, but the final piece is OK" },
+  { id: "nda", label: "No, NDA required (privacy fee)" },
+] as const;
+export type SharingId = (typeof SHARING_OPTIONS)[number]["id"];
+export const SHARING_QUESTION = "May I publicly stream / share the work with credit?";
+
+/**
+ * An add-on that duplicates the NDA choice ("Private / NDA", "Privacy fee").
+ * Same pattern the 0053 migration used to move them. Saving a service with one
+ * is refused, so NDA can't be charged twice.
+ */
+export function isNdaAddonName(name: string) {
+  return /\bnda\b|private|privacy/i.test(name);
+}
+
+/** Default NDA fee for a service that hasn't set its own (USD). */
+export const DEFAULT_NDA_FEE = 100;
+
+export function isSharingId(value: unknown): value is SharingId {
+  return SHARING_OPTIONS.some((o) => o.id === value);
+}
+
+export function sharingLabel(value: string | null | undefined): string | null {
+  return SHARING_OPTIONS.find((o) => o.id === value)?.label ?? null;
+}
+
+/** The fee a sharing choice adds: only NDA costs anything. */
+export function privacyFeeFor(sharing: string | null | undefined, ndaFee: number): number {
+  return sharing === "nda" ? Math.max(0, Math.round(ndaFee * 100) / 100) : 0;
+}
+
 export const AVAILABILITY = ["open", "waitlist", "closed"] as const;
 export type Availability = (typeof AVAILABILITY)[number];
 
@@ -201,6 +242,10 @@ export type PriceQuote = {
   licensePercent: number;
   /** licensePercent of (subtotal + addonsTotal + backgroundPrice). */
   licenseFee: number;
+  /** null when the client hasn't answered the sharing question yet. */
+  sharing: SharingId | null;
+  /** Flat NDA fee, added after the license fee. 0 unless sharing is "nda". */
+  privacyFee: number;
   total: number;
 };
 
@@ -228,6 +273,8 @@ export function quote(
   licenseId: string = "personal",
   backgrounds: ServiceBackground[] = [],
   backgroundId: string = "",
+  sharing: string | null = null,
+  ndaFee: number = DEFAULT_NDA_FEE,
 ): PriceQuote | null {
   const pkg = packages.find((p) => p.id === packageId);
   if (!pkg) return null;
@@ -244,6 +291,8 @@ export function quote(
   const backgroundPrice = background?.price ?? 0;
   const base = Math.round((subtotal + addonsTotal + backgroundPrice) * 100) / 100;
   const licenseFee = Math.round(base * license.percent) / 100;
+  const sharingId = isSharingId(sharing) ? sharing : null;
+  const privacyFee = privacyFeeFor(sharingId, ndaFee);
   return {
     packageId: pkg.id,
     addonIds: chosen.map((a) => a.id),
@@ -255,7 +304,9 @@ export function quote(
     licenseId: license.id,
     licensePercent: license.percent,
     licenseFee,
-    total: Math.round((base + licenseFee) * 100) / 100,
+    sharing: sharingId,
+    privacyFee,
+    total: Math.round((base + licenseFee + privacyFee) * 100) / 100,
   };
 }
 
