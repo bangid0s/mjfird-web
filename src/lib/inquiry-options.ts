@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isFoundVia } from "@/lib/found-via";
 
 export const PROJECT_TYPES = [
   { value: "character", label: "Character illustration" },
@@ -26,6 +27,7 @@ const inquirySchema = z.object({
   email: z.string().email("That email doesn't look right."),
   projectType: z.string().min(1, "Pick what this is about."),
   budget: z.string().min(1, "Pick a rough budget range."),
+  foundVia: z.string().refine(isFoundVia, "Pick where you found me."),
   message: z
     .string()
     .min(20, "Give me at least a couple of sentences.")
@@ -49,6 +51,7 @@ export function validateInquiry(
     email: "",
     projectType: "",
     budget: "",
+    foundVia: "",
     message: "",
     company: "",
     ...values,

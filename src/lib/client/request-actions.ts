@@ -11,6 +11,7 @@ import type { CommissionAnswer, CommissionRequestRow, ServiceRow } from "@/lib/s
 import { formatUSD } from "@/lib/services/storefront";
 import { refreshDiscountFor } from "@/lib/discord/sync";
 import { isQuoteRequest } from "@/lib/commissions/quote";
+import { FOUND_VIA_ANSWER_ID, FOUND_VIA_QUESTION, foundViaLabel, isFoundVia } from "@/lib/found-via";
 
 export type RequestState = { error?: string; done?: boolean } | undefined;
 
@@ -58,6 +59,12 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
       return a ? { id: q.id, label: q.label, value: a.value } : null;
     })
     .filter(Boolean);
+  // "How did you find me?" rides along as one more answer, so it shows on the
+  // request page and needs no change to the submit functions in the database.
+  const foundVia = formData.get("found_via");
+  if (isFoundVia(foundVia)) {
+    cleanAnswers.push({ id: FOUND_VIA_ANSWER_ID, label: FOUND_VIA_QUESTION, value: foundViaLabel(foundVia)! });
+  }
 
   // Re-check Discord roles so the database's discount trigger sees a fresh result.
   await refreshDiscountFor(supabase, user);
@@ -95,6 +102,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
         lines: [
           `${req.contact_name} (${req.contact_email}) asked for a custom quote for ${req.service_title}.`,
           ...(req.waitlisted ? ["Joined the waitlist."] : []),
+          ...(isFoundVia(foundVia) ? [`Found me via: ${foundViaLabel(foundVia)}`] : []),
           req.brief,
           "Set the price when you accept it.",
         ],
@@ -133,6 +141,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
           `License: ${license}`,
           ...(discount ? [`${discount} — verified Discord role`] : []),
           `Estimated total: ${total}${req.waitlisted ? " · joined the waitlist" : ""}`,
+          ...(isFoundVia(foundVia) ? [`Found me via: ${foundViaLabel(foundVia)}`] : []),
           req.brief,
         ],
         cta: { label: "Review request", path: `/admin/requests/${req.id}` },

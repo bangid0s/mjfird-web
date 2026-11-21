@@ -89,11 +89,20 @@ test("inquiry: an untouched dropdown gets a readable message, not a type error",
   assert.deepEqual(result.ok ? {} : result.errors, {
     projectType: "Pick what this is about.",
     budget: "Pick a rough budget range.",
+    foundVia: "Pick where you found me.",
   });
 });
 
+test("inquiry: 'how did you find me' only takes a known channel", () => {
+  const base = { name: "A", email: "a@b.co", projectType: "brand", budget: "2k+", message: "Twenty characters of brief." };
+  const bad = validateInquiry({ ...base, foundVia: "tiktok-ads" });
+  assert.equal(bad.ok, false);
+  assert.equal(bad.ok ? "" : bad.errors.foundVia, "Pick where you found me.");
+  assert.equal(validateInquiry({ ...base, foundVia: "ai-assistant" }).ok, true);
+});
+
 test("inquiry: a complete form validates and keeps its values", () => {
-  const values = { name: "A", email: "a@b.co", projectType: "retainer", budget: "retainer", message: "Twenty characters of brief." };
+  const values = { name: "A", email: "a@b.co", projectType: "retainer", budget: "retainer", foundVia: "google", message: "Twenty characters of brief." };
   const result = validateInquiry(values);
   assert.equal(result.ok, true);
   assert.deepEqual(result.ok && result.data, { ...values, company: "" });

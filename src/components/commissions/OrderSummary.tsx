@@ -85,7 +85,12 @@ export default function OrderSummary({ req }: { req: CommissionRequestRow }) {
       {(req.delivery_days || req.revisions !== null) && (
         <div className="mono-meta flex gap-4 pt-1">
           {req.delivery_days ? <span>{req.delivery_days} days</span> : null}
-          {req.revisions !== null && <span>{req.revisions} revisions</span>}
+          {req.revisions !== null && (
+            <span>
+              {req.delivery_days ? <span className="sr-only">, </span> : null}
+              {req.revisions} revisions
+            </span>
+          )}
         </div>
       )}
     </dl>

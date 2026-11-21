@@ -1,4 +1,5 @@
 import { BUDGETS, PROJECT_TYPES } from "@/lib/inquiry-options";
+import { foundViaLabel } from "@/lib/found-via";
 import { formatUSD } from "@/lib/services/storefront";
 
 /*
@@ -13,7 +14,7 @@ export type EmailCopy = {
   cta?: { label: string; path: string };
 };
 
-type Inquiry = { name: string; email: string; projectType: string; budget: string; message: string };
+type Inquiry = { name: string; email: string; projectType: string; budget: string; foundVia?: string; message: string };
 
 function labelOf(options: readonly { value: string; label: string }[], value: string) {
   return options.find((o) => o.value === value)?.label ?? value;
@@ -33,7 +34,7 @@ export function inquiryAdminEmail(inq: Inquiry): EmailCopy {
     subject: `New inquiry: ${type} — ${oneLine(inq.name, 60)}`,
     lines: [
       `${inq.name} (${inq.email}) sent an inquiry through the contact form.`,
-      `Project: ${type}\nBudget: ${budget}`,
+      `Project: ${type}\nBudget: ${budget}\nFound me via: ${foundViaLabel(inq.foundVia) ?? "not given"}`,
       inq.message,
       "Reply to this email to answer them directly.",
     ],

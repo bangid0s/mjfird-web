@@ -131,6 +131,8 @@ export type InquiryRow = {
   email: string;
   project_type: string | null;
   budget: string | null;
+  /** "How did you find me?" — a FOUND_VIA value; null on older inquiries. */
+  found_via: string | null;
   message: string;
   status: InquiryStatus;
   created_at: string;

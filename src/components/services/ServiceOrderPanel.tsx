@@ -92,7 +92,10 @@ export default function ServiceOrderPanel({
                     />
                     <span className={`text-body font-medium ${choiceTitle(checked)}`}>{pkg.name}</span>
                   </span>
-                  <span className={`text-body ${choiceTitle(checked)}`}>{formatUSD(pkg.price)}</span>
+                  <span className={`text-body ${choiceTitle(checked)}`}>
+                    <span className="sr-only">: </span>
+                    {formatUSD(pkg.price)}
+                  </span>
                 </span>
                 {pkg.description && <span className={`pl-[1.6rem] text-body-sm ${choiceMuted(checked)}`}>{pkg.description}</span>}
               </label>
