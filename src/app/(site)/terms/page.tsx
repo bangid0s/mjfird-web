@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LegalDocument, { LegalList, LegalSection, LegalTable, SectionRef, Term } from "@/components/legal/LegalDocument";
-import { getSiteSettings } from "@/lib/data/site-settings";
 
 export const metadata: Metadata = {
   title: "Terms",
@@ -13,12 +12,10 @@ const linkClass =
   "text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-[var(--duration-fast)] hover:text-accent hover:decoration-accent";
 
 export default async function TermsPage() {
-  const settings = await getSiteSettings();
-  const email = settings.contactEmail || "info@mjfird.com";
-  const emailLink = (
-    <a href={`mailto:${email}`} className={linkClass}>
-      {email}
-    </a>
+  const formLink = (
+    <Link href="/contact" className={linkClass}>
+      the contact form
+    </Link>
   );
 
   return (
@@ -26,7 +23,6 @@ export default async function TermsPage() {
       eyebrow="Terms"
       title="Terms of service & client policies"
       updated="17 November 2026"
-      contactEmail={settings.contactEmail}
       related={{ href: "/privacy", label: "Privacy policy" }}
     >
       <LegalSection id="section-1" title="1. About these terms">
@@ -296,7 +292,7 @@ export default async function TermsPage() {
             style that matches my portfolio.
           </li>
           <li>
-            <Term>How to cancel</Term>{" "}once work has started: message me on your order or email {emailLink}. Refunds are
+            <Term>How to cancel</Term>{" "}once work has started: message me on your order or use {formLink}. Refunds are
             sent within 14 days.
           </li>
         </LegalList>
@@ -464,8 +460,8 @@ export default async function TermsPage() {
             <Term>One contact person:</Term>{" "}for businesses, one person gives feedback and approvals.
           </li>
           <li>
-            <Term>Channels:</Term>{" "}official communication is by email ({emailLink}
-            ), the order page on mjfird.com, or the Fird Studio Discord server. Agreements made elsewhere must be
+            <Term>Channels:</Term>{" "}official communication is the order page on mjfird.com, {formLink}, email
+            once we are in touch, or the Fird Studio Discord server. Agreements made elsewhere must be
             confirmed in one of these.
           </li>
           <li>

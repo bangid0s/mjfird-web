@@ -28,7 +28,6 @@ export default function Nav({
   logoType = "text",
   logoText = "MJFIRD",
   links,
-  contactEmail,
   socials = [],
 }: {
   logoUrl?: string | null;
@@ -36,7 +35,6 @@ export default function Nav({
   logoType?: "text" | "image";
   logoText?: string;
   links: NavLink[];
-  contactEmail?: string;
   socials?: { label: string; url: string }[];
 }) {
   const [open, setOpen] = useState(false);
@@ -271,14 +269,6 @@ export default function Nav({
                 className="mt-auto flex flex-col gap-6 pb-8 pt-10"
               >
                 <AccountLink className="text-ink" onNavigate={() => setOpen(false)} />
-                {contactEmail && (
-                  <a
-                    href={`mailto:${contactEmail}`}
-                    className="display-sm underline decoration-line-strong decoration-1 underline-offset-4"
-                  >
-                    {contactEmail}
-                  </a>
-                )}
               </motion.div>
             </div>
 

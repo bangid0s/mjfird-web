@@ -13,7 +13,6 @@ export default function SiteChrome({
   socials,
   footerHeading,
   footerSubtext,
-  contactEmail,
   logoUrl,
   logoUrlLight,
   logoType,
@@ -24,7 +23,6 @@ export default function SiteChrome({
   socials: { label: string; url: string }[];
   footerHeading: string;
   footerSubtext: string;
-  contactEmail: string;
   logoUrl?: string | null;
   logoUrlLight?: string | null;
   logoType?: "text" | "image";
@@ -48,7 +46,6 @@ export default function SiteChrome({
           logoType={logoType}
           logoText={logoText}
           links={navLinks}
-          contactEmail={contactEmail}
           socials={socials}
         />
         <main id="main-content" className="flex-1 pt-[var(--nav-h)]">
@@ -58,7 +55,6 @@ export default function SiteChrome({
           socials={socials}
           heading={footerHeading}
           subtext={footerSubtext}
-          contactEmail={contactEmail}
           links={navLinks}
         />
       </SmoothScroll>

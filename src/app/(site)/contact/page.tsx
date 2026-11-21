@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import InquiryForm from "@/components/contact/InquiryForm";
 import Reveal from "@/components/motion/Reveal";
-import { getSiteSettings } from "@/lib/data/site-settings";
 import { getStorefrontService } from "@/lib/data/services";
 import { formatUSD, quote } from "@/lib/services/storefront";
 import { inquiryPreselect } from "@/lib/inquiry-options";
@@ -60,7 +59,7 @@ export default async function ContactPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const [settings, initialMessage] = await Promise.all([getSiteSettings(), servicePrefill(params)]);
+  const initialMessage = await servicePrefill(params);
   const preselect = inquiryPreselect(params.type);
 
   return (
@@ -80,17 +79,6 @@ export default async function ContactPage({
             </li>
           ))}
         </ol>
-
-        <div className="mt-2 flex flex-col gap-1.5">
-          <p className="label">Or email me directly</p>
-          <a
-            href={`mailto:${settings.contactEmail}`}
-            data-cursor="view"
-            className="text-body-lg text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-[var(--duration-fast)] hover:text-accent hover:decoration-accent"
-          >
-            {settings.contactEmail}
-          </a>
-        </div>
       </Reveal>
 
       <Reveal delay={80}>
@@ -98,7 +86,6 @@ export default async function ContactPage({
           initialMessage={initialMessage}
           initialProjectType={preselect.projectType}
           initialBudget={preselect.budget}
-          contactEmail={settings.contactEmail}
         />
       </Reveal>
     </div>
