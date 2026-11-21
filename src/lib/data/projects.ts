@@ -17,6 +17,7 @@ function mapRow(row: ProjectRow): Project {
     cover: row.cover_image ?? "/placeholder/project-01.jpg",
     ogImage: row.og_image ?? undefined,
     gallery: row.gallery ?? [],
+    updatedAt: row.updated_at,
     narrative: {
       context: row.narrative?.context ?? "",
       move: row.narrative?.move ?? "",

@@ -3,6 +3,7 @@ import { getProjects } from "@/lib/data/projects";
 import { getPosts } from "@/lib/data/blog";
 import { getStorefrontServices } from "@/lib/data/services";
 import { SITE_URL } from "@/lib/site-url";
+import { sitemapImages } from "@/lib/sitemap-images";
 
 const BASE_URL = SITE_URL;
 
@@ -34,9 +35,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.3,
   }));
 
+  // Each work page lists its artwork, so Google Images ties every piece to
+  // the page it belongs on (and to this domain).
   const projectRoutes: MetadataRoute.Sitemap = projects.map((p) => ({
     url: `${BASE_URL}/work/${p.slug}`,
-    lastModified: new Date(),
+    lastModified: p.updatedAt ? new Date(p.updatedAt) : new Date(),
+    images: sitemapImages([p.cover, ...(p.gallery ?? []).map((g) => g.url)]),
     changeFrequency: "monthly",
     priority: 0.8,
   }));
@@ -44,6 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const postRoutes: MetadataRoute.Sitemap = posts.map((p) => ({
     url: `${BASE_URL}/blog/${p.slug}`,
     lastModified: new Date(p.date),
+    images: sitemapImages([p.cover]),
     changeFrequency: "monthly",
     priority: 0.5,
   }));
@@ -51,6 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const serviceRoutes: MetadataRoute.Sitemap = services.map((s) => ({
     url: `${BASE_URL}/services/${s.slug}`,
     lastModified: new Date(),
+    images: sitemapImages([s.coverUrl]),
     changeFrequency: "weekly",
     priority: 0.8,
   }));
