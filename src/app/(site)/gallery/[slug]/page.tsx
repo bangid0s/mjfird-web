@@ -125,10 +125,11 @@ export default async function GalleryItemPage({ params }: { params: Promise<{ sl
             </div>
 
             <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-line pt-5 text-body-sm">
-              {item.clientName && (
+              {/* A client is only ever named through their own public review. */}
+              {(item.clientName || item.fromCommission) && (
                 <div className="flex flex-col gap-1">
                   <dt className="text-ink-faint">Made for</dt>
-                  <dd className="text-ink">{item.clientName}</dd>
+                  <dd className="text-ink">{item.clientName || "A commission client"}</dd>
                 </div>
               )}
               <div className="flex flex-col gap-1">

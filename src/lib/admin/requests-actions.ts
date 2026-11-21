@@ -18,6 +18,7 @@ import { DeliveryUrlError, normalizeDeliveryUrl } from "@/lib/commissions/delive
 import { readPaypalSandboxConfig } from "@/lib/payments/config";
 import { formatUSD } from "@/lib/services/storefront";
 import type { CommissionRequestRow, CommissionStatus } from "@/lib/supabase/types";
+import { publishDeliveryToGallery } from "@/lib/commissions/delivery-gallery-run";
 
 type State = { error?: string } | undefined;
 
@@ -59,6 +60,25 @@ function refresh(id: string) {
   revalidatePath(`/admin/requests/${id}`);
   revalidatePath(`/account/requests/${id}`);
   revalidatePath("/account");
+}
+
+/**
+ * A shareable delivered order lands in the public gallery by itself. Runs
+ * after the request is saved and never fails the action: a gallery problem
+ * is logged, the delivery stands.
+ */
+async function addToGalleryIfShareable(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  req: CommissionRequestRow,
+) {
+  const result = await publishDeliveryToGallery(supabase, req);
+  if (result.status === "added") {
+    revalidatePath("/gallery");
+    revalidatePath("/admin/gallery");
+    revalidatePath("/services", "layout");
+  } else if (result.status === "failed") {
+    console.error(`Gallery: could not add request ${req.id}: ${result.reason}`);
+  }
 }
 
 function missingDbObject(message: string, name: string) {
@@ -257,6 +277,9 @@ async function advanceRequestNow(id: string) {
   refresh(id);
   // A finished commission frees its slot.
   if (step.to === "completed") await bumpSlots(supabase, req.service_id, -1);
+  if (step.to === "delivered") {
+    await addToGalleryIfShareable(supabase, { ...req, status: "delivered", delivered_at: new Date().toISOString() });
+  }
 
   const copy: Partial<Record<CommissionStatus, [string, string]>> = {
     in_progress: [`Work has started on #${req.ref}`, "Payment is confirmed and I've started on your commission."],
@@ -329,6 +352,10 @@ async function addDeliveryFilesNow(id: string, paths: string[]) {
     .eq("id", id);
   if (error) throw new Error(error.message);
   refresh(id);
+  // Files added after the request was already marked Delivered still count.
+  if (req.status === "delivered" || req.status === "completed") {
+    await addToGalleryIfShareable(supabase, { ...req, delivery_paths: [...req.delivery_paths, ...valid] });
+  }
 }
 
 /** Paste, replace, or clear the drop link for finished files. */
