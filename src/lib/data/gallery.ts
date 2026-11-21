@@ -20,6 +20,8 @@ export type GalleryReview = {
 export type GalleryItem = {
   /** Stable across filtering, so tiles aren't remounted (and images refetched). */
   id: string;
+  /** Its own page, /gallery/<slug>. Absent on manual service samples and before migration 0054. */
+  slug?: string;
   imageUrl: string;
   title: string;
   caption: string;
@@ -71,6 +73,7 @@ export function mapGalleryRow(row: Row, services: Map<string, GalleryServiceLink
   const review = mapReview(row.review);
   return {
     id: row.id,
+    slug: row.slug ?? undefined,
     imageUrl: row.image_url,
     title: row.title ?? "",
     caption: row.caption ?? "",
@@ -119,6 +122,12 @@ export async function getGalleryItems(): Promise<GalleryItem[]> {
   } catch {
     return placeholderItems;
   }
+}
+
+/** One published gallery image by its page address. */
+export async function getGalleryItem(slug: string): Promise<GalleryItem | undefined> {
+  const items = await getGalleryItems();
+  return items.find((item) => item.slug === slug);
 }
 
 /** Gallery images filed under one service — its samples, in gallery order. */

@@ -227,6 +227,15 @@ export default function Lightbox({
               </div>
             )}
 
+            {item.slug && (
+              <Link
+                href={`/gallery/${item.slug}`}
+                className="w-fit border border-line px-5 py-2.5 text-body-sm font-medium text-ink transition-colors duration-[var(--duration-fast)] hover:border-ink"
+              >
+                Details &amp; order similar →
+              </Link>
+            )}
+
             {/* The tile's own click opens this viewer, so an item's link lives here. */}
             {item.linkUrl &&
               (isExternal(item.linkUrl) ? (

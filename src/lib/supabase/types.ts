@@ -191,6 +191,8 @@ export type GalleryItemRow = {
   client_name?: string | null;
   /** Review shown with the image; verified when the review itself is. */
   testimonial_id?: string | null;
+  /** Address of the image's own page, /gallery/<slug> (migration 0054). */
+  slug?: string | null;
   sort_order: number;
   status: ContentStatus;
   created_at: string;

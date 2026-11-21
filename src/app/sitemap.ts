@@ -2,13 +2,19 @@ import type { MetadataRoute } from "next";
 import { getProjects } from "@/lib/data/projects";
 import { getPosts } from "@/lib/data/blog";
 import { getStorefrontServices } from "@/lib/data/services";
+import { getGalleryItems } from "@/lib/data/gallery";
 import { SITE_URL } from "@/lib/site-url";
 import { sitemapImages } from "@/lib/sitemap-images";
 
 const BASE_URL = SITE_URL;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [projects, posts, services] = await Promise.all([getProjects(), getPosts(), getStorefrontServices()]);
+  const [projects, posts, services, gallery] = await Promise.all([
+    getProjects(),
+    getPosts(),
+    getStorefrontServices(),
+    getGalleryItems(),
+  ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     "",
@@ -61,5 +67,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticRoutes, ...legalRoutes, ...projectRoutes, ...postRoutes, ...serviceRoutes];
+  const galleryRoutes: MetadataRoute.Sitemap = gallery
+    .filter((item) => item.slug)
+    .map((item) => ({
+      url: `${BASE_URL}/gallery/${item.slug}`,
+      lastModified: item.publishedAt ? new Date(item.publishedAt) : new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6,
+      images: sitemapImages([item.imageUrl]),
+    }));
+
+  return [...staticRoutes, ...legalRoutes, ...projectRoutes, ...postRoutes, ...serviceRoutes, ...galleryRoutes];
 }

@@ -11,6 +11,45 @@ import FlowImage from "@/components/media/FlowImage";
 // Each card is the artwork with its name underneath, nothing painted over the
 // art except a small "Commission" badge on real client work. Three wide
 // columns on desktop so each piece reads at a size worth looking at.
+const TILE_CLASS =
+  "group mb-5 block w-full break-inside-avoid text-left focus-visible:outline-none sm:mb-7 lg:mb-8";
+
+function Tile({
+  href,
+  onOpen,
+  label,
+  children,
+}: {
+  href?: string;
+  onOpen: () => void;
+  label: string;
+  children: React.ReactNode;
+}) {
+  if (!href) {
+    return (
+      <button type="button" onClick={onOpen} aria-label={label} data-cursor="view" className={TILE_CLASS}>
+        {children}
+      </button>
+    );
+  }
+  return (
+    <a
+      href={href}
+      onClick={(e) => {
+        // Let modified clicks (new tab, new window) do what links do.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        e.preventDefault();
+        onOpen();
+      }}
+      aria-label={label}
+      data-cursor="view"
+      className={TILE_CLASS}
+    >
+      {children}
+    </a>
+  );
+}
+
 export default function MasonryGrid({
   items,
   onOpen,
@@ -29,13 +68,14 @@ export default function MasonryGrid({
         const label = cardLabel(item, serviceFallback);
         const video = isVideoFile(item.imageUrl);
         return (
-          <button
+          // A real link to the piece's own page when it has one, so crawlers
+          // and new-tab clicks reach /gallery/<slug>. A plain click still
+          // opens the viewer in place.
+          <Tile
             key={item.id}
-            type="button"
-            onClick={() => onOpen(i)}
-            aria-label={label ? `Open: ${label}` : "Open image"}
-            data-cursor="view"
-            className="group mb-5 block w-full break-inside-avoid text-left focus-visible:outline-none sm:mb-7 lg:mb-8"
+            href={item.slug ? `/gallery/${item.slug}` : undefined}
+            onOpen={() => onOpen(i)}
+            label={label ? `Open: ${label}` : "Open image"}
           >
             <span className="relative block overflow-hidden border border-line bg-bg-raised transition-[border-color,transform] duration-[var(--duration-base)] ease-[var(--ease-freeze)] group-hover:-translate-y-0.5 group-hover:border-ink group-focus-visible:border-accent group-focus-visible:outline group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-accent">
               {/* Pasted addresses have unknown dimensions, so the image sets its
@@ -81,7 +121,7 @@ export default function MasonryGrid({
                 {label}
               </span>
             )}
-          </button>
+          </Tile>
         );
       })}
     </div>
