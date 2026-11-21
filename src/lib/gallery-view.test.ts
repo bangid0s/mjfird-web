@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { GalleryItem } from "@/lib/data/gallery";
-import { cardLabel, fullDate, isClientWork, monthYear } from "@/lib/gallery-view";
+import { cardLabel, fullDate, isClientWork, monthYear, withCoverFirst } from "@/lib/gallery-view";
 
 const base: GalleryItem = {
   id: "1",
@@ -39,4 +39,27 @@ test("dates read the way the panel shows them, and tolerate junk", () => {
   assert.equal(fullDate("2026-11-10T08:00:00Z"), "Nov 10, 2026");
   assert.equal(monthYear(undefined), "");
   assert.equal(fullDate("not a date"), "");
+});
+
+test("service page: cover first, then the samples", () => {
+  const a = { ...base, id: "a", imageUrl: "https://x/a.png" };
+  const b = { ...base, id: "b", imageUrl: "https://x/b.png" };
+  const { coverItem, rest } = withCoverFirst([a, b], { url: "https://x/cover.png", alt: "DnD" });
+  assert.deepEqual([coverItem?.imageUrl, coverItem?.title], ["https://x/cover.png", "DnD"]);
+  assert.deepEqual(rest.map((i) => i.id), ["a", "b"]);
+});
+
+test("service page: a cover that is also a sample shows once, keeping its review", () => {
+  const review = { quote: "Great", name: "Toban", role: "", verified: true };
+  const a = { ...base, id: "a", imageUrl: "https://x/a.png" };
+  const b = { ...base, id: "b", imageUrl: "https://x/b.png", title: "Kori", review };
+  const { coverItem, rest } = withCoverFirst([a, b], { url: "https://x/b.png", alt: "DnD" });
+  assert.deepEqual([coverItem?.id, coverItem?.title, coverItem?.review?.name], ["b", "Kori", "Toban"]);
+  assert.deepEqual(rest.map((i) => i.id), ["a"]);
+});
+
+test("service page: no cover leaves the samples alone", () => {
+  const a = { ...base, id: "a" };
+  assert.deepEqual(withCoverFirst([a], undefined), { coverItem: null, rest: [a] });
+  assert.deepEqual(withCoverFirst([a], { url: "  ", alt: "x" }), { coverItem: null, rest: [a] });
 });

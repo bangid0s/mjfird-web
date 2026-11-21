@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import JsonLd from "@/components/seo/JsonLd";
-import SmartImage from "@/components/media/SmartImage";
 import Reveal from "@/components/motion/Reveal";
 import ServiceOrderPanel from "@/components/services/ServiceOrderPanel";
 import ServiceSamples from "@/components/services/ServiceSamples";
@@ -120,9 +119,13 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
             )}
           </Reveal>
 
-          {hasSamples ? (
+          {/* The cover leads, then the portfolio filed under this service. */}
+          {(service.coverUrl || hasSamples) && (
             <Reveal className="flex flex-col gap-4">
-              <ServiceSamples items={samples} />
+              <ServiceSamples
+                items={samples}
+                cover={service.coverUrl ? { url: service.coverUrl, alt: service.title } : undefined}
+              />
               {gallerySamples.length > 0 && (
                 <Link
                   href={`/gallery?service=${encodeURIComponent(service.slug)}`}
@@ -132,12 +135,6 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                 </Link>
               )}
             </Reveal>
-          ) : (
-            service.coverUrl && (
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)] border border-line bg-bg-raised-2">
-                <SmartImage src={service.coverUrl} alt={service.title} priority sizes="(min-width: 1024px) 60vw, 100vw" className="object-cover" />
-              </div>
-            )
           )}
 
           {/* On phones the order panel sits here, right after the samples. */}

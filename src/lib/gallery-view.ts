@@ -43,3 +43,24 @@ export function fullDate(iso: string | undefined): string {
   const d = parse(iso);
   return d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "";
 }
+
+/**
+ * A service page leads with its cover, then its samples. When the cover is
+ * also one of the samples, that sample becomes the cover (keeping its review
+ * and client) and leaves the grid, so the image never shows twice.
+ */
+export function withCoverFirst(
+  items: GalleryItem[],
+  cover: { url: string; alt: string } | undefined,
+): { coverItem: GalleryItem | null; rest: GalleryItem[] } {
+  const url = cover?.url.trim();
+  if (!url) return { coverItem: null, rest: items };
+  const match = items.find((item) => item.imageUrl === url);
+  if (match) {
+    return { coverItem: { ...match, title: match.title || cover!.alt }, rest: items.filter((item) => item !== match) };
+  }
+  return {
+    coverItem: { id: "service-cover", imageUrl: url, title: cover!.alt, caption: "", linkUrl: "", tags: [], services: [], clientName: "" },
+    rest: items,
+  };
+}
