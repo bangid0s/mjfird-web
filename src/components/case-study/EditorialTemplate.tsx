@@ -4,6 +4,7 @@ import CaseStudyNext from "@/components/case-study/CaseStudyNext";
 import CaseStudyNarrative from "@/components/case-study/CaseStudyNarrative";
 import MediaSlot from "@/components/case-study/MediaSlot";
 import ProjectGallery from "@/components/media/ProjectGallery";
+import { projectImageLabel } from "@/lib/alt-text";
 import Reveal from "@/components/motion/Reveal";
 
 export default function EditorialTemplate({
@@ -43,7 +44,7 @@ export default function EditorialTemplate({
 
       {project.gallery && project.gallery.length > 0 && (
         <Reveal className="container-page max-w-6xl pb-[var(--space-section)]">
-          <ProjectGallery images={project.gallery} />
+          <ProjectGallery images={project.gallery} label={projectImageLabel(project)} />
         </Reveal>
       )}
 

@@ -9,6 +9,7 @@ import CaseStudyNext from "@/components/case-study/CaseStudyNext";
 import CaseStudyNarrative from "@/components/case-study/CaseStudyNarrative";
 import SmartImage from "@/components/media/SmartImage";
 import ProjectGallery from "@/components/media/ProjectGallery";
+import { projectImageLabel } from "@/lib/alt-text";
 import Reveal from "@/components/motion/Reveal";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
@@ -50,7 +51,7 @@ export default function ImmersiveTemplate({
           className="absolute inset-0 -top-[8%] h-[116%] bg-gradient-to-br from-bg-raised via-bg-raised-2 to-bg"
         >
           {hasCover && (
-            <SmartImage src={project.cover} sizes="100vw" priority className="object-cover" />
+            <SmartImage src={project.cover} alt={projectImageLabel(project)} sizes="100vw" priority className="object-cover" />
           )}
         </div>
 
@@ -77,7 +78,7 @@ export default function ImmersiveTemplate({
 
       {project.gallery && project.gallery.length > 0 && (
         <Reveal className="container-page pb-[var(--space-section)]">
-          <ProjectGallery images={project.gallery} />
+          <ProjectGallery images={project.gallery} label={projectImageLabel(project)} />
         </Reveal>
       )}
 

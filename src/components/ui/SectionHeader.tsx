@@ -8,6 +8,7 @@ export default function SectionHeader({
   action,
   index,
   align = "left",
+  as: Heading = "h2",
   className,
 }: {
   eyebrow: string;
@@ -19,6 +20,8 @@ export default function SectionHeader({
   /** Section number, printed in the top rule like a spec sheet. */
   index?: number;
   align?: "left" | "right";
+  /** "h1" when this header opens the page — every page needs exactly one h1. */
+  as?: "h1" | "h2";
   className?: string;
 }) {
   return (
@@ -39,7 +42,7 @@ export default function SectionHeader({
         )}
       >
         <div className="flex flex-col gap-4">
-          <h2 className="display-md max-w-2xl">{title}</h2>
+          <Heading className="display-md max-w-2xl">{title}</Heading>
           {description && (
             <p className="max-w-xl text-body-lg text-pretty text-ink-muted">{description}</p>
           )}

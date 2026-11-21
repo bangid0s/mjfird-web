@@ -15,6 +15,7 @@ export default async function WorkPage() {
     <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
       <SectionHeader
         index={1}
+        as="h1"
         eyebrow="Selected Work"
         title="Everything I've shipped"
         description="Character art, card illustration and brand work for clients worldwide."

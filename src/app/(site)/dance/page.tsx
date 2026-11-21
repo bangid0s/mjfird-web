@@ -31,6 +31,7 @@ export default async function DancePage() {
       <div className="container-page pb-12 pt-14 sm:pt-20">
         <SectionHeader
           index={1}
+          as="h1"
           eyebrow={settings.danceSectionEyebrow}
           title={settings.danceSectionTitle}
           description={settings.danceIntro}

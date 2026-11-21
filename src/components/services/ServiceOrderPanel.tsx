@@ -182,9 +182,13 @@ export default function ServiceOrderPanel({
       )}
 
       {priced && (
-        <div className="flex items-baseline justify-between border-t border-line pt-4">
-          <span className="text-body-sm text-ink-muted">Estimated total</span>
-          <span className="display-sm">{formatUSD(priced.total)}</span>
+        <div className="flex flex-col gap-1.5 border-t border-line pt-4">
+          <div className="flex items-baseline justify-between">
+            <span className="text-body-sm text-ink-muted">Starting estimate</span>
+            <span className="display-sm">{formatUSD(priced.total)}</span>
+          </div>
+          {/* One price is binding: the quotation. This number only sets expectations. */}
+          <p className="text-[13px] leading-snug text-ink-faint">Your final price is in the quotation I send.</p>
         </div>
       )}
 

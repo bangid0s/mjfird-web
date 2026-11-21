@@ -79,7 +79,7 @@ export default function InquiryForm({
         </span>
         <p className="display-sm mt-1">Message sent</p>
         <p className="max-w-sm text-body-sm text-ink-muted">
-          Got it — I&apos;ll get back to you within a couple of days.
+          Got it — I&apos;ll get back to you within 48 hours.
         </p>
       </div>
     );
