@@ -171,7 +171,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
           `License: ${license}.`,
           ...(privacyFee > 0 ? [`NDA / privacy fee: +${formatUSD(privacyFee)}. I won't post or stream this piece.`] : []),
           ...(discount ? [`${discount}. Thanks for coming back!`] : []),
-          `Estimated total: ${total}. No payment is needed until I accept.`,
+          `Starting estimate: ${total}. Your final price is in the quotation I send, and no payment is needed until then.`,
         ],
         cta: { label: "View your request", path: `/account/requests/${req.id}` },
       }),

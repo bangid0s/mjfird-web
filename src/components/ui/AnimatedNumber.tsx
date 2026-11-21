@@ -18,16 +18,21 @@ export default function AnimatedNumber({
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const reducedMotion = usePrefersReducedMotion();
+  const formatted = value.toLocaleString("en-US");
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
     if (reducedMotion) {
-      el.textContent = value.toLocaleString("en-US");
+      el.textContent = formatted;
       return;
     }
 
+    // The server HTML already holds the real number, so crawlers, link
+    // previews and no-JS readers see "15+", not "0+". Only here, in the
+    // browser, does it drop to 0 and count back up when scrolled into view.
+    el.textContent = "0";
     const counter = { value: 0 };
     const tween = gsap.to(counter, {
       value,
@@ -41,13 +46,14 @@ export default function AnimatedNumber({
 
     return () => {
       tween.kill();
+      el.textContent = formatted;
     };
-  }, [value, reducedMotion]);
+  }, [value, formatted, reducedMotion]);
 
   return (
     <div className="flex flex-col gap-2.5">
       <p className="display-md tabular-nums">
-        <span ref={ref}>0</span>
+        <span ref={ref}>{formatted}</span>
         {suffix}
       </p>
       <p className="text-body-sm text-ink-muted">{label}</p>

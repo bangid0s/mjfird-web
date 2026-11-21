@@ -7,7 +7,7 @@ import { getPosts } from "@/lib/data/blog";
 
 export const metadata: Metadata = {
   title: "Blog",
-  description: "Notes on design, motion, and breaking from MJFIRD.",
+  description: "Notes from M.J. Fird on commissions, illustration process, events and the studio.",
 };
 
 export default async function BlogPage() {
@@ -17,6 +17,7 @@ export default async function BlogPage() {
     <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
       <SectionHeader
         index={1}
+        as="h1"
         eyebrow="Blog"
         title="Notes"
         action={

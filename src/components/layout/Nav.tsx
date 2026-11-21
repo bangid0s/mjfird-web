@@ -118,7 +118,7 @@ export default function Nav({
           <Link
             href="/"
             data-cursor="view"
-            aria-label="Home"
+            aria-label="MJFIRD home"
             className="shrink-0 font-display text-lg font-semibold tracking-[-0.04em] text-ink"
           >
             {logoType === "image" && logoUrl ? (
@@ -126,6 +126,7 @@ export default function Nav({
                 darkUrl={logoUrl}
                 lightUrl={logoUrlLight}
                 className="h-7 w-auto max-w-[150px] object-contain"
+                alt="MJFIRD home"
               />
             ) : (
               logoText

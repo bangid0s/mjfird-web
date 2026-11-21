@@ -19,6 +19,7 @@ export default async function ReviewsPage() {
     <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
       <SectionHeader
         index={1}
+        as="h1"
         eyebrow={settings.testimonialsSectionEyebrow}
         title="Client reviews"
         description="Every review, newest first. Verified reviews were written by clients from a completed commission on this site."

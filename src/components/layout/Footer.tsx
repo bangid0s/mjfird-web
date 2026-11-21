@@ -114,7 +114,7 @@ export default function Footer({
               Send an inquiry →
             </Link>
             <p className="max-w-sm text-body-sm text-ink-muted">
-              Commissions, retainers and collaborations. Replies within a couple of days.
+              Commissions, retainers and collaborations. Usually replies within 48 hours.
             </p>
           </div>
         </div>

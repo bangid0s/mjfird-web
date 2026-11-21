@@ -8,7 +8,8 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 
 export const metadata: Metadata = {
   title: "Gallery",
-  description: "Selected frames — work, process and the floor.",
+  description:
+    "Portfolio of hand-drawn character art, TTRPG and card illustration, emotes and brand design by M.J. Fird. Client commissions and personal projects.",
 };
 
 /*
@@ -23,6 +24,7 @@ export default async function GalleryPage() {
     <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
       <SectionHeader
         index={1}
+        as="h1"
         eyebrow="Gallery"
         title={settings.galleryHeadline}
         description={settings.galleryIntro || undefined}

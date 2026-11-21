@@ -486,7 +486,10 @@ export default function RequestForm({
                 </div>
               )}
               <div className="flex items-baseline justify-between gap-3 border-t border-line pt-4">
-                <dt className="text-ink-muted">Estimated total</dt>
+                <dt className="text-ink-muted">
+                  Starting estimate
+                  <span className="block text-[13px] text-ink-faint">Final price is in your quotation</span>
+                </dt>
                 <dd className="display-sm">{formatUSD(discounted.total)}</dd>
               </div>
             </dl>

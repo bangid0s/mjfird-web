@@ -33,7 +33,7 @@ export async function GET() {
   <channel>
     <title>MJFIRD — Notes</title>
     <link>${BASE_URL}/blog</link>
-    <description>Notes on design, motion, and breaking from MJFIRD.</description>
+    <description>Notes from M.J. Fird on commissions, illustration process, events and the studio.</description>
     <language>en</language>${items}
   </channel>
 </rss>`;

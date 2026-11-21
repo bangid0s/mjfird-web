@@ -4,6 +4,7 @@ import CaseStudyNext from "@/components/case-study/CaseStudyNext";
 import CaseStudyNarrative from "@/components/case-study/CaseStudyNarrative";
 import MediaSlot from "@/components/case-study/MediaSlot";
 import ProjectGallery from "@/components/media/ProjectGallery";
+import { projectImageLabel } from "@/lib/alt-text";
 import Reveal from "@/components/motion/Reveal";
 
 export default function SystemsTemplate({
@@ -51,7 +52,7 @@ export default function SystemsTemplate({
       {gallery.length > 0 && (
         <Reveal className="container-page pb-[var(--space-section)]">
           <p className="eyebrow mb-6">The system, applied</p>
-          <ProjectGallery images={gallery} />
+          <ProjectGallery images={gallery} label={projectImageLabel(project)} />
         </Reveal>
       )}
 

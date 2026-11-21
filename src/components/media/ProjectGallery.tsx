@@ -14,7 +14,20 @@ function isPlayable(url: string) {
 // Masonry gallery (CSS columns) that shows every image at its natural aspect
 // ratio — nothing cropped — and opens a full-screen lightbox on click, with
 // keyboard + prev/next navigation. Videos/YouTube open as embedded players.
-export default function ProjectGallery({ images }: { images: GalleryImage[] }) {
+export default function ProjectGallery({
+  images,
+  label,
+}: {
+  images: GalleryImage[];
+  /**
+   * Names the images when the admin left their alt text blank — usually the
+   * project title. Google Images and screen readers both read the alt, so an
+   * empty one throws the artwork's search value away.
+   */
+  label?: string;
+}) {
+  const altFor = (image: GalleryImage, i: number) =>
+    image.alt || (label ? `${label}, image ${i + 1} of ${images.length}` : "");
   const [open, setOpen] = useState<number | null>(null);
 
   const close = useCallback(() => setOpen(null), []);
@@ -62,7 +75,7 @@ export default function ProjectGallery({ images }: { images: GalleryImage[] }) {
             >
               <FlowImage
                 src={mediaThumbnail(image.url)}
-                alt={image.alt ?? ""}
+                alt={altFor(image, i)}
                 sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                 className="h-auto w-full transition-transform duration-[var(--duration-expressive)] ease-[var(--ease-freeze)] group-hover:scale-[1.03]"
               />
@@ -137,7 +150,7 @@ export default function ProjectGallery({ images }: { images: GalleryImage[] }) {
             ) : (
               <FlowImage
                 src={active.url}
-                alt={active.alt ?? ""}
+                alt={altFor(active, open!)}
                 sizes="(min-width: 1024px) 1024px, 100vw"
                 priority
                 className="mx-auto h-auto max-h-[85svh] w-auto max-w-full rounded-[var(--radius-md)] object-contain"

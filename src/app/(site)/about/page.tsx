@@ -10,7 +10,8 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "About M.J. Fird: illustrator and graphic designer based in Indonesia.",
+  description:
+    "M.J. Fird is an Indonesian illustrator and graphic designer in Semarang: hand-drawn DnD character art, custom MTG and Pokémon card illustration, emotes and brand design for clients worldwide.",
 };
 
 export default async function AboutPage() {
@@ -55,6 +56,18 @@ export default async function AboutPage() {
                 {settings.aboutCtaLabel}
               </MagneticButton>
             </div>
+          )}
+          {/* A plain, crawlable address: clients and press look for it here. */}
+          {settings.contactEmail && (
+            <p className="text-body text-ink-muted">
+              Email{" "}
+              <a
+                href={`mailto:${settings.contactEmail}`}
+                className="text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-[var(--duration-fast)] hover:text-accent hover:decoration-accent"
+              >
+                {settings.contactEmail}
+              </a>
+            </p>
           )}
         </Reveal>
       </div>

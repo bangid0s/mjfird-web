@@ -47,7 +47,7 @@ async function servicePrefill(params: { [key: string]: string | string[] | undef
           `License: ${service.licenses.find((l) => l.id === priced.licenseId)?.name} (+${priced.licensePercent}%, +${formatUSD(priced.licenseFee)})`,
         ]
       : []),
-    `Estimated total: ${formatUSD(priced.total)}`,
+    `Starting estimate: ${formatUSD(priced.total)} (final price in your quotation)`,
     "",
     "",
   ].join("\n");

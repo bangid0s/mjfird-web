@@ -10,7 +10,8 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 
 export const metadata: Metadata = {
   title: "Services",
-  description: "Commission illustration and design from MJFIRD — packages, samples, and pricing in USD.",
+  description:
+    "Commission hand-drawn DnD character art, custom MTG proxy and alter cards, Pokémon trainer cards and Twitch emotes. From $35, no AI.",
 };
 
 export default async function ServicesPage() {
@@ -25,8 +26,9 @@ export default async function ServicesPage() {
       <div className="container-page pb-[var(--space-section)] pt-14 sm:pt-20">
         <SectionHeader
           index={1}
+          as="h1"
           eyebrow="Services"
-          title="Commissions & services"
+          title="Commission illustration services"
           description={availability || undefined}
         />
 
