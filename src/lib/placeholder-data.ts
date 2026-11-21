@@ -14,6 +14,8 @@ export type Project = {
   /** Custom link-preview thumbnail; falls back to the generated card. */
   ogImage?: string;
   gallery?: { url: string; alt?: string }[];
+  /** Last real edit (ISO). Feeds the sitemap's lastmod; absent on placeholder data. */
+  updatedAt?: string;
   narrative: {
     context: string;
     move: string;
