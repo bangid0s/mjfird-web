@@ -7,6 +7,7 @@ import MediaTabs from "@/components/admin/MediaTabs";
 
 const BUCKET = "media";
 const LIMIT = 200;
+const ART_FOLDER = "art";
 
 export default async function AdminMediaPage({
   searchParams,
@@ -16,12 +17,21 @@ export default async function AdminMediaPage({
   const { error, renamed, refs, deleted } = await searchParams;
   const supabase = await createClient();
 
-  const { data: objects, error: listError } = await supabase.storage
-    .from(BUCKET)
-    .list("", { limit: LIMIT, sortBy: { column: "created_at", order: "desc" } });
+  // The root holds admin uploads; art/ holds the portfolio pieces moved off
+  // Behance (descriptive names, WebP). Listing is per folder, so read both.
+  const [rootList, artList, { data: galleryRows }] = await Promise.all([
+    supabase.storage.from(BUCKET).list("", { limit: LIMIT, sortBy: { column: "created_at", order: "desc" } }),
+    supabase.storage.from(BUCKET).list(ART_FOLDER, { limit: LIMIT, sortBy: { column: "name", order: "asc" } }),
+    supabase.from("gallery_items").select("image_url"),
+  ]);
+  const listError = rootList.error ?? artList.error;
+  const inGallery = new Set((galleryRows ?? []).map((row) => row.image_url as string));
 
   // Supabase lists folder prefixes as rows with a null id — those aren't files.
-  const entries = (objects ?? []).filter((object) => object.id);
+  const entries = [
+    ...(rootList.data ?? []).filter((object) => object.id),
+    ...(artList.data ?? []).filter((object) => object.id).map((object) => ({ ...object, name: `${ART_FOLDER}/${object.name}` })),
+  ];
   const urlFor = (name: string) => supabase.storage.from(BUCKET).getPublicUrl(name).data.publicUrl;
   const uses = await countMediaReferences(supabase, entries.map((entry) => urlFor(entry.name)));
 
@@ -33,6 +43,7 @@ export default async function AdminMediaPage({
       size: (entry.metadata?.size as number | undefined) ?? 0,
       createdAt: entry.created_at ?? null,
       uses: uses[url] ?? 0,
+      inGallery: inGallery.has(url),
     };
   });
 
@@ -42,7 +53,7 @@ export default async function AdminMediaPage({
     <div>
       <PageHeader
         title="Files"
-        description="Everything uploaded to the media library. Renaming a file also repoints every page that uses it, so links never break. Deleting is permanent — check the usage badge first."
+        description="Everything uploaded to the media library, plus the portfolio pieces in art/. “Add to gallery” makes a hidden gallery item from a file: name it, tag it, link its service, then set it Live. Renaming a file also repoints every page that uses it, so links never break. Deleting is permanent — check the usage badge first."
       />
       <MediaTabs active="/admin/media" />
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { renameMediaFile, deleteMediaFile } from "@/lib/admin/media-actions";
+import { addMediaToGallery } from "@/lib/admin/gallery-actions";
 import { fieldInputClasses } from "@/components/admin/Field";
 import DeleteButton from "@/components/admin/DeleteButton";
 import { isVideoFile } from "@/lib/media";
@@ -13,6 +14,8 @@ export type MediaFile = {
   size: number;
   createdAt: string | null;
   uses: number;
+  /** Already a gallery item (live or hidden). */
+  inGallery?: boolean;
 };
 
 function formatBytes(bytes: number) {
@@ -105,7 +108,19 @@ export default function MediaGrid({ files }: { files: MediaFile[] }) {
           </div>
 
           <div className="flex items-center justify-between gap-4 border-t border-line pt-3">
-            <CopyUrlButton url={file.url} />
+            <div className="flex items-center gap-4">
+              <CopyUrlButton url={file.url} />
+              {isImage(file.name) &&
+                (file.inGallery ? (
+                  <span className="text-body-sm font-medium text-success">In gallery</span>
+                ) : (
+                  <form action={addMediaToGallery.bind(null, file.url)}>
+                    <button type="submit" className="text-body-sm font-medium text-accent-strong hover:text-ink">
+                      + Add to gallery
+                    </button>
+                  </form>
+                ))}
+            </div>
             <DeleteButton action={deleteMediaFile.bind(null, file.name)} />
           </div>
         </li>

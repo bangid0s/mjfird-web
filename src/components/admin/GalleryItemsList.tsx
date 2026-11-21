@@ -38,7 +38,7 @@ export default function GalleryItemsList({
           />
 
           <form action={updateGalleryItem.bind(null, item.id)} className="flex flex-1 flex-col gap-2">
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-[1.4fr_1fr]">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-[1.4fr_1fr_0.9fr]">
               <UploadInput
                 name="image_url"
                 defaultValue={item.image_url}
@@ -52,15 +52,25 @@ export default function GalleryItemsList({
                 aria-label="Title"
                 className={fieldInputClasses}
               />
+              {/* Set once from the title; edit only to change the page address. */}
+              <input
+                name="slug"
+                defaultValue={item.slug ?? ""}
+                placeholder="page-address"
+                aria-label="Page address (/gallery/…)"
+                title="Page address: /gallery/…"
+                className={`${fieldInputClasses} font-mono text-[13px]`}
+              />
             </div>
 
             <div className="grid grid-cols-2 items-center gap-3 lg:grid-cols-[1.2fr_1fr_1fr_6.5rem_auto]">
-              <input
+              <textarea
                 name="caption"
                 defaultValue={item.caption ?? ""}
-                placeholder="Caption (optional)"
-                aria-label="Caption"
-                className={fieldInputClasses}
+                rows={2}
+                placeholder="Description: what it is, for whom, how it was made"
+                aria-label="Description"
+                className={`${fieldInputClasses} resize-y`}
               />
               <input
                 name="tags"
@@ -101,6 +111,16 @@ export default function GalleryItemsList({
               />
             </div>
           </form>
+          {item.slug && item.status === "published" && (
+            <a
+              href={`/gallery/${item.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 text-body-sm text-ink-muted underline-offset-4 hover:text-ink hover:underline"
+            >
+              View page ↗
+            </a>
+          )}
           <DeleteButton action={deleteGalleryItem.bind(null, item.id)} />
         </div>
       )}

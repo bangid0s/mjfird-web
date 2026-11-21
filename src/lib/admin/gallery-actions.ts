@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeMediaUrl } from "@/lib/media";
 import type { ContentStatus } from "@/lib/supabase/types";
+import { GALLERY_SLUG_RE, slugifyGallery, uniqueGallerySlug } from "@/lib/gallery-slug";
 
 /** Tags arrive comma- or newline-separated; either way one tag per entry. */
 function parseTags(raw: string) {
@@ -48,18 +49,37 @@ function revalidateGallery() {
   revalidatePath("/services", "layout");
 }
 
+type Db = Awaited<ReturnType<typeof createClient>>;
+
+/** Slugs other items already use (the unique index would refuse a repeat). */
+async function takenSlugs(supabase: Db, exceptId?: string) {
+  let q = supabase.from("gallery_items").select("slug").not("slug", "is", null);
+  if (exceptId) q = q.neq("id", exceptId);
+  const { data } = await q;
+  return (data ?? []).map((row) => row.slug as string);
+}
+
 export async function createGalleryItem(formData: FormData) {
   const payload = parsePayload(formData);
   if (!payload.image_url) return;
   const supabase = await createClient();
-  const { error } = await supabase.from("gallery_items").insert(payload);
+  const wanted = String(formData.get("slug") ?? "") || payload.title || "";
+  const slug = uniqueGallerySlug(wanted, await takenSlugs(supabase));
+  const { error } = await supabase.from("gallery_items").insert({ ...payload, slug });
   if (error) redirect(`/admin/gallery?error=${encodeURIComponent(error.message)}`);
   revalidateGallery();
 }
 
 export async function updateGalleryItem(id: string, formData: FormData) {
   const supabase = await createClient();
-  const { error } = await supabase.from("gallery_items").update(parsePayload(formData)).eq("id", id);
+  // The page address only changes when the slug field itself is edited, so
+  // renaming a piece never breaks a link someone already shared.
+  const typed = slugifyGallery(String(formData.get("slug") ?? ""));
+  const update: Record<string, unknown> = parsePayload(formData);
+  if (typed && GALLERY_SLUG_RE.test(typed)) {
+    update.slug = uniqueGallerySlug(typed, await takenSlugs(supabase, id));
+  }
+  const { error } = await supabase.from("gallery_items").update(update).eq("id", id);
   if (error) redirect(`/admin/gallery?error=${encodeURIComponent(error.message)}`);
   revalidateGallery();
 }
@@ -97,4 +117,42 @@ export async function updateGalleryPanel(formData: FormData) {
   revalidatePath("/admin/gallery");
   revalidatePath("/gallery");
   redirect("/admin/gallery?saved=1");
+}
+
+/** "orc-bard-character-design-illustration-2.webp" → "Orc Bard Character Design Illustration". */
+function titleFromFileName(path: string) {
+  const name = path.split("/").pop() ?? "";
+  const words = name.replace(/\.[a-z0-9]+$/i, "").replace(/-\d+$/, "").split(/[-_]+/).filter(Boolean);
+  return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ").slice(0, 120);
+}
+
+/**
+ * Media library → gallery in one click. The new item starts hidden, titled
+ * from the file name, so it can be named, tagged and linked to a service
+ * before it goes live.
+ */
+export async function addMediaToGallery(url: string) {
+  const image_url = normalizeMediaUrl(url);
+  if (!image_url) return;
+  const supabase = await createClient();
+  const { data: existing } = await supabase.from("gallery_items").select("id").eq("image_url", image_url).limit(1);
+  if (existing && existing.length > 0) {
+    redirect(`/admin/gallery?error=${encodeURIComponent("That image is already in the gallery.")}`);
+  }
+  const title = titleFromFileName(image_url) || null;
+  const { data: last } = await supabase
+    .from("gallery_items")
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1);
+  const { error } = await supabase.from("gallery_items").insert({
+    image_url,
+    title,
+    slug: uniqueGallerySlug(title ?? "", await takenSlugs(supabase)),
+    status: "draft" as ContentStatus,
+    sort_order: (last?.[0]?.sort_order ?? -1) + 1,
+  });
+  if (error) redirect(`/admin/media?error=${encodeURIComponent(error.message)}`);
+  revalidateGallery();
+  revalidatePath("/admin/media");
 }

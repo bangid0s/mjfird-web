@@ -20,6 +20,8 @@ export type GalleryReview = {
 export type GalleryItem = {
   /** Stable across filtering, so tiles aren't remounted (and images refetched). */
   id: string;
+  /** Its own page, /gallery/<slug>. Absent on manual service samples and before migration 0054. */
+  slug?: string;
   imageUrl: string;
   title: string;
   caption: string;
@@ -33,6 +35,8 @@ export type GalleryItem = {
   review?: GalleryReview;
   /** When the image was added (ISO). Absent on manual service samples. */
   publishedAt?: string;
+  /** Added from a delivered order on this site (not a manual upload). */
+  fromCommission?: boolean;
 };
 
 // Nothing to show until the admin pastes some image addresses in — an empty
@@ -71,6 +75,7 @@ export function mapGalleryRow(row: Row, services: Map<string, GalleryServiceLink
   const review = mapReview(row.review);
   return {
     id: row.id,
+    slug: row.slug ?? undefined,
     imageUrl: row.image_url,
     title: row.title ?? "",
     caption: row.caption ?? "",
@@ -80,6 +85,7 @@ export function mapGalleryRow(row: Row, services: Map<string, GalleryServiceLink
     clientName: (row.client_name ?? "").trim() || review?.name || "",
     review,
     publishedAt: row.created_at || undefined,
+    fromCommission: Boolean(row.request_id),
   };
 }
 
@@ -109,7 +115,30 @@ async function queryGallery({ serviceId }: GalleryQuery = {}): Promise<GalleryIt
     ({ data, error } = await query("*"));
   }
   if (error || !data) return [];
-  return (data as unknown as Row[]).filter((row) => row.image_url).map((row) => mapGalleryRow(row, services));
+  const rows = await attachOrderReviews(supabase, (data as unknown as Row[]).filter((row) => row.image_url));
+  return rows.map((row) => mapGalleryRow(row, services));
+}
+
+/*
+  An image made from a delivered order shows that order's review on its own,
+  once the client has written it with public consent and it is approved (the
+  public can only read published reviews, and publishing one needs consent).
+  A review linked by hand in the admin still wins.
+*/
+async function attachOrderReviews(supabase: ReturnType<typeof createPublicClient>, rows: Row[]): Promise<Row[]> {
+  const requestIds = rows.filter((row) => row.request_id && !mapReview(row.review)).map((row) => row.request_id!);
+  if (requestIds.length === 0) return rows;
+  const { data } = await supabase
+    .from("testimonials")
+    .select("quote, name, role, rating, request_id, created_at")
+    .in("request_id", requestIds)
+    .eq("status", "published");
+  const byRequest = new Map((data ?? []).map((review) => [review.request_id as string, review as ReviewEmbed]));
+  return rows.map((row) =>
+    row.request_id && !mapReview(row.review) && byRequest.has(row.request_id)
+      ? { ...row, review: byRequest.get(row.request_id) }
+      : row,
+  );
 }
 
 export async function getGalleryItems(): Promise<GalleryItem[]> {
@@ -119,6 +148,12 @@ export async function getGalleryItems(): Promise<GalleryItem[]> {
   } catch {
     return placeholderItems;
   }
+}
+
+/** One published gallery image by its page address. */
+export async function getGalleryItem(slug: string): Promise<GalleryItem | undefined> {
+  const items = await getGalleryItems();
+  return items.find((item) => item.slug === slug);
 }
 
 /** Gallery images filed under one service — its samples, in gallery order. */

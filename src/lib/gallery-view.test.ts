@@ -32,6 +32,7 @@ test("only real client work earns the Commission badge", () => {
   assert.equal(isClientWork({ ...base, clientName: "Eleanor" }), true);
   assert.equal(isClientWork({ ...base, clientName: "  " }), false);
   assert.equal(isClientWork({ ...base, review: { quote: "Great", name: "Toban", role: "", verified: true } }), true);
+  assert.equal(isClientWork({ ...base, fromCommission: true }), true, "an order delivered on this site is client work");
 });
 
 test("dates read the way the panel shows them, and tolerate junk", () => {

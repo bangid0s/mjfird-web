@@ -18,12 +18,13 @@ export function cardLabel(item: GalleryItem, serviceFallback = true): string {
 }
 
 /**
- * Real client work: made for a named client or carrying their review. Only
+ * Real client work: made for a named client, carrying their review, or
+ * added from a delivered order on this site. Only
  * these get the "Commission" badge. Being filed under a service just means
  * "this is the kind of thing that service makes", which is nearly every image.
  */
 export function isClientWork(item: GalleryItem): boolean {
-  return Boolean(item.review || item.clientName.trim());
+  return Boolean(item.review || item.clientName.trim() || item.fromCommission);
 }
 
 function parse(iso: string | undefined): Date | null {

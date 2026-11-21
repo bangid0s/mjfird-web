@@ -20,8 +20,19 @@ function fail(message: string): never {
   redirect(`/admin/media?error=${encodeURIComponent(message)}`);
 }
 
+/**
+ * The new key for a rename: the typed file name, kept in the file's own
+ * folder (art/…). Typing a folder can't move a file, and "/" can't sneak in.
+ */
+export async function renamedKey(path: string, typed: string) {
+  const slash = path.lastIndexOf("/");
+  const folder = slash === -1 ? "" : path.slice(0, slash + 1);
+  const base = sanitizeName(typed.split("/").pop() ?? "");
+  return base ? `${folder}${base}` : "";
+}
+
 export async function renameMediaFile(path: string, formData: FormData) {
-  const nextName = sanitizeName(String(formData.get("name") ?? ""));
+  const nextName = await renamedKey(path, String(formData.get("name") ?? ""));
   if (!nextName || nextName === path) redirect("/admin/media");
 
   const supabase = await createClient();
