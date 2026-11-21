@@ -243,7 +243,7 @@ export default async function ResumePage() {
 
   const name = settings.resumeHeadline || profile.name;
   const summary = settings.resumeSummary || profile.bio;
-  const email = settings.resumeEmail || settings.contactEmail;
+  // Contact goes through the form: a published address only draws spam.
   // A resume-specific portrait when one is set, otherwise the site avatar.
   const photo = settings.resumePhotoUrl || profile.avatarUrl;
 
@@ -332,7 +332,7 @@ export default async function ResumePage() {
 
             {/* Paper has no links to press, so the contact line is spelled out. */}
             <p className="hidden text-[9.5pt] text-ink print:block">
-              {[email, SITE_HOST, settings.resumeLocation].filter(Boolean).join("  |  ")}
+              {[`${SITE_HOST}/contact`, settings.resumeLocation].filter(Boolean).join("  |  ")}
             </p>
 
             {summary && (
@@ -495,15 +495,13 @@ export default async function ResumePage() {
 
             <div className="flex flex-col gap-3">
               <p className="text-label text-ink-faint">Contact</p>
-              {email && (
-                <a
-                  href={`mailto:${email}`}
-                  className="group flex min-h-11 items-center gap-2 break-all text-body-sm font-medium text-ink transition-colors duration-[var(--duration-fast)] hover:text-accent-strong lg:min-h-0"
-                >
-                  <SocialIcon url="mailto:" className="h-4 w-4 shrink-0 text-ink-faint group-hover:text-accent-strong" />
-                  {email}
-                </a>
-              )}
+              <Link
+                href="/contact"
+                className="group flex min-h-11 items-center gap-2 break-all text-body-sm font-medium text-ink transition-colors duration-[var(--duration-fast)] hover:text-accent-strong lg:min-h-0"
+              >
+                <SocialIcon url="mailto:" className="h-4 w-4 shrink-0 text-ink-faint group-hover:text-accent-strong" />
+                mjfird.com/contact
+              </Link>
               {profile.socials.length > 0 && (
                 <ul className="flex flex-wrap gap-2 lg:flex-col lg:gap-1.5">
                   {profile.socials.map((social) => (
@@ -705,14 +703,12 @@ export default async function ResumePage() {
               >
                 Commission me
               </Link>
-              {email && (
-                <a
-                  href={`mailto:${email}`}
-                  className="inline-flex h-12 items-center border border-bg/30 px-6 text-body-sm font-medium text-bg transition-colors duration-[var(--duration-fast)] hover:border-bg"
-                >
-                  Email me
-                </a>
-              )}
+              <Link
+                href="/contact"
+                className="inline-flex h-12 items-center border border-bg/30 px-6 text-body-sm font-medium text-bg transition-colors duration-[var(--duration-fast)] hover:border-bg"
+              >
+                Send a message
+              </Link>
             </div>
           </section>
         )}

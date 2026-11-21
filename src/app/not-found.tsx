@@ -16,7 +16,6 @@ export default async function RootNotFound() {
       socials={profile.socials}
       footerHeading={settings.footerHeading}
       footerSubtext={settings.footerSubtext}
-      contactEmail={settings.contactEmail}
       logoUrl={settings.logoUrl}
       logoUrlLight={settings.logoUrlLight}
       logoType={settings.logoType}

@@ -12,13 +12,11 @@ export default function Footer({
   socials,
   heading,
   subtext,
-  contactEmail,
   links,
 }: {
   socials: { label: string; url: string }[];
   heading: string;
   subtext: string;
-  contactEmail: string;
   links: { label: string; href: string }[];
 }) {
   const pathname = usePathname();
@@ -108,13 +106,13 @@ export default function Footer({
 
           <div className="col-span-2 flex flex-col gap-4">
             <p className="eyebrow text-ink-faint">Contact</p>
-            <a
-              href={`mailto:${contactEmail}`}
+            <Link
+              href="/contact"
               data-cursor="view"
               className="display-sm w-fit underline decoration-line-strong decoration-1 underline-offset-[6px] transition-colors duration-[var(--duration-fast)] hover:text-accent-strong hover:decoration-accent"
             >
-              {contactEmail}
-            </a>
+              Send an inquiry →
+            </Link>
             <p className="max-w-sm text-body-sm text-ink-muted">
               Commissions, retainers and collaborations. Replies within a couple of days.
             </p>

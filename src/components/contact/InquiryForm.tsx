@@ -24,13 +24,11 @@ export default function InquiryForm({
   initialMessage = "",
   initialProjectType = "",
   initialBudget = "",
-  contactEmail,
 }: {
   initialMessage?: string;
   /** Preselected from `/contact?type=…`; blank leaves "Select one". */
   initialProjectType?: string;
   initialBudget?: string;
-  contactEmail: string;
 }) {
   const [state, setState] = useState<FormState>("idle");
   const [errors, setErrors] = useState<InquiryErrors>({});
@@ -190,11 +188,8 @@ export default function InquiryForm({
 
       {state === "error" && (
         <p className="border border-error/50 px-4 py-3 text-body-sm text-error">
-          Something went wrong on my end. Try again, or email{" "}
-          <a href={`mailto:${contactEmail}`} className="underline underline-offset-2">
-            {contactEmail}
-          </a>{" "}
-          directly.
+          Something went wrong on my end. Your message is still here, so please try sending it again in a few
+          minutes.
         </p>
       )}
 

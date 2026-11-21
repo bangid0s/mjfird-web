@@ -95,7 +95,6 @@ export default function LegalDocument({
   title,
   intro,
   updated,
-  contactEmail,
   related,
   children,
 }: {
@@ -103,7 +102,6 @@ export default function LegalDocument({
   title: string;
   intro?: React.ReactNode;
   updated: string;
-  contactEmail: string;
   related: { href: string; label: string };
   children: React.ReactNode;
 }) {
@@ -126,14 +124,6 @@ export default function LegalDocument({
               <Term>Studio:</Term>{" "}FiRD Creative Studio, operated by Mohammad Jamaluddin Firdaus (M.J Fird), Semarang,
               Indonesia
             </li>
-            {contactEmail ? (
-              <li>
-                <Term>Email:</Term>{" "}
-                <a href={`mailto:${contactEmail}`} className={linkClass}>
-                  {contactEmail}
-                </a>
-              </li>
-            ) : null}
             <li>
               <Term>Contact form:</Term>{" "}
               <Link href="/contact" className={linkClass}>

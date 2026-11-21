@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import LegalDocument, { LegalList, LegalSection, LegalTable, Term } from "@/components/legal/LegalDocument";
-import { getSiteSettings } from "@/lib/data/site-settings";
 
 export const metadata: Metadata = {
   title: "Privacy",
@@ -13,12 +12,10 @@ const linkClass =
   "text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-[var(--duration-fast)] hover:text-accent hover:decoration-accent";
 
 export default async function PrivacyPage() {
-  const settings = await getSiteSettings();
-  const email = settings.contactEmail || "info@mjfird.com";
-  const emailLink = (
-    <a href={`mailto:${email}`} className={linkClass}>
-      {email}
-    </a>
+  const formLink = (
+    <Link href="/contact" className={linkClass}>
+      the contact form
+    </Link>
   );
 
   return (
@@ -26,7 +23,6 @@ export default async function PrivacyPage() {
       eyebrow="Privacy"
       title="Privacy policy"
       updated="10 November 2026"
-      contactEmail={settings.contactEmail}
       related={{ href: "/terms", label: "Terms of service" }}
     >
       <LegalSection id="overview" title="Overview">
@@ -127,8 +123,8 @@ export default async function PrivacyPage() {
             delivery.
           </li>
           <li>
-            <Term>Your rights:</Term>{" "}you can ask to see, correct, or delete your data, or withdraw consent, by emailing{" "}
-            {emailLink}. I reply within 14 days. Records I must keep for tax purposes cannot be deleted early.
+            <Term>Your rights:</Term>{" "}you can ask to see, correct, or delete your data, or withdraw consent, through{" "}
+            {formLink}. I reply within 14 days. Records I must keep for tax purposes cannot be deleted early.
           </li>
           <li>
             <Term>Security:</Term>{" "}data is stored with reputable providers and access is limited to me and my assistant.
