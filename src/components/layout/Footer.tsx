@@ -119,14 +119,7 @@ export default function Footer({
           </div>
         </div>
 
-        {/* Signature: the wordmark at full width, cropped by the sheet's edge. */}
-        <div aria-hidden="true" className="mt-16 select-none overflow-hidden">
-          <p className="font-display font-semibold leading-[0.78] tracking-[-0.06em] text-ink text-[clamp(4.5rem,24vw,23rem)]">
-            MJFIRD<span className="text-accent">.</span>
-          </p>
-        </div>
-
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
+        <div className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
           <p className="mono-meta">© {new Date().getFullYear()} MJFIRD — All rights reserved</p>
           <StudioTime />
           <BackToTop />
