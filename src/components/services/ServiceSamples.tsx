@@ -15,7 +15,7 @@ export default function ServiceSamples({ items }: { items: GalleryItem[] }) {
   if (items.length === 0) return null;
   return (
     <>
-      <MasonryGrid items={items} onOpen={setOpen} />
+      <MasonryGrid items={items} onOpen={setOpen} serviceFallback={false} />
       {open !== null && (
         <Lightbox
           items={items}

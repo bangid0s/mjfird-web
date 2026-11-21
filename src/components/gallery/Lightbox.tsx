@@ -9,13 +9,16 @@ import { isVideoFile, isYouTubeUrl, mediaThumbnail } from "@/lib/media";
 import { getYouTubeId, youTubeEmbedUrl } from "@/lib/youtube";
 import type { GalleryItem } from "@/lib/data/gallery";
 import FlowImage from "@/components/media/FlowImage";
+import { cardLabel, fullDate, isClientWork, monthYear } from "@/lib/gallery-view";
 
 function isExternal(url: string) {
   return /^https?:\/\//i.test(url);
 }
 
 /**
- * Full-screen viewer for a gallery image. Escape closes, arrows step, the
+ * Full-screen viewer for a gallery image: the artwork on the left, its story on
+ * the right (who it was for, their review, how to order the same, tags), and
+ * stacked on a phone. Escape closes, arrows step, the
  * backdrop is a click target, and the page behind is locked from scrolling
  * while it is open — the same contract the case-study gallery uses.
  *
@@ -74,23 +77,30 @@ export default function Lightbox({
   if (!item) return null;
 
   const services = showServices ? item.services : [];
-  // Who it was for, what they said, and where to order the same thing.
-  const hasStory = Boolean(item.clientName || item.review || services.length > 0);
+  const title = cardLabel(item, showServices);
+  const published = fullDate(item.publishedAt);
+  const reviewDate = monthYear(item.review?.date);
+  const youTubeId = isYouTubeUrl(item.imageUrl) ? getYouTubeId(item.imageUrl) : null;
+
+  const arrow =
+    "fixed top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center bg-bg/70 font-mono text-2xl text-ink-muted backdrop-blur-sm transition-colors hover:text-accent";
 
   return createPortal(
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={item.title || "Image viewer"}
+      aria-label={title || "Image viewer"}
       onClick={onClose}
-      className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-bg/95 p-4 backdrop-blur-sm sm:p-10"
+      // Solid, not blurred: a backdrop-filter here would become the containing
+      // block for the fixed close/arrow buttons and scroll them away on a phone.
+      className="fixed inset-0 z-[var(--z-modal)] overflow-y-auto bg-bg"
     >
       <button
         ref={closeRef}
         type="button"
         onClick={onClose}
         aria-label="Close"
-        className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center font-mono text-lg text-ink-muted transition-colors hover:text-accent"
+        className="fixed right-3 top-3 z-10 flex h-11 w-11 items-center justify-center bg-bg/70 font-mono text-lg text-ink-muted backdrop-blur-sm transition-colors hover:text-accent sm:right-5 sm:top-5"
       >
         ✕
       </button>
@@ -104,7 +114,7 @@ export default function Lightbox({
               prev();
             }}
             aria-label="Previous image"
-            className="absolute left-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center font-mono text-2xl text-ink-muted transition-colors hover:text-accent sm:left-6"
+            className={`${arrow} left-1 sm:left-4`}
           >
             ‹
           </button>
@@ -115,119 +125,149 @@ export default function Lightbox({
               next();
             }}
             aria-label="Next image"
-            className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center font-mono text-2xl text-ink-muted transition-colors hover:text-accent sm:right-6"
+            className={`${arrow} right-1 sm:right-4`}
           >
             ›
           </button>
         </>
       )}
 
-      <figure
-        className="flex max-h-full w-full max-w-5xl flex-col items-center gap-4 overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {isYouTubeUrl(item.imageUrl) && getYouTubeId(item.imageUrl) ? (
-          <div className="relative aspect-video w-full">
-            <iframe
-              key={item.id}
-              src={youTubeEmbedUrl(getYouTubeId(item.imageUrl)!, { autoplay: true })}
-              title={item.title || "Video"}
-              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-              allowFullScreen
-              className="absolute inset-0 h-full w-full border-0"
-            />
+      <div className="flex min-h-full items-center justify-center px-4 py-16 sm:px-16 lg:py-12">
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="grid w-full max-w-7xl items-start gap-8 lg:grid-cols-[minmax(0,1fr)_23rem] lg:gap-12"
+        >
+          {/* The art: as large as the screen allows, never cropped. */}
+          <div className="flex items-center justify-center lg:sticky lg:top-12">
+            {youTubeId ? (
+              <div className="relative aspect-video w-full">
+                <iframe
+                  key={item.id}
+                  src={youTubeEmbedUrl(youTubeId, { autoplay: true })}
+                  title={title || "Video"}
+                  allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                  allowFullScreen
+                  className="absolute inset-0 h-full w-full border-0"
+                />
+              </div>
+            ) : isVideoFile(item.imageUrl) ? (
+              <video
+                key={item.id}
+                src={item.imageUrl}
+                controls
+                autoPlay
+                playsInline
+                className="max-h-[65svh] w-auto max-w-full lg:max-h-[86svh]"
+              />
+            ) : (
+              <FlowImage
+                key={item.id}
+                src={mediaThumbnail(item.imageUrl)}
+                alt={item.title || title || ""}
+                sizes="(min-width: 1024px) 60vw, 100vw"
+                priority
+                className="h-auto max-h-[65svh] w-auto max-w-full object-contain lg:max-h-[86svh]"
+              />
+            )}
           </div>
-        ) : isVideoFile(item.imageUrl) ? (
-          <video key={item.id} src={item.imageUrl} controls autoPlay playsInline className="max-h-[70svh] w-auto" />
-        ) : (
-          <FlowImage
-            key={item.id}
-            src={mediaThumbnail(item.imageUrl)}
-            alt={item.title || ""}
-            sizes="(min-width: 1024px) 1024px, 100vw"
-            priority
-            className={`${hasStory ? "max-h-[62svh]" : "max-h-[78svh]"} h-auto w-auto max-w-full object-contain`}
-          />
-        )}
 
-        {(item.title || item.caption || item.linkUrl || item.tags.length > 0 || hasStory) && (
-          <figcaption className="flex w-full flex-col items-center gap-2 text-center">
-            {item.title && (
-              <span className="font-body text-body font-medium text-ink">{item.title}</span>
+          {/* The story: who it was for, what they said, how to order the same. */}
+          <aside className="flex flex-col gap-6">
+            <div className="flex flex-col gap-3">
+              {title && <h2 className="display-sm text-pretty">{title}</h2>}
+              {item.clientName && <p className="mono-meta text-ink-muted">Made for {item.clientName}</p>}
+              {isClientWork(item) && (
+                <span className="inline-flex w-fit items-center gap-1.5 border border-line bg-bg-raised px-2.5 py-1 font-body text-[12px] font-medium text-ink">
+                  <span aria-hidden="true" className="grid h-3.5 w-3.5 place-items-center bg-accent text-[9px] leading-none text-accent-ink">
+                    ✓
+                  </span>
+                  Client commission
+                </span>
+              )}
+            </div>
+
+            {item.review && (
+              <blockquote className="flex flex-col gap-3 border border-line bg-bg-raised p-5">
+                <div className="flex items-center gap-3">
+                  {item.review.rating ? <Stars rating={item.review.rating} /> : null}
+                  {reviewDate && <span className="text-body-sm text-ink-muted">{reviewDate}</span>}
+                </div>
+                <p className="whitespace-pre-line text-body-sm leading-relaxed text-pretty text-ink">
+                  &ldquo;{item.review.quote}&rdquo;
+                </p>
+                <footer className="flex flex-col gap-1">
+                  <span className="text-body-sm text-ink-muted">
+                    — {item.review.name}
+                    {item.review.role ? `, ${item.review.role}` : ""}
+                  </span>
+                  {item.review.verified && <VerifiedBadge />}
+                </footer>
+              </blockquote>
             )}
-            {item.caption && (
-              <span className="font-body text-body-sm text-ink-muted">{item.caption}</span>
+
+            {item.caption && <p className="text-body-sm text-pretty text-ink-muted">{item.caption}</p>}
+
+            {services.length > 0 && (
+              <div className="flex flex-col gap-3 border-y border-line py-4">
+                {services.map((service) => (
+                  <Link
+                    key={service.id}
+                    href={`/services/${service.slug}`}
+                    className="group flex flex-col gap-0.5 text-body font-medium text-accent-strong"
+                  >
+                    <span>
+                      Commission me for something similar{" "}
+                      <span aria-hidden="true" className="inline-block transition-transform group-hover:translate-x-1">
+                        →
+                      </span>
+                    </span>
+                    <span className="text-body-sm font-normal text-ink-muted">{service.title}</span>
+                  </Link>
+                ))}
+              </div>
             )}
-            {item.tags.length > 0 && (
-              <span className="font-mono text-label uppercase tracking-[0.15em] text-ink-faint">
-                {item.tags.join(" · ")}
-              </span>
-            )}
-            {/* The tile's own click now opens this viewer, so an item's link
-                lives here instead of on the tile. */}
+
+            {/* The tile's own click opens this viewer, so an item's link lives here. */}
             {item.linkUrl &&
               (isExternal(item.linkUrl) ? (
                 <a
                   href={item.linkUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1 bg-accent px-6 py-2.5 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
+                  className="w-fit bg-accent px-5 py-2.5 text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
                 >
                   Visit link ↗
                 </a>
               ) : (
                 <Link
                   href={item.linkUrl}
-                  className="mt-1 bg-accent px-6 py-2.5 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
+                  className="w-fit bg-accent px-5 py-2.5 text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
                 >
                   Visit link →
                 </Link>
               ))}
 
-            {hasStory && (
-              <div className="mt-2 flex w-full max-w-xl flex-col items-center gap-3 border-t border-line pt-4">
-                {item.clientName && (
-                  <span className="mono-meta text-ink-muted">Made for {item.clientName}</span>
-                )}
-                {item.review && (
-                  <blockquote className="flex max-h-[18svh] flex-col items-center gap-2 overflow-y-auto">
-                    {item.review.rating ? <Stars rating={item.review.rating} /> : null}
-                    <p className="whitespace-pre-line font-body text-body-sm text-pretty text-ink">
-                      &ldquo;{item.review.quote}&rdquo;
-                    </p>
-                    <footer className="flex flex-col items-center gap-1">
-                      <span className="text-body-sm text-ink-muted">
-                        — {item.review.name}
-                        {item.review.role ? `, ${item.review.role}` : ""}
-                      </span>
-                      {item.review.verified && <VerifiedBadge />}
-                    </footer>
-                  </blockquote>
-                )}
-                {services.length > 0 && (
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {services.map((service) => (
-                      <Link
-                        key={service.id}
-                        href={`/services/${service.slug}`}
-                        className="bg-accent px-5 py-2.5 font-body text-body-sm font-medium text-accent-ink transition-colors duration-[var(--duration-fast)] hover:bg-accent/85"
-                      >
-                        Commission this · {service.title} →
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {item.tags.length > 0 && (
+              <ul className="flex flex-wrap gap-2" aria-label="Tags">
+                {item.tags.map((tag) => (
+                  <li key={tag} className="border border-line px-3 py-1 text-body-sm text-ink-muted">
+                    {tag}
+                  </li>
+                ))}
+              </ul>
             )}
-          </figcaption>
-        )}
-      </figure>
 
-      {items.length > 1 && (
-        <span className="absolute bottom-4 left-1/2 -translate-x-1/2 font-mono text-label text-ink-faint">
-          {index + 1} / {items.length}
-        </span>
-      )}
+            <div className="flex items-center justify-between gap-3 text-body-sm text-ink-faint">
+              {published ? <span>Published {published}</span> : <span />}
+              {items.length > 1 && (
+                <span className="font-mono text-label">
+                  {index + 1} / {items.length}
+                </span>
+              )}
+            </div>
+          </aside>
+        </div>
+      </div>
     </div>,
     document.body,
   );

@@ -13,6 +13,8 @@ export type GalleryReview = {
   rating?: number;
   /** Written by the client from a completed order on this site. */
   verified: boolean;
+  /** When the review was written (ISO), for "Nov 2026". */
+  date?: string;
 };
 
 export type GalleryItem = {
@@ -29,6 +31,8 @@ export type GalleryItem = {
   /** Who it was made for. Falls back to the reviewer's name. */
   clientName: string;
   review?: GalleryReview;
+  /** When the image was added (ISO). Absent on manual service samples. */
+  publishedAt?: string;
 };
 
 // Nothing to show until the admin pastes some image addresses in — an empty
@@ -37,7 +41,7 @@ const placeholderItems: GalleryItem[] = [];
 
 // The public can only read published reviews (RLS), so a draft or private
 // review linked to an image comes back as null and is simply not shown.
-const REVIEW_EMBED = "review:testimonials(quote, name, role, rating, request_id)";
+const REVIEW_EMBED = "review:testimonials(quote, name, role, rating, request_id, created_at)";
 
 type ReviewEmbed = {
   quote: string;
@@ -45,6 +49,7 @@ type ReviewEmbed = {
   role: string | null;
   rating: number | null;
   request_id: string | null;
+  created_at?: string | null;
 } | null;
 
 type Row = GalleryItemRow & { review?: ReviewEmbed | ReviewEmbed[] };
@@ -58,6 +63,7 @@ function mapReview(embed: Row["review"]): GalleryReview | undefined {
     role: r.role ?? "",
     rating: r.rating ?? undefined,
     verified: r.request_id !== null && r.request_id !== undefined,
+    date: r.created_at ?? undefined,
   };
 }
 
@@ -73,6 +79,7 @@ export function mapGalleryRow(row: Row, services: Map<string, GalleryServiceLink
     services: (row.service_ids ?? []).flatMap((id) => services.get(id) ?? []),
     clientName: (row.client_name ?? "").trim() || review?.name || "",
     review,
+    publishedAt: row.created_at || undefined,
   };
 }
 
