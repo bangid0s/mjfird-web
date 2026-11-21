@@ -128,7 +128,34 @@ export async function fetchImageData(url: string | null | undefined): Promise<st
     const buffer = await res.arrayBuffer();
     // 6MB of source art is already far more than a 1200×630 card needs.
     if (buffer.byteLength > 6_000_000) return null;
-    return `data:${type};base64,${Buffer.from(buffer).toString("base64")}`;
+    if (SATORI_FORMATS.has(baseType(type))) {
+      return `data:${type};base64,${Buffer.from(buffer).toString("base64")}`;
+    }
+    // WebP, AVIF and the rest: next/og can't decode them and throws ("u2 is not
+    // iterable"), which failed the whole build when the share background was a
+    // .webp. Convert to PNG; if that fails too, draw the card without it.
+    return await toPngDataUrl(buffer);
+  } catch {
+    return null;
+  }
+}
+
+/** The raster formats next/og (satori) can draw. */
+const SATORI_FORMATS = new Set(["image/png", "image/jpeg", "image/jpg", "image/gif"]);
+
+function baseType(contentType: string) {
+  return contentType.split(";")[0].trim().toLowerCase();
+}
+
+/** Any image sharp can read → a PNG data URL no wider than the card, or null. */
+export async function toPngDataUrl(input: ArrayBuffer): Promise<string | null> {
+  try {
+    const { default: sharp } = await import("sharp");
+    const png = await sharp(Buffer.from(input))
+      .resize({ width: OG_SIZE.width * 2, withoutEnlargement: true })
+      .png()
+      .toBuffer();
+    return `data:image/png;base64,${png.toString("base64")}`;
   } catch {
     return null;
   }
