@@ -58,9 +58,9 @@ export default async function AdminServicesPageText({ searchParams }: { searchPa
             />
           </Field>
           <Field
-            label="Commission slots per month"
-            hint={`A slot is taken when you accept a request and freed if it's cancelled; it resets on the 1st (Western Indonesia Time). When the month is full, new requests join the waitlist and visitors can leave an email. Leave blank for no limit.${
-              counts && counts.total !== null ? ` This month: ${counts.taken} of ${counts.total} taken.` : ""
+            label="Commission slots (orders in progress at once)"
+            hint={`A slot is taken when you accept a request and comes back when the order is completed, cancelled or declined. When every slot is taken, new requests join the waitlist and visitors can leave an email. Leave blank for no limit.${
+              counts && counts.total !== null ? ` Right now: ${counts.taken} of ${counts.total} taken.` : ""
             }`}
           >
             <input
@@ -200,7 +200,7 @@ export default async function AdminServicesPageText({ searchParams }: { searchPa
         </div>
         {waiting.length === 0 ? (
           <p className="text-body-sm text-ink-muted">
-            No one yet. When a month is full, visitors can leave their email on /services and service pages; they show up here.
+            No one yet. When every slot is taken, visitors can leave their email on /services and service pages; they show up here.
           </p>
         ) : (
           <ul className="divide-y divide-line border-y border-line">

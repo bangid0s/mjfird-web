@@ -76,7 +76,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
   const notify =
     slots.kind === "full" ? (
       <div className="mt-6">
-        <NotifyForm service={service.slug} reopens={slots.reopens} />
+        <NotifyForm service={service.slug} />
       </div>
     ) : null;
   // Gallery images filed under this service lead; samples typed on the service

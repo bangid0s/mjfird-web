@@ -38,7 +38,7 @@ export default async function ServicesPage() {
         {slots.kind !== "unlimited" && (
           <div className="-mt-6 mb-12 flex max-w-xl flex-col gap-5 sm:-mt-10">
             <SlotBadge state={slots} className="self-start" />
-            {slots.kind === "full" && <NotifyForm reopens={slots.reopens} />}
+            {slots.kind === "full" && <NotifyForm />}
           </div>
         )}
 

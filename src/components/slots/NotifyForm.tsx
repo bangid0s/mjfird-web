@@ -5,8 +5,8 @@ import { joinSlotWaitlist, type WaitlistState } from "@/lib/client/waitlist-acti
 import { trackEvent } from "@/lib/track";
 import { fieldInputClasses } from "@/components/admin/Field";
 
-/** "Notify me when slots open" — one email field, shown while the month is full. */
-export default function NotifyForm({ service, reopens }: { service?: string; reopens: string }) {
+/** "Notify me when a slot opens" — one email field, shown while every slot is taken. */
+export default function NotifyForm({ service }: { service?: string }) {
   const [state, action, pending] = useActionState<WaitlistState, FormData>(async (prev, formData) => {
     const result = await joinSlotWaitlist(prev, formData);
     if (result?.done) trackEvent("join_waitlist", { service: service ?? "any" });
@@ -16,7 +16,7 @@ export default function NotifyForm({ service, reopens }: { service?: string; reo
   if (state?.done) {
     return (
       <p role="status" className="border border-line px-4 py-3 text-body-sm text-ink">
-        You&apos;re on the list. I&apos;ll email you when slots reopen on {reopens}.
+        You&apos;re on the list. I&apos;ll email you as soon as a slot opens.
       </p>
     );
   }
@@ -24,7 +24,7 @@ export default function NotifyForm({ service, reopens }: { service?: string; reo
   return (
     <form action={action} className="flex flex-col gap-2.5">
       <label htmlFor={`notify-${service ?? "any"}`} className="text-body-sm text-ink-muted">
-        This month is full. Leave your email and I&apos;ll tell you when slots reopen on {reopens}.
+        All slots are taken right now. Leave your email and I&apos;ll tell you as soon as one opens.
       </label>
       <div className="flex flex-wrap gap-2">
         <input
@@ -52,7 +52,7 @@ export default function NotifyForm({ service, reopens }: { service?: string; reo
           {state.error}
         </p>
       )}
-      <p className="text-[12px] text-ink-faint">One email when slots reopen. No newsletter.</p>
+      <p className="text-[12px] text-ink-faint">One email when a slot opens. No newsletter.</p>
     </form>
   );
 }

@@ -4,6 +4,7 @@ import test from "node:test";
 import { PGlite } from "@electric-sql/pglite";
 
 const migration = readFileSync(new URL("../../supabase/migrations/0056_monthly_slots.sql", import.meta.url), "utf8");
+const activeQueue = readFileSync(new URL("../../supabase/migrations/0057_active_order_slots.sql", import.meta.url), "utf8");
 
 async function createDb() {
   const pg = new PGlite();
@@ -22,6 +23,7 @@ async function createDb() {
     );
   `);
   await pg.exec(migration);
+  await pg.exec(activeQueue);
   return pg;
 }
 
@@ -36,20 +38,23 @@ test("starts at 6 slots and re-running keeps the admin's own number", async () =
   assert.equal((await slots(pg)).total, 8);
 });
 
-test("counts requests accepted this month; cancelled ones and last month's free their slot", async () => {
+test("counts orders in hand: accepted and not yet completed, cancelled or declined", async () => {
   const pg = await createDb();
   await pg.exec(`
     insert into public.commission_requests (status, accepted_at) values
       ('in_progress', now()),
       ('awaiting_payment', now()),
+      ('delivered', now()),
+      ('completed', now()),
       ('cancelled', now()),
+      ('declined', null),
       ('pending', null),
-      ('completed', now() - interval '45 days');
+      ('in_progress', now() - interval '45 days');
   `);
-  assert.equal((await slots(pg)).taken, 2);
+  assert.equal((await slots(pg)).taken, 4, "last month's unfinished order still holds its slot");
 });
 
-test("a full month sends new requests to the waitlist; an open one doesn't", async () => {
+test("a full queue sends new requests to the waitlist; completing an order frees the slot", async () => {
   const pg = await createDb();
   await pg.exec("update public.site_settings set monthly_slots = 1");
   await pg.exec("insert into public.commission_requests default values");
@@ -60,6 +65,13 @@ test("a full month sends new requests to the waitlist; an open one doesn't", asy
   await pg.exec("insert into public.commission_requests default values");
   ({ rows } = await pg.query<{ waitlisted: boolean }>("select waitlisted from public.commission_requests where accepted_at is null"));
   assert.equal(rows[0].waitlisted, true);
+
+  await pg.exec("update public.commission_requests set status = 'completed' where accepted_at is not null");
+  await pg.exec("insert into public.commission_requests default values");
+  ({ rows } = await pg.query<{ waitlisted: boolean }>(
+    "select waitlisted from public.commission_requests where accepted_at is null order by ctid desc limit 1",
+  ));
+  assert.equal(rows[0].waitlisted, false, "a completed order gave its slot back");
 
   await pg.exec("update public.site_settings set monthly_slots = null");
   await pg.exec("insert into public.commission_requests default values");
