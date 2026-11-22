@@ -1,5 +1,7 @@
 "use client";
 
+import type { SlotState } from "@/lib/slots";
+
 import SmoothScroll from "@/components/motion/SmoothScroll";
 import CustomCursor from "@/components/motion/CustomCursor";
 import Preloader from "@/components/motion/Preloader";
@@ -18,6 +20,7 @@ export default function SiteChrome({
   logoType,
   logoText,
   navLinks,
+  slots,
 }: {
   children: React.ReactNode;
   socials: { label: string; url: string }[];
@@ -28,6 +31,8 @@ export default function SiteChrome({
   logoType?: "text" | "image";
   logoText?: string;
   navLinks: { label: string; href: string }[];
+  /** This month's commission capacity, for the badge in the nav. */
+  slots?: SlotState;
 }) {
   return (
     <SoundProvider>
@@ -47,6 +52,7 @@ export default function SiteChrome({
           logoText={logoText}
           links={navLinks}
           socials={socials}
+          slots={slots}
         />
         <main id="main-content" className="flex-1 pt-[var(--nav-h)]">
           <PageTransition>{children}</PageTransition>

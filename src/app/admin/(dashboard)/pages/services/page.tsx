@@ -4,11 +4,22 @@ import PageHeader from "@/components/admin/PageHeader";
 import RowsField from "@/components/admin/RowsField";
 import SettingsForm, { ViewPageLink } from "@/components/admin/SettingsForm";
 import { loadSettingsRow, type SettingsSearchParams } from "@/lib/admin/settings-row";
+import { createClient } from "@/lib/supabase/server";
+import { getSlotCounts } from "@/lib/data/slots";
+import { formatDate } from "@/lib/admin/format";
+import CopyTextButton from "@/components/admin/CopyTextButton";
 
 const RETAINER_POINTS = ["Priority scheduling", "One point of contact", "Consistent style across every piece", "Monthly invoice"];
 
 export default async function AdminServicesPageText({ searchParams }: { searchParams: SettingsSearchParams }) {
-  const [status, settings] = await Promise.all([searchParams, loadSettingsRow()]);
+  const supabase = await createClient();
+  const [status, settings, counts, { data: waitlist }] = await Promise.all([
+    searchParams,
+    loadSettingsRow(),
+    getSlotCounts(),
+    supabase.from("slot_waitlist").select("email, service_slug, created_at, notified_at").order("created_at", { ascending: false }),
+  ]);
+  const waiting = (waitlist ?? []) as { email: string; service_slug: string | null; created_at: string; notified_at: string | null }[];
 
   return (
     <div>
@@ -44,6 +55,22 @@ export default async function AdminServicesPageText({ searchParams }: { searchPa
               name="services_availability_label"
               defaultValue={settings?.services_availability_label ?? ""}
               className={fieldInputClasses}
+            />
+          </Field>
+          <Field
+            label="Commission slots per month"
+            hint={`A slot is taken when you accept a request and freed if it's cancelled; it resets on the 1st (Western Indonesia Time). When the month is full, new requests join the waitlist and visitors can leave an email. Leave blank for no limit.${
+              counts && counts.total !== null ? ` This month: ${counts.taken} of ${counts.total} taken.` : ""
+            }`}
+          >
+            <input
+              name="monthly_slots"
+              type="number"
+              min={0}
+              max={200}
+              inputMode="numeric"
+              defaultValue={settings?.monthly_slots ?? ""}
+              className={`${fieldInputClasses} max-w-32`}
             />
           </Field>
         </FieldSection>
@@ -159,6 +186,36 @@ export default async function AdminServicesPageText({ searchParams }: { searchPa
           </div>
         </FieldSection>
       </SettingsForm>
+
+      {/* Emails left with "Notify me when slots open". Readable by the admin only. */}
+      <section className="mt-12 border-t border-line pt-8">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+          <h2 className="display-sm">Slot waitlist</h2>
+          {waiting.length > 0 && (
+            <CopyTextButton
+              text={waiting.filter((w) => !w.notified_at).map((w) => w.email).join(", ")}
+              label="Copy waiting emails"
+            />
+          )}
+        </div>
+        {waiting.length === 0 ? (
+          <p className="text-body-sm text-ink-muted">
+            No one yet. When a month is full, visitors can leave their email on /services and service pages; they show up here.
+          </p>
+        ) : (
+          <ul className="divide-y divide-line border-y border-line">
+            {waiting.map((w) => (
+              <li key={w.email} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5 text-body-sm">
+                <span className="font-mono text-ink">{w.email}</span>
+                <span className="text-ink-faint">
+                  {w.service_slug ?? "any service"} · {formatDate(w.created_at)}
+                  {w.notified_at && " · notified"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

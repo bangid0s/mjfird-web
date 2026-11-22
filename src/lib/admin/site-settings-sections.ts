@@ -1,7 +1,7 @@
 import { normalizeMediaUrl } from "@/lib/media";
 import { normalizeHeroHref } from "@/lib/hero-cta";
 import { normalizeGaId } from "@/lib/analytics";
-import { parseFaq } from "@/lib/admin/site-settings-columns";
+import { parseFaq, parseMonthlySlots } from "@/lib/admin/site-settings-columns";
 
 /*
   Site settings live in one row, but the admin edits them a page at a time:
@@ -159,6 +159,8 @@ export function buildSettingsPayload(formData: FormData) {
     contact_email: String(formData.get("contact_email") ?? ""),
     services_availability_heading: String(formData.get("services_availability_heading") ?? ""),
     services_availability_label: String(formData.get("services_availability_label") ?? ""),
+    // Migration 0056 — see SLOT_COLUMNS.
+    monthly_slots: parseMonthlySlots(formData.get("monthly_slots")),
     process_section_eyebrow: String(formData.get("process_section_eyebrow") ?? ""),
     process_section_title: String(formData.get("process_section_title") ?? ""),
     process_steps: parseProcessSteps(String(formData.get("process_steps") ?? "")),
@@ -216,7 +218,7 @@ export const SETTINGS_SECTIONS: Record<SettingsSection, { path: string; columns:
   services: {
     path: "/admin/pages/services",
     columns: [
-      "services_availability_heading", "services_availability_label",
+      "services_availability_heading", "services_availability_label", "monthly_slots",
       "process_section_eyebrow", "process_section_title", "process_steps", "services_faq",
       "retainer_enabled", "retainer_eyebrow", "retainer_title", "retainer_intro",
       "retainer_points", "retainer_price_label", "retainer_cta_label",

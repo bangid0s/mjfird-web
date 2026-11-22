@@ -1,6 +1,7 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { services as placeholderServices, type Service } from "@/lib/placeholder-data";
 import { isSupabaseConfigured } from "./config";
+import { getSlotState, withMonthlyCap } from "./slots";
 import type { ServiceRow } from "@/lib/supabase/types";
 import { parseGallery } from "@/lib/admin/form-parse";
 import { getServiceCovers } from "./gallery";
@@ -121,12 +122,13 @@ export async function getStorefrontServices(): Promise<StorefrontService[]> {
   if (!isSupabaseConfigured) return placeholderStorefront;
   try {
     const supabase = createPublicClient();
-    const [{ data, error }, covers] = await Promise.all([
+    const [{ data, error }, covers, slots] = await Promise.all([
       supabase.from("services").select("*").eq("status", "published").order("sort_order", { ascending: true }),
       getServiceCovers(),
+      getSlotState(),
     ]);
     if (error || !data) return [];
-    return (data as ServiceRow[]).map((row) => mapStorefrontRow(row, covers.get(row.id)));
+    return (data as ServiceRow[]).map((row) => withMonthlyCap(mapStorefrontRow(row, covers.get(row.id)), slots));
   } catch {
     return [];
   }
@@ -144,7 +146,8 @@ export async function getStorefrontService(slug: string): Promise<StorefrontServ
       .maybeSingle();
     if (error || !data) return null;
     const row = data as ServiceRow;
-    return mapStorefrontRow(row, (await getServiceCovers()).get(row.id));
+    const [covers, slots] = await Promise.all([getServiceCovers(), getSlotState()]);
+    return withMonthlyCap(mapStorefrontRow(row, covers.get(row.id)), slots);
   } catch {
     return null;
   }

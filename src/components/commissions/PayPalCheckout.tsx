@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
+import { trackEvent } from "@/lib/track";
 
 const orderResponse = z.object({ orderId: z.string().min(1) });
 const captureResponse = z.object({ ok: z.literal(true) });
@@ -56,7 +57,16 @@ async function postJson(path: string, body: { requestId: string } | { orderId: s
   return payload;
 }
 
-export function PayPalCheckout({ requestId, clientId }: { requestId: string; clientId: string }) {
+export function PayPalCheckout({
+  requestId,
+  clientId,
+  amount,
+}: {
+  requestId: string;
+  clientId: string;
+  /** What the client is paying, for the purchase event. */
+  amount?: number;
+}) {
   const router = useRouter();
   const hostRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -103,6 +113,9 @@ export function PayPalCheckout({ requestId, clientId }: { requestId: string; cli
             return;
           }
           setError(null);
+          // Captured on the server: this is a real sale. Value comes from the
+          // order page; the transaction id keeps GA4 from counting it twice.
+          trackEvent("purchase", { transaction_id: approved.data.orderID, currency: "USD", value: amount });
           router.refresh();
         },
         onError: () => fail("Payment couldn't finish. You have not been marked paid."),
@@ -122,7 +135,7 @@ export function PayPalCheckout({ requestId, clientId }: { requestId: string; cli
       script.remove();
       host.replaceChildren();
     };
-  }, [clientId, requestId, router]);
+  }, [clientId, requestId, router, amount]);
 
   return (
     <div className="flex flex-col gap-3" role="region" aria-label="PayPal checkout">
