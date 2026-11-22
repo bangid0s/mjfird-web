@@ -3,9 +3,9 @@ import { cn } from "@/lib/cn";
 import { slotLabel, slotLabelShort, type SlotState } from "@/lib/slots";
 
 /*
-  The studio's monthly capacity as a small status pill. Renders nothing when
-  no capacity is set. Visible scarcity: a client sees that a 7+ day delivery
-  is real, and that a slot this month is worth taking now.
+  The studio's capacity as a small status pill. Renders nothing when no
+  capacity is set. Visible scarcity: a client sees that a 7+ day delivery is
+  real, and that a free slot is worth taking now.
 */
 export default function SlotBadge({
   state,

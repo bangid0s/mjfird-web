@@ -31,7 +31,7 @@ export default function SiteChrome({
   logoType?: "text" | "image";
   logoText?: string;
   navLinks: { label: string; href: string }[];
-  /** This month's commission capacity, for the badge in the nav. */
+  /** Free commission slots, for the badge in the nav. */
   slots?: SlotState;
 }) {
   return (

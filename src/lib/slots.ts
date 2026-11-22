@@ -1,30 +1,24 @@
 /*
-  The studio's monthly commission capacity as a visitor reads it. Months are
-  counted in Western Indonesia Time, where the studio works.
+  The studio's commission capacity as a visitor reads it: how many orders can
+  be in hand at once, and how many of those places are free. A place frees up
+  when an order is completed, so there is no date to promise.
 */
-
-const TZ = "Asia/Jakarta";
 
 export type SlotState =
   | { kind: "unlimited" }
-  | { kind: "open"; left: number; total: number; month: string }
-  | { kind: "full"; total: number; reopens: string };
+  | { kind: "open"; left: number; total: number }
+  | { kind: "full"; total: number };
 
-export function slotState(counts: { total: number | null; taken: number } | null, now = new Date()): SlotState {
+export function slotState(counts: { total: number | null; taken: number } | null): SlotState {
   if (!counts || counts.total === null) return { kind: "unlimited" };
   const left = Math.max(0, counts.total - counts.taken);
-  const month = now.toLocaleDateString("en-US", { month: "long", timeZone: TZ });
-  if (left > 0) return { kind: "open", left, total: counts.total, month };
-  // The 1st of next month, in studio time.
-  const [y, m] = now.toLocaleDateString("en-CA", { timeZone: TZ }).split("-").map(Number);
-  const next = new Date(Date.UTC(m === 12 ? y + 1 : y, m === 12 ? 0 : m, 1, 12));
-  return { kind: "full", total: counts.total, reopens: next.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) };
+  return left > 0 ? { kind: "open", left, total: counts.total } : { kind: "full", total: counts.total };
 }
 
-/** "Commissions open · 3 of 6 slots left in December" / "Commission waitlist · slots reopen Jan 1". */
+/** "Commissions open · 5 of 6 slots free" / "Commission waitlist · all 6 slots taken". */
 export function slotLabel(state: SlotState): string | null {
-  if (state.kind === "open") return `Commissions open · ${state.left} of ${state.total} slots left in ${state.month}`;
-  if (state.kind === "full") return `Commission waitlist · slots reopen ${state.reopens}`;
+  if (state.kind === "open") return `Commissions open · ${state.left} of ${state.total} slots free`;
+  if (state.kind === "full") return `Commission waitlist · all ${state.total} slots taken`;
   return null;
 }
 
