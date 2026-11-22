@@ -1,7 +1,9 @@
+import { Fragment } from "react";
 import type { Project } from "@/lib/placeholder-data";
 import Linkify from "@/components/ui/Linkify";
 import VideoEmbed from "@/components/media/VideoEmbed";
 import { isYouTubeUrl, isVideoFile, normalizeMediaUrl } from "@/lib/media";
+import { narrativeBlocks } from "@/lib/narrative-blocks";
 
 // The narrative keys stay the same in the database; only the public labels are
 // project-oriented now: brief → idea → execution → result.
@@ -60,10 +62,27 @@ export default function CaseStudyNarrative({
         return (
           <section key={key} className="flex flex-col gap-3.5">
             <p className="eyebrow eyebrow-accent">{label}</p>
-            {prose && (
-              <p className="max-w-2xl text-body-lg leading-relaxed text-pretty text-ink">
-                <Linkify text={prose} />
-              </p>
+            {/* Paragraphs and "- " lists as typed in the admin; plain text
+                used to collapse into one block. */}
+            {narrativeBlocks(prose).map((block, i) =>
+              block.kind === "list" ? (
+                <ul key={i} className="flex max-w-2xl list-disc flex-col gap-2 pl-5 text-body-lg leading-relaxed text-pretty text-ink">
+                  {block.items.map((item, j) => (
+                    <li key={j}>
+                      <Linkify text={item} />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p key={i} className="max-w-2xl text-body-lg leading-relaxed text-pretty text-ink">
+                  {block.lines.map((line, j) => (
+                    <Fragment key={j}>
+                      {j > 0 && <br />}
+                      <Linkify text={line} />
+                    </Fragment>
+                  ))}
+                </p>
+              ),
             )}
             {videos.map((url, i) => (
               <div

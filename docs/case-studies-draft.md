@@ -3,7 +3,7 @@
 Five rewrites for the work pages. Each has a hook (the line under the title),
 an SEO description (Google snippet, max 160 characters) and the four narrative
 sections the page shows: The brief, The idea, The execution, The result.
-Nothing is live yet: review, mark changes, then they go into the database.
+Approved by the owner and written to the projects table (old rows backed up in media_migration_backup as tbl 'projects_case_study').
 
 ---
 
@@ -103,7 +103,7 @@ Nax24 came to me through VGen with a proxy for Sisay, Weatherlight Captain, star
 A commander card has to work at two sizes: as a full illustration, and squeezed into a card frame on the table. The storm gave me a strong, dark backdrop to push Ash forward, with the lightning used as a natural light source that sculpts the character and leads the eye to her face.
 
 **The execution**
-- Pose and expression followed the client's references closely, so the character felt like *theirs*.
+- Pose and expression followed the client's references closely, so the character felt like theirs.
 - The flavor text set the tone: proud, a little dangerous, loyal to her people. That's the attitude the pose and lighting lean into.
 - The storm background was kept simple in shape and dramatic in value, so the figure still reads when the art shrinks to card size.
 - Drawn and rendered in Clip Studio Paint on an iPad Pro, then laid out as a finished card in Card Conjurer with the custom name and flavor text.
@@ -135,8 +135,8 @@ I wanted to write a dark fantasy that pushes back against absolute destiny, and 
 I wrote the novel and drew all of its artwork: the cover and the illustrations inside. Like my commission work, the art is made in Clip Studio Paint on an iPad Pro. I wasn't alone on the book: Dani Setiadi helped with the cover layout, and Airy Ananta edited the text. Writing and illustrating together let the words and the pictures shape each other, so the characters look the way the story describes them.
 
 **The result**
-I brought the book to Semarang IP Fest 2026, my first pop-up art market, and every copy I brought sold out. It's now available on Tokopedia.
+I brought the book to Semarang IP Fest 2026, my first pop-up art market, and every copy I brought sold out. It's now available on Tokopedia: https://tk.tokopedia.com/ZSseBboVr/
 
 For me it's only the beginning. Friedenia is meant to be a whole ecosystem, not a single story. The clash between the Order of Balance and the Freeborn Flame carries on beyond this book: a Trading Card Game is already in the prototype stage, and more lore is on the way. Selling out a small first print run at my first market told me the world has readers waiting for it.
 
-Read about the launch at the market: https://mjfird.com/blog/semarang-ip-fest-2026
+Read about that day at the market: https://mjfird.com/blog/semarang-ip-fest-2026
