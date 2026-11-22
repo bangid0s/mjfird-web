@@ -6,6 +6,10 @@ import { AddonsEditor, FaqEditor, LicensesEditor, PackagesEditor, QuestionsEdito
 import type { ServiceRow } from "@/lib/supabase/types";
 import { mapStorefrontRow } from "@/lib/data/services";
 import { DEFAULT_LICENSES, DEFAULT_NDA_FEE } from "@/lib/services/storefront";
+
+// A new service starts in line with the terms (section 8): monetized streams
+// and videos are part of personal use, so that tier starts at +0%.
+const NEW_SERVICE_LICENSES = DEFAULT_LICENSES.map((l) => (l.id === "monetized" ? { ...l, percent: 0 } : l));
 import SubmitButton, { FormActions } from "@/components/admin/SubmitButton";
 
 export default function ServiceForm({
@@ -131,7 +135,7 @@ export default function ServiceForm({
         title="Usage license"
         description="How the client may use the art. Personal use is the default and always offered; the others add a percentage of the order total (package × characters + add-ons + background)."
       >
-        <LicensesEditor initial={store?.licenses ?? DEFAULT_LICENSES} />
+        <LicensesEditor initial={store?.licenses ?? NEW_SERVICE_LICENSES} />
       </FieldSection>
 
       <FieldSection
