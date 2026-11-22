@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import sharp from "sharp";
 import { deliveryGalleryItem, mayShowInGallery, pickDeliveryImage } from "@/lib/commissions/delivery-gallery";
 import { uniqueGallerySlug } from "@/lib/gallery-slug";
+import { fitToBudget, MEDIA_MAX_EDGE } from "@/lib/media-budget";
 import type { CommissionRequestRow } from "@/lib/supabase/types";
 
 /*
@@ -14,8 +15,6 @@ export type DeliveryGalleryResult =
   | { status: "added"; slug: string }
   | { status: "skipped"; reason: "not_shareable" | "no_image" | "already_added" | "not_delivered" }
   | { status: "failed"; reason: string };
-
-const MAX_EDGE = 2400;
 
 export async function publishDeliveryToGallery(
   supabase: SupabaseClient,
@@ -37,11 +36,17 @@ export async function publishDeliveryToGallery(
     const { data: blob, error: downloadError } = await supabase.storage.from("commissions").download(path);
     if (downloadError || !blob) return { status: "failed", reason: downloadError?.message ?? "download failed" };
 
-    const webp = await sharp(Buffer.from(await blob.arrayBuffer()))
-      .rotate()
-      .resize({ width: MAX_EDGE, height: MAX_EDGE, fit: "inside", withoutEnlargement: true })
-      .webp({ quality: 86, effort: 5 })
-      .toBuffer();
+    const source = sharp(Buffer.from(await blob.arrayBuffer())).rotate();
+    const meta = await source.metadata();
+    const { out } = await fitToBudget(Math.max(meta.width ?? MEDIA_MAX_EDGE, meta.height ?? 0), async ({ edge, quality }) => {
+      const data = await source
+        .clone()
+        .resize({ width: edge, height: edge, fit: "inside", withoutEnlargement: true })
+        .webp({ quality, effort: 5 })
+        .toBuffer();
+      return { data, size: data.length };
+    });
+    const webp = out.data;
 
     const item = deliveryGalleryItem({ ...req, delivered_at: req.delivered_at ?? new Date().toISOString() });
     const media = supabase.storage.from("media");
