@@ -22,9 +22,48 @@ export default async function TermsPage() {
     <LegalDocument
       eyebrow="Terms"
       title="Terms of service & client policies"
-      updated="17 November 2026"
+      updated="22 November 2026"
       related={{ href: "/privacy", label: "Privacy policy" }}
     >
+      {/* The short version a client reads before ordering. Every line points at
+          the section that governs it, so the two can't drift apart unseen. */}
+      <LegalSection id="at-a-glance" title="Commission terms at a glance">
+        <LegalList>
+          <li>
+            <Term>Price:</Term>{" "}the price on a service page is a starting estimate. Your final price is in the
+            quotation I send (<SectionRef n={3} />).
+          </li>
+          <li>
+            <Term>Payment:</Term>{" "}orders under USD 150 are paid upfront; USD 150–1,000 is 50% to start and 50%
+            before delivery; larger orders go by milestones (<SectionRef n={4} />).
+          </li>
+          <li>
+            <Term>Revisions:</Term>{" "}up to 2 rounds at the sketch stage, then 1 round of small fixes at line art and
+            color (<SectionRef n={5} />).
+          </li>
+          <li>
+            <Term>Delivery:</Term>{" "}usually 7–21 working days for illustration. Rush delivery is +50% when my
+            schedule allows (<SectionRef n={6} />).
+          </li>
+          <li>
+            <Term>Usage:</Term>{" "}personal use is included, including your own monetized streams, videos and
+            emotes. Merch or anything sold is +100%. Fan art of characters you don&apos;t own (Pokémon, MTG) is for
+            personal use only (<SectionRef n={8} />).
+          </li>
+          <li>
+            <Term>Portfolio:</Term>{" "}I may show the finished piece unless you choose NDA when you order; its fee is
+            shown on each service (<SectionRef n={8} />).
+          </li>
+          <li>
+            <Term>Refunds:</Term>{" "}set by how far the work has gone, from 100% before I start to none after final
+            files (<SectionRef n={7} />).
+          </li>
+          <li>
+            <Term>Replies:</Term>{" "}within 2 working days, usually faster.
+          </li>
+        </LegalList>
+      </LegalSection>
+
       <LegalSection id="section-1" title="1. About these terms">
         <p>
           By placing an order, paying an invoice, or using mjfird.com, you agree to these terms. They apply to every
@@ -166,7 +205,7 @@ export default async function TermsPage() {
             pay.
           </li>
           <li>
-            <Term>Rush orders:</Term>{" "}delivery faster than the standard estimate costs an extra 30–50%, only if my
+            <Term>Rush orders:</Term>{" "}delivery faster than the standard estimate costs an extra 50%, only if my
             schedule allows.
           </li>
           <li>
@@ -315,7 +354,7 @@ export default async function TermsPage() {
             ],
             [
               "Commercial use",
-              "Paid add-on, +50% to +100% of base price",
+              "Paid add-on, +100% of the order total, as listed on each service",
               "The uses listed in the quotation: merch, book or album covers, games, ads, crowdfunding, with the print run or platform agreed",
               "Resell the artwork itself, or use it beyond the agreed scope",
             ],

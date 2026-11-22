@@ -218,6 +218,18 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
           {service.terms && (
             <Section title="Terms of service">
               <p className="max-w-2xl whitespace-pre-line text-body-sm text-pretty text-ink-muted">{service.terms}</p>
+              {/* One source of truth: the service lists its own specifics, the
+                  site-wide rules live on /terms. */}
+              <p className="mt-4 text-body-sm text-ink-muted">
+                Everything else (payment schedule, refunds, usage rights) is in the{" "}
+                <Link
+                  href="/terms#at-a-glance"
+                  className="text-ink underline decoration-line-strong underline-offset-4 hover:text-accent"
+                >
+                  commission terms
+                </Link>
+                .
+              </p>
             </Section>
           )}
         </div>

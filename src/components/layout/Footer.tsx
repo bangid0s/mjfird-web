@@ -57,7 +57,7 @@ export default function Footer({
                 <MagneticButton href="/contact" cursorLabel="view">
                   Start an inquiry
                 </MagneticButton>
-  <p className="label">Usually replies within 48 hours</p>
+  <p className="label">Replies within 2 working days</p>
               </div>
             </div>
           </Reveal>
@@ -114,7 +114,7 @@ export default function Footer({
               Send an inquiry →
             </Link>
             <p className="max-w-sm text-body-sm text-ink-muted">
-              Commissions, retainers and collaborations. Usually replies within 48 hours.
+              Commissions, retainers and collaborations. Replies within 2 working days.
             </p>
           </div>
         </div>
