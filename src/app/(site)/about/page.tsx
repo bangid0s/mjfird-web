@@ -7,6 +7,10 @@ import AnimatedNumber from "@/components/ui/AnimatedNumber";
 import Timeline from "@/components/about/Timeline";
 import { getProfile } from "@/lib/data/profile";
 import { getSiteSettings } from "@/lib/data/site-settings";
+import { getStorefrontServices } from "@/lib/data/services";
+import JsonLd from "@/components/seo/JsonLd";
+import { personSchema } from "@/lib/structured-data";
+import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   title: "About",
@@ -15,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage() {
-  const [profile, settings] = await Promise.all([getProfile(), getSiteSettings()]);
+  const [profile, settings, services] = await Promise.all([getProfile(), getSiteSettings(), getStorefrontServices()]);
 
   const paragraphs = settings.aboutDescription
     ? settings.aboutDescription
@@ -26,6 +30,19 @@ export default async function AboutPage() {
 
   return (
     <div>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "ProfilePage",
+          url: `${SITE_URL}/about`,
+          mainEntity: personSchema({
+            ...profile,
+            jobTitle: settings.resumeRole,
+            location: settings.resumeLocation,
+            knowsAbout: services.map((s) => s.title),
+          }),
+        }}
+      />
       <div className="container-page grid gap-10 pb-[var(--space-section)] pt-14 sm:pt-20 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
         <Reveal>
           {profile.avatarUrl ? (

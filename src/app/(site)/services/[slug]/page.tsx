@@ -10,8 +10,7 @@ import { ReviewBody } from "@/components/reviews/ReviewCard";
 import Stars from "@/components/reviews/Stars";
 import { getStorefrontService, getStorefrontServices } from "@/lib/data/services";
 import { getServiceReviews } from "@/lib/data/testimonials";
-import { startingPrice } from "@/lib/services/storefront";
-import { SITE_URL } from "@/lib/site-url";
+import { breadcrumbSchema, serviceSchema } from "@/lib/structured-data";
 
 export async function generateStaticParams() {
   const services = await getStorefrontServices();
@@ -25,6 +24,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: service.title,
     description: service.description,
+    // One address per service: ?package=… links point back here.
+    alternates: { canonical: `/services/${service.slug}` },
     openGraph: {
       title: service.title,
       description: service.description,
@@ -67,7 +68,6 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
     getServiceReviews(service.id),
     getServiceSamples(service.id),
   ]);
-  const from = startingPrice(service.packages);
   // Gallery images filed under this service lead; samples typed on the service
   // itself (videos, process shots that aren't in the gallery) follow.
   const samples = [...gallerySamples, ...samplesAsGalleryItems(service.samples, "sample")];
@@ -77,21 +77,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
     <div className="container-page pb-[var(--space-section)] pt-10 sm:pt-14">
       <JsonLd
         data={{
-          "@context": "https://schema.org",
-          "@type": "Service",
-          name: service.title,
-          description: service.description,
-          provider: { "@type": "Person", name: "MJFIRD" },
-          url: `${SITE_URL}/services/${service.slug}`,
-          ...(from !== null && {
-            offers: {
-              "@type": "AggregateOffer",
-              priceCurrency: "USD",
-              lowPrice: from,
-              highPrice: Math.max(...service.packages.map((p) => p.price)),
-              offerCount: service.packages.length,
-            },
-          }),
+          ...serviceSchema(service),
           ...(reviews.count > 0 && {
             aggregateRating: {
               "@type": "AggregateRating",
@@ -101,6 +87,13 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
             },
           }),
         }}
+      />
+
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Services", path: "/services" },
+          { name: service.title, path: `/services/${service.slug}` },
+        ])}
       />
 
       <nav aria-label="Breadcrumb" className="mb-8">

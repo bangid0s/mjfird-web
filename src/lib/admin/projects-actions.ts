@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { canonicalSlug } from "@/lib/url-case";
 import { normalizeMediaUrl } from "@/lib/media";
 import { parseFocalPoint, parseGallery } from "@/lib/admin/form-parse";
 import type { ContentStatus, CaseStudyTemplate } from "@/lib/supabase/types";
@@ -12,7 +13,7 @@ function parsePayload(formData: FormData) {
   const scheduledAt = String(formData.get("scheduled_at") ?? "");
 
   return {
-    slug: String(formData.get("slug") ?? "").trim(),
+    slug: canonicalSlug(String(formData.get("slug") ?? "")),
     title: String(formData.get("title") ?? ""),
     client: String(formData.get("client") ?? ""),
     year: String(formData.get("year") ?? ""),

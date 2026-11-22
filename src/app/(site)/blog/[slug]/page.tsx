@@ -7,6 +7,7 @@ import CoverMedia from "@/components/media/CoverMedia";
 import ProjectGallery from "@/components/media/ProjectGallery";
 import PostBody from "@/components/blog/PostBody";
 import { SITE_URL } from "@/lib/site-url";
+import { personRef } from "@/lib/structured-data";
 
 const BASE_URL = SITE_URL;
 
@@ -26,6 +27,7 @@ export async function generateMetadata({
   return {
     title: post.title,
     description: post.excerpt,
+    alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
       title: post.title,
       description: post.excerpt,
@@ -52,11 +54,13 @@ export default async function PostPage({
       <JsonLd
         data={{
           "@context": "https://schema.org",
-          "@type": "Article",
+          "@type": "BlogPosting",
           headline: post.title,
           description: post.excerpt,
           datePublished: post.date,
-          author: { "@type": "Person", name: "MJFIRD" },
+          ...(post.cover && /^https?:\/\//.test(post.cover) && { image: post.cover }),
+          author: personRef,
+          publisher: personRef,
           mainEntityOfPage: `${BASE_URL}/blog/${post.slug}`,
         }}
       />

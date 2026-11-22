@@ -1,4 +1,5 @@
 import type { GalleryItem } from "@/lib/data/gallery";
+import { personRef } from "@/lib/structured-data";
 
 const ARTIST = "M.J. Fird";
 
@@ -39,7 +40,7 @@ export function relatedItems(item: GalleryItem, all: GalleryItem[], limit = 4): 
  */
 export function galleryJsonLd(item: GalleryItem, siteUrl: string) {
   const pageUrl = `${siteUrl}/gallery/${item.slug}`;
-  const creator = { "@type": "Person", name: ARTIST, url: `${siteUrl}/about` };
+  const creator = personRef;
   const orderPage = item.services[0] ? `${siteUrl}/services/${item.services[0].slug}` : `${siteUrl}/contact`;
   const year = item.publishedAt ? new Date(item.publishedAt).getUTCFullYear() : undefined;
   return {

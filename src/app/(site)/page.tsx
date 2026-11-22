@@ -14,6 +14,7 @@ import Testimonials from "@/components/reviews/Testimonials";
 import ServiceCard from "@/components/services/ServiceCard";
 import RetainerBand from "@/components/services/RetainerBand";
 import { SITE_URL } from "@/lib/site-url";
+import { personSchema, PERSON_ID } from "@/lib/structured-data";
 import { cn } from "@/lib/cn";
 
 /*
@@ -58,11 +59,21 @@ export default async function Home() {
       <JsonLd
         data={{
           "@context": "https://schema.org",
-          "@type": "Person",
-          name: profile.name,
-          description: profile.tagline,
-          url: SITE_URL,
-          sameAs: profile.socials.map((s) => s.url),
+          "@graph": [
+            personSchema({
+              ...profile,
+              jobTitle: settings.resumeRole,
+              location: settings.resumeLocation,
+              knowsAbout: services.map((s) => s.title),
+            }),
+            {
+              "@type": "WebSite",
+              "@id": `${SITE_URL}/#website`,
+              name: "MJFIRD",
+              url: SITE_URL,
+              publisher: { "@id": PERSON_ID },
+            },
+          ],
         }}
       />
       <Hero

@@ -6,6 +6,7 @@ import ImmersiveTemplate from "@/components/case-study/ImmersiveTemplate";
 import SystemsTemplate from "@/components/case-study/SystemsTemplate";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL } from "@/lib/site-url";
+import { personRef } from "@/lib/structured-data";
 
 const BASE_URL = SITE_URL;
 
@@ -25,6 +26,7 @@ export async function generateMetadata({
   return {
     title: project.title,
     description: project.hook,
+    alternates: { canonical: `/work/${project.slug}` },
     openGraph: {
       title: project.title,
       description: project.hook,
@@ -56,7 +58,8 @@ export default async function ProjectPage({
           "@type": "CreativeWork",
           name: project.title,
           description: project.hook,
-          creator: { "@type": "Person", name: "MJFIRD" },
+          creator: personRef,
+          ...(/^https?:\/\//.test(project.cover) && { image: project.cover }),
           about: project.category,
           url: `${BASE_URL}/work/${project.slug}`,
         }}

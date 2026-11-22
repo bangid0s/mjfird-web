@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { lowercaseRedirectPath } from "@/lib/url-case";
 
 type SupabaseClient = ReturnType<typeof createServerClient>;
 
@@ -13,6 +14,20 @@ async function isAdmin(supabase: SupabaseClient) {
 }
 
 export async function proxy(request: NextRequest) {
+  // Old mixed-case addresses (/work/AshOakriver) move permanently to their
+  // lowercase one. Checked first: it needs no session.
+  const lower = lowercaseRedirectPath(request.nextUrl.pathname);
+  if (lower) {
+    const url = request.nextUrl.clone();
+    url.pathname = lower;
+    return NextResponse.redirect(url, 308);
+  }
+  // Public content pages only came here for that check.
+  if (/^\/(work|blog|gallery)(\/|$)/.test(request.nextUrl.pathname)) return NextResponse.next();
+  if (/^\/services(\/|$)/.test(request.nextUrl.pathname) && !/^\/services\/[^/]+\/request$/.test(request.nextUrl.pathname)) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -78,5 +93,16 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Also runs on client pages so their session cookie is refreshed.
-  matcher: ["/admin/:path*", "/account/:path*", "/services/:slug/request", "/login", "/signup", "/auth/:path*"],
+  // The content sections are matched for the lowercase redirect only.
+  matcher: [
+    "/admin/:path*",
+    "/account/:path*",
+    "/services/:path*",
+    "/work/:path*",
+    "/blog/:path*",
+    "/gallery/:path*",
+    "/login",
+    "/signup",
+    "/auth/:path*",
+  ],
 };
