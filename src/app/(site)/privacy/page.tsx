@@ -22,7 +22,7 @@ export default async function PrivacyPage() {
     <LegalDocument
       eyebrow="Privacy"
       title="Privacy policy"
-      updated="10 November 2026"
+      updated="22 November 2026"
       related={{ href: "/terms", label: "Terms of service" }}
     >
       <LegalSection id="overview" title="Overview">
@@ -61,6 +61,11 @@ export default async function PrivacyPage() {
             [
               "Contact form: name, email, project type, budget range, message",
               "Replying to your inquiry",
+              "Nobody",
+            ],
+            [
+              "Slot waitlist: your email (and the service, if you picked one)",
+              "One email when commission slots reopen; no newsletter. Ask and I remove it",
               "Nobody",
             ],
             [

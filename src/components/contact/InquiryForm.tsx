@@ -5,6 +5,7 @@ import MagneticButton from "@/components/ui/MagneticButton";
 import { BUDGETS, PROJECT_TYPES, validateInquiry, type InquiryErrors } from "@/lib/inquiry-options";
 import { FOUND_VIA, FOUND_VIA_QUESTION } from "@/lib/found-via";
 import { cn } from "@/lib/cn";
+import { trackEvent } from "@/lib/track";
 
 type FormState = "idle" | "loading" | "success" | "error";
 
@@ -55,6 +56,7 @@ export default function InquiryForm({
       });
       if (!res.ok) throw new Error("Request failed");
       setState("success");
+      trackEvent("generate_lead", { form: "contact", project_type: result.data.projectType });
     } catch {
       setState("error");
     }

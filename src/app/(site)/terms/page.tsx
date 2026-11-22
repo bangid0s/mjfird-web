@@ -183,6 +183,10 @@ export default async function TermsPage() {
             ["Over USD 1,000 / Rp 15.000.000", "Milestones, usually 40% / 30% / 30%, set in the quotation"],
           ]}
         />
+        <p>
+          <Term>Exception:</Term>{" "}Custom Illustration orders are always 50% deposit to start and 50% before final
+          files are sent, whatever the total, as stated on that service.
+        </p>
         <LegalList>
           <li>
             <Term>Currency:</Term>{" "}international clients pay in USD; Indonesian clients may pay in IDR. The invoice

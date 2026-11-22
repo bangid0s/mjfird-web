@@ -15,8 +15,20 @@ export const OVERHAUL_COLUMNS = [
 /** Hero button destinations. Added by migration 0041. */
 export const HERO_LINK_COLUMNS = ["hero_cta_primary_url", "hero_cta_secondary_url"] as const;
 
+/** Monthly commission capacity. Added by migration 0056. */
+export const SLOT_COLUMNS = ["monthly_slots"] as const;
+
 /** Every column a save can skip while its migration hasn't been run yet. */
-export const LATE_COLUMNS: readonly string[] = [...OVERHAUL_COLUMNS, ...HERO_LINK_COLUMNS];
+export const LATE_COLUMNS: readonly string[] = [...OVERHAUL_COLUMNS, ...HERO_LINK_COLUMNS, ...SLOT_COLUMNS];
+
+/** Blank means unlimited (no badge); otherwise a whole number 0–200. */
+export function parseMonthlySlots(raw: unknown): number | null {
+  const text = typeof raw === "string" ? raw.trim() : "";
+  if (text === "") return null;
+  const n = Number(text);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(200, Math.max(0, Math.round(n)));
+}
 
 export function withoutOverhaulColumns<T extends Record<string, unknown>>(payload: T): Partial<T> {
   const drop = new Set<string>(LATE_COLUMNS);

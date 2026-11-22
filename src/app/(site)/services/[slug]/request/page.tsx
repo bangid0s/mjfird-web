@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import RequestForm from "@/components/services/RequestForm";
+import TrackOnView from "@/components/analytics/TrackOnView";
 import { getStorefrontService } from "@/lib/data/services";
 import { requireUser } from "@/lib/auth/session";
 import { effectiveAvailability } from "@/lib/services/storefront";
@@ -32,6 +33,7 @@ export default async function RequestPage({
 
   return (
     <div className="container-page pb-[var(--space-section)] pt-10 sm:pt-14">
+      <TrackOnView event="begin_checkout" params={{ item_id: service.slug, item_name: service.title, package: query.package }} />
       <nav aria-label="Breadcrumb" className="mb-8">
         <Link href={`/services/${service.slug}`} className="spec text-ink-muted transition-colors hover:text-accent">
           ← {service.title}

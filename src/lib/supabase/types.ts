@@ -302,6 +302,8 @@ export type SiteSettingsRow = {
   contact_email: string;
   services_availability_heading: string;
   services_availability_label: string;
+  /** Commission slots per month; null = unlimited (migration 0056). */
+  monthly_slots?: number | null;
   process_section_eyebrow: string;
   process_section_title: string;
   process_steps: { title: string; description: string }[];

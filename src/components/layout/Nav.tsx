@@ -10,6 +10,8 @@ import ThemeToggle from "@/components/ui/ThemeToggle";
 import ThemedLogo from "@/components/ui/ThemedLogo";
 import AccountLink from "@/components/layout/AccountLink";
 import NotificationBell from "@/components/layout/NotificationBell";
+import SlotBadge from "@/components/slots/SlotBadge";
+import type { SlotState } from "@/lib/slots";
 import { partitionNavLinks } from "@/lib/nav-links";
 import SocialIcon from "@/components/ui/SocialIcon";
 
@@ -29,6 +31,7 @@ export default function Nav({
   logoText = "MJFIRD",
   links,
   socials = [],
+  slots,
 }: {
   logoUrl?: string | null;
   logoUrlLight?: string | null;
@@ -36,6 +39,7 @@ export default function Nav({
   logoText?: string;
   links: NavLink[];
   socials?: { label: string; url: string }[];
+  slots?: SlotState;
 }) {
   const [open, setOpen] = useState(false);
   const [lifted, setLifted] = useState(false);
@@ -161,6 +165,7 @@ export default function Nav({
           </nav>
 
           <div className="flex shrink-0 items-center gap-4 lg:gap-5">
+            {slots && <SlotBadge state={slots} short href="/services" className="hidden xl:inline-flex" />}
             <AccountLink className="hidden lg:inline" />
 
             <NotificationBell />
@@ -269,6 +274,7 @@ export default function Nav({
                 transition={{ duration: 0.4, delay: 0.1 + (sheetList.length + (ctaLink ? 1 : 0)) * 0.035 }}
                 className="mt-auto flex flex-col gap-6 pb-8 pt-10"
               >
+                {slots && <SlotBadge state={slots} className="self-start" />}
                 <AccountLink className="text-ink" onNavigate={() => setOpen(false)} />
               </motion.div>
             </div>

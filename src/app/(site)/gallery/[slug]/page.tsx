@@ -177,9 +177,17 @@ export default async function GalleryItemPage({ params }: { params: Promise<{ sl
                           )}
                         </span>
                       </div>
-                      <MagneticButton href={`/services/${service.slug}`} arrow className="self-start">
-                        Order similar
-                      </MagneticButton>
+                      {/* Counted by the site-wide ClickTracker. */}
+                      <span
+                        className="self-start"
+                        data-track="select_item"
+                        data-track-item-id={service.slug}
+                        data-track-from={item.slug}
+                      >
+                        <MagneticButton href={`/services/${service.slug}`} arrow>
+                          Order similar
+                        </MagneticButton>
+                      </span>
                     </div>
                   );
                 })

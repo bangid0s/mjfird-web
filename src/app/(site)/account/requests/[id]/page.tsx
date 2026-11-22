@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import TrackOnView from "@/components/analytics/TrackOnView";
 import { signFiles } from "@/components/commissions/FileLinks";
 import { PayPalCheckout } from "@/components/commissions/PayPalCheckout";
 import { RequestPayment } from "@/components/commissions/RequestPayment";
@@ -59,6 +60,14 @@ export default async function ClientRequestPage({
   const canPay = paymentView.kind === "link" || paymentView.kind === "checkout";
 
   return (
+    <>
+    {submitted && (
+      <TrackOnView
+        event="generate_lead"
+        params={{ form: "commission_request", item_id: req.service_slug, value: Number(req.estimated_total) || undefined, currency: "USD" }}
+        dropParam="submitted"
+      />
+    )}
     <RequestDetail
       req={req}
       step={nextStep({ ...req, hasReview: Boolean(review), canPay })}
@@ -71,7 +80,7 @@ export default async function ClientRequestPage({
         canPay ? (
           <RequestPayment
             view={paymentView}
-            checkout={paymentView.kind === "checkout" && paypalClientId ? <PayPalCheckout requestId={req.id} clientId={paypalClientId} /> : null}
+            checkout={paymentView.kind === "checkout" && paypalClientId ? <PayPalCheckout requestId={req.id} clientId={paypalClientId} amount={Number(req.final_price) || undefined} /> : null}
           />
         ) : null
       }
@@ -79,5 +88,6 @@ export default async function ClientRequestPage({
       postMessage={postClientMessage.bind(null, id)}
       submitReview={submitReview.bind(null, id)}
     />
+    </>
   );
 }

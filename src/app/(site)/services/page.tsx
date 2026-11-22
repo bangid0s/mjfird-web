@@ -7,6 +7,9 @@ import RetainerBand from "@/components/services/RetainerBand";
 import ServicesFaq from "@/components/services/ServicesFaq";
 import { getStorefrontServices } from "@/lib/data/services";
 import { getSiteSettings } from "@/lib/data/site-settings";
+import { getSlotState } from "@/lib/data/slots";
+import SlotBadge from "@/components/slots/SlotBadge";
+import NotifyForm from "@/components/slots/NotifyForm";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -15,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ServicesPage() {
-  const [services, settings] = await Promise.all([getStorefrontServices(), getSiteSettings()]);
+  const [services, settings, slots] = await Promise.all([getStorefrontServices(), getSiteSettings(), getSlotState()]);
   // The availability line used to be its own call-to-action block at the foot
   // of the page, right above the footer's. It is a fact about the services, so
   // it sits under their heading now.
@@ -31,6 +34,13 @@ export default async function ServicesPage() {
           title="Commission illustration services"
           description={availability || undefined}
         />
+
+        {slots.kind !== "unlimited" && (
+          <div className="-mt-6 mb-12 flex max-w-xl flex-col gap-5 sm:-mt-10">
+            <SlotBadge state={slots} className="self-start" />
+            {slots.kind === "full" && <NotifyForm reopens={slots.reopens} />}
+          </div>
+        )}
 
         {services.length > 0 ? (
           <ServicesBrowser services={services} />

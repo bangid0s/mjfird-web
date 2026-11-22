@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import JsonLd from "@/components/seo/JsonLd";
+import TrackOnView from "@/components/analytics/TrackOnView";
+import NotifyForm from "@/components/slots/NotifyForm";
+import { getSlotState } from "@/lib/data/slots";
+import { startingPrice } from "@/lib/services/storefront";
 import Reveal from "@/components/motion/Reveal";
 import ServiceOrderPanel from "@/components/services/ServiceOrderPanel";
 import ServiceSamples from "@/components/services/ServiceSamples";
@@ -64,10 +68,17 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
   const service = await getStorefrontService(slug);
   if (!service) notFound();
 
-  const [reviews, gallerySamples] = await Promise.all([
+  const [reviews, gallerySamples, slots] = await Promise.all([
     getServiceReviews(service.id),
     getServiceSamples(service.id),
+    getSlotState(),
   ]);
+  const notify =
+    slots.kind === "full" ? (
+      <div className="mt-6">
+        <NotifyForm service={service.slug} reopens={slots.reopens} />
+      </div>
+    ) : null;
   // Gallery images filed under this service lead; samples typed on the service
   // itself (videos, process shots that aren't in the gallery) follow.
   const samples = [...gallerySamples, ...samplesAsGalleryItems(service.samples, "sample")];
@@ -75,6 +86,10 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
 
   return (
     <div className="container-page pb-[var(--space-section)] pt-10 sm:pt-14">
+      <TrackOnView
+        event="view_item"
+        params={{ item_id: service.slug, item_name: service.title, value: startingPrice(service.packages) ?? undefined, currency: "USD" }}
+      />
       <JsonLd
         data={{
           ...serviceSchema(service),
@@ -133,6 +148,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
           {/* On phones the order panel sits here, right after the samples. */}
           <div className="lg:hidden">
             <ServiceOrderPanel service={service} rating={reviews.count > 0 ? { average: reviews.average, count: reviews.count } : undefined} />
+            {notify}
           </div>
 
           {service.details && (
@@ -237,6 +253,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
         <aside className="hidden lg:block">
           <div className="sticky top-[calc(var(--nav-h)+2rem)]">
             <ServiceOrderPanel service={service} rating={reviews.count > 0 ? { average: reviews.average, count: reviews.count } : undefined} />
+            {notify}
           </div>
         </aside>
       </div>
