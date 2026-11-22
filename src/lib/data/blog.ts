@@ -17,6 +17,7 @@ function mapRow(row: BlogPostRow): Post {
     slug: canonicalSlug(row.slug),
     title: row.title,
     excerpt: row.excerpt ?? "",
+    seoDescription: row.seo_description?.trim() || undefined,
     date: row.published_at ?? row.created_at,
     readTime: row.read_time ?? "",
     body: (row.body as string[]) ?? [],

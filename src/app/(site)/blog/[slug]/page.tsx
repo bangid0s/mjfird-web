@@ -26,11 +26,11 @@ export async function generateMetadata({
   if (!post) return {};
   return {
     title: post.title,
-    description: post.excerpt,
+    description: post.seoDescription ?? post.excerpt,
     alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
       title: post.title,
-      description: post.excerpt,
+      description: post.seoDescription ?? post.excerpt,
       // Only set when the post has its own share image — leaving the key off
       // lets the generated card in opengraph-image.tsx take over.
       ...(post.ogImage && { images: [{ url: post.ogImage, alt: post.title }] }),

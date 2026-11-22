@@ -25,11 +25,11 @@ export async function generateMetadata({
   if (!project) return {};
   return {
     title: project.title,
-    description: project.hook,
+    description: project.seoDescription ?? project.hook,
     alternates: { canonical: `/work/${project.slug}` },
     openGraph: {
       title: project.title,
-      description: project.hook,
+      description: project.seoDescription ?? project.hook,
       // Only set when the project has its own share image — leaving the key off
       // lets the generated card in opengraph-image.tsx take over.
       ...(project.ogImage && { images: [{ url: project.ogImage, alt: project.title }] }),
