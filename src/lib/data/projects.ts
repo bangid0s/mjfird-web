@@ -1,11 +1,12 @@
 import { createPublicClient } from "@/lib/supabase/public";
+import { canonicalSlug } from "@/lib/url-case";
 import { projects as placeholderProjects, type Project } from "@/lib/placeholder-data";
 import { isSupabaseConfigured } from "./config";
 import type { ProjectRow } from "@/lib/supabase/types";
 
 function mapRow(row: ProjectRow): Project {
   return {
-    slug: row.slug,
+    slug: canonicalSlug(row.slug),
     title: row.title,
     client: row.client ?? "",
     year: row.year ?? "",
@@ -45,5 +46,5 @@ export async function getProjects(): Promise<Project[]> {
 
 export async function getProject(slug: string): Promise<Project | undefined> {
   const all = await getProjects();
-  return all.find((p) => p.slug === slug);
+  return all.find((p) => p.slug === canonicalSlug(slug));
 }

@@ -1,4 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
+import { canonicalSlug } from "@/lib/url-case";
 import { posts as placeholderPosts, type Post } from "@/lib/placeholder-data";
 import { isSupabaseConfigured } from "./config";
 import type { BlogPostRow, CoverFit } from "@/lib/supabase/types";
@@ -13,7 +14,7 @@ function mapRow(row: BlogPostRow): Post {
   const point = row.cover_focal_point;
 
   return {
-    slug: row.slug,
+    slug: canonicalSlug(row.slug),
     title: row.title,
     excerpt: row.excerpt ?? "",
     date: row.published_at ?? row.created_at,
@@ -47,5 +48,5 @@ export async function getPosts(): Promise<Post[]> {
 
 export async function getPost(slug: string): Promise<Post | undefined> {
   const all = await getPosts();
-  return all.find((p) => p.slug === slug);
+  return all.find((p) => p.slug === canonicalSlug(slug));
 }
