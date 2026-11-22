@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/data/config";
 import { INQUIRY_EMAIL, sendEmail } from "@/lib/email";
+import { notifyStudio } from "@/lib/notifications/studio";
 import { inquiryAdminEmail, inquiryClientEmail } from "@/lib/notifications/copy";
 import { foundViaLabel, isFoundVia } from "@/lib/found-via";
 
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
   // Studio alert (reply goes straight to the sender) + confirmation to the sender.
   // sendEmail never throws and is a no-op without RESEND_API_KEY.
   await Promise.all([
-    sendEmail({ to: INQUIRY_EMAIL, ...inquiryAdminEmail(parsed.data), replyTo: parsed.data.email }),
+    notifyStudio("inquiry", { to: INQUIRY_EMAIL, ...inquiryAdminEmail(parsed.data), replyTo: parsed.data.email }),
     sendEmail({ to: parsed.data.email, ...inquiryClientEmail(parsed.data), replyTo: INQUIRY_EMAIL }),
   ]);
 

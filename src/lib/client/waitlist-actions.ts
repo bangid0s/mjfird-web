@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createPublicClient } from "@/lib/supabase/public";
+import { postStudioDiscord } from "@/lib/notifications/discord-studio";
 
 export type WaitlistState = { done?: true; error?: string } | undefined;
 
@@ -29,5 +30,13 @@ export async function joinSlotWaitlist(_prev: WaitlistState, formData: FormData)
     .insert({ email: parsed.data.email, service_slug: parsed.data.service ?? null });
   // 23505: already on the list, which is what they wanted.
   if (error && error.code !== "23505") return { error: "Couldn't save that right now. Please try again in a minute." };
+  if (!error) {
+    // Only a new address is news; joining twice stays quiet.
+    await postStudioDiscord("waitlist", {
+      subject: "Someone joined the slot waitlist",
+      lines: [`${parsed.data.email}${parsed.data.service ? ` · ${parsed.data.service}` : ""}`],
+      ctaPath: "/admin/pages/services",
+    });
+  }
   return { done: true };
 }

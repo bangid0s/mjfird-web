@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyRpcError } from "@/lib/commissions/status";
 import { COMMISSION_EMAIL, sendEmail } from "@/lib/email";
+import { notifyStudio } from "@/lib/notifications/studio";
 import { mapStorefrontRow } from "@/lib/data/services";
 import type { CommissionAnswer, CommissionRequestRow, ServiceRow } from "@/lib/supabase/types";
 import { formatUSD, isSharingId, SHARING_QUESTION, sharingLabel } from "@/lib/services/storefront";
@@ -106,7 +107,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
   const req = created as CommissionRequestRow | null;
   if (req && isQuoteRequest(req)) {
     await Promise.all([
-      sendEmail({
+      notifyStudio("quote_request", {
         to: COMMISSION_EMAIL,
         subject: `New quote request #${req.ref}: ${req.service_title}`,
         lines: [
@@ -144,7 +145,7 @@ export async function submitRequest(_prev: RequestState, formData: FormData): Pr
     const discount =
       discountAmount > 0 ? `${req.discount_label ?? "Discount"} (${Number(req.discount_percent)}%): −${formatUSD(discountAmount)}` : null;
     await Promise.all([
-      sendEmail({
+      notifyStudio("new_request", {
         to: COMMISSION_EMAIL,
         subject: `New request #${req.ref}: ${req.service_title} — ${req.package_name} (${total})`,
         lines: [
@@ -189,7 +190,7 @@ export async function cancelRequest(requestId: string) {
 
   const { data } = await supabase.from("commission_requests").select("ref, contact_name, service_title").eq("id", requestId).single();
   if (data) {
-    await sendEmail({
+    await notifyStudio("cancelled", {
       to: COMMISSION_EMAIL,
       subject: `Request #${data.ref} cancelled by client`,
       lines: [`${data.contact_name} cancelled their request for ${data.service_title}.`],
@@ -211,7 +212,7 @@ export async function postClientMessage(requestId: string, _prev: RequestState, 
 
   const { data } = await supabase.from("commission_requests").select("ref, contact_name, contact_email").eq("id", requestId).single();
   if (data) {
-    await sendEmail({
+    await notifyStudio("message", {
       to: COMMISSION_EMAIL,
       subject: `New message on request #${data.ref}`,
       lines: [`${data.contact_name} wrote:`, body],
@@ -243,7 +244,7 @@ export async function submitReview(requestId: string, _prev: RequestState, formD
 
   const { data } = await supabase.from("commission_requests").select("ref, contact_name, service_title").eq("id", requestId).single();
   if (data) {
-    await sendEmail({
+    await notifyStudio("review", {
       to: COMMISSION_EMAIL,
       subject: `New ${rating}★ review on #${data.ref} — waiting for approval`,
       lines: [
