@@ -13,6 +13,7 @@ function mapRow(row: ProjectRow): Project {
     role: row.role ?? "",
     category: row.category ?? "",
     hook: row.hook ?? "",
+    seoDescription: row.seo_description?.trim() || undefined,
     template: row.template,
     featured: row.featured,
     cover: row.cover_image ?? "/placeholder/project-01.jpg",

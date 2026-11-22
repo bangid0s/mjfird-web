@@ -8,6 +8,8 @@ export type Project = {
   role: string;
   category: string;
   hook: string;
+  /** Meta description for search results; falls back to the hook. */
+  seoDescription?: string;
   template: "editorial" | "immersive" | "systems";
   featured: boolean;
   cover: string;
@@ -172,6 +174,8 @@ export type Post = {
   slug: string;
   title: string;
   excerpt: string;
+  /** Meta description for search results; falls back to the excerpt. */
+  seoDescription?: string;
   date: string;
   readTime: string;
   body: string[];
