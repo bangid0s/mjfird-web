@@ -87,3 +87,32 @@ To run it right away (for example to register the commands the first time): Verc
 | Same Discord account on a second website account | Refused: one Discord account per website account |
 
 On the admin request page, the **Client** panel shows the verified Discord account and its roles, and the accept form notes when the estimate already includes the discount.
+
+## 6. Order alerts in a private channel
+
+The site can post every studio alert to one Discord channel, next to the email
+you already get. This uses a **channel webhook**, not the bot: it can only post
+to that one channel and needs no extra permissions.
+
+| Alert | When |
+|---|---|
+| 🆕 New request / 📝 New quote request | A client sends a request |
+| 💸 Payment received | PayPal captures a payment |
+| 💬 New message | A client writes on their order (this is also where revision requests arrive) |
+| ✖️ Cancelled | A client cancels |
+| ⭐ New review | A client leaves a review (waiting for your approval) |
+| 📮 New inquiry | Someone sends the contact form |
+| ⏳ Waitlist | Someone leaves an email while all slots are taken |
+
+Each alert's title links to the matching admin page. Mentions are switched
+off, so text a client writes (even `@everyone`) never pings anyone.
+
+**Setup (5 minutes):**
+
+1. In your server, create a **private** channel, e.g. `#web-orders`, visible to you only.
+2. Channel settings → **Integrations** → **Webhooks** → **New Webhook**. Name it "mjfird.com", pick `#web-orders`, then **Copy Webhook URL**.
+3. Vercel → project → Settings → **Environment Variables** → add `DISCORD_ORDERS_WEBHOOK_URL` with that URL (Production). Treat it as a secret: anyone with it can post to the channel.
+4. Redeploy (or merge the next PR). Alerts start with the next event.
+
+Leave the variable unset to turn alerts off; email keeps working either way.
+If the URL ever leaks, delete the webhook in Discord and make a new one.

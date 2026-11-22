@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { COMMISSION_EMAIL, sendEmail } from "@/lib/email";
+import { notifyStudio } from "@/lib/notifications/studio";
 import { paymentAdminEmail, paymentClientEmail } from "@/lib/notifications/copy";
 
 /** True only for a capture this call settled for the first time. */
@@ -32,7 +33,7 @@ export async function notifyPaymentReceived(admin: SupabaseClient, orderId: stri
     const studio = paymentAdminEmail(req);
     await Promise.all([
       sendEmail({ to: req.contact_email, ...client }),
-      sendEmail({ to: COMMISSION_EMAIL, ...studio, replyTo: req.contact_email }),
+      notifyStudio("payment", { to: COMMISSION_EMAIL, ...studio, cta: studio.cta ?? { label: "Open request", path: `/admin/requests/${req.id}` }, replyTo: req.contact_email }),
     ]);
   } catch (err) {
     console.error("[email] payment notification failed", err instanceof Error ? err.message : err);
