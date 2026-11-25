@@ -26,7 +26,7 @@ export default function RetainerBand({ settings }: Props) {
           <h2 className="display-lg">{settings.retainerTitle}</h2>
           <p className="max-w-lg text-body-lg text-pretty text-ink">{settings.retainerIntro}</p>
           <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-4">
-            <MagneticButton href="/contact?type=retainer" size="lg" variant="secondary" arrow>
+            <MagneticButton href="/studios" size="lg" variant="secondary" arrow>
               {settings.retainerCtaLabel}
             </MagneticButton>
             <span className="text-body text-ink">{settings.retainerPriceLabel}</span>
