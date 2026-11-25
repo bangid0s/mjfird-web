@@ -22,7 +22,7 @@ export default async function TermsPage() {
     <LegalDocument
       eyebrow="Terms"
       title="Terms of service & client policies"
-      updated="22 November 2026"
+      updated="25 November 2026"
       related={{ href: "/privacy", label: "Privacy policy" }}
     >
       {/* The short version a client reads before ordering. Every line points at
@@ -451,14 +451,20 @@ export default async function TermsPage() {
         </p>
         <LegalList>
           <li>
-            <Term>Term:</Term>{" "}12 months is standard. 6-month terms are possible at a smaller discount.
+            <Term>Term:</Term>{" "}12 months is standard. 6-month terms and a 3-month starter are possible at a smaller
+            discount.
           </li>
           <li>
             <Term>What&apos;s included:</Term>{" "}a fixed monthly quota, counted either in pieces (for example 2 full
             illustrations or 6 social graphics) or in hours.
           </li>
           <li>
-            <Term>Rate:</Term>{" "}10–20% below my one-off prices, depending on term and volume.
+            <Term>Rate:</Term>{" "}below my one-off prices: 15% on a 12-month term, 10% on 6 months, 5% on the 3-month
+            starter. Current plans are listed on the{" "}
+            <Link href="/retainer" className={linkClass}>
+              retainer page
+            </Link>
+            .
           </li>
           <li>
             <Term>Billing:</Term>{" "}invoiced at the start of each month, paid by the 5th. Work for that month starts once
@@ -475,8 +481,8 @@ export default async function TermsPage() {
             the agreement.
           </li>
           <li>
-            <Term>Rights:</Term>{" "}each piece follows <SectionRef n={8} /> unless the agreement grants commercial use for
-            all work, which is common for brand retainers.
+            <Term>Rights:</Term>{" "}retainers include commercial use for your own products and promotion. Fan art of
+            characters you don&apos;t own stays personal use (<SectionRef n={8} />).
           </li>
           <li>
             <Term>Ending early:</Term>{" "}either side may end the contract with 30 days&apos; written notice. If the client
