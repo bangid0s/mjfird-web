@@ -20,10 +20,16 @@ export default function Footer({
   links: { label: string; href: string }[];
 }) {
   const pathname = usePathname();
-  // On /contact the form *is* the call to action; a second one under it is noise.
-  const showCta = pathname !== "/contact";
+  // The big "Start an inquiry" band only belongs on the homepage, where visitors
+  // are still browsing. Everywhere else it competed with the request buttons:
+  // clients on a service page clicked it instead and landed in Inquiries, outside
+  // the tracked request flow.
+  const showCta = pathname === "/";
+  // While ordering (service pages, request forms, account), the small contact
+  // link points back to the commission menu instead of the contact form.
+  const ordering = pathname.startsWith("/services/") || pathname.startsWith("/account");
   const headingLines = heading.split("\n");
-  // The CTA band already links to /contact, so skip it in the sitemap column.
+  // The Contact column links to /contact, so skip it in the sitemap column.
   // Privacy and Terms stay here even when the nav list in settings does not include them.
   const legalLinks = [
     { label: "Privacy", href: "/privacy" },
@@ -107,14 +113,16 @@ export default function Footer({
           <div className="col-span-2 flex flex-col gap-4">
             <p className="eyebrow text-ink-faint">Contact</p>
             <Link
-              href="/contact"
+              href={ordering ? "/services" : "/contact"}
               data-cursor="view"
               className="display-sm w-fit underline decoration-line-strong decoration-1 underline-offset-[6px] transition-colors duration-[var(--duration-fast)] hover:text-accent-strong hover:decoration-accent"
             >
-              Send an inquiry →
+              {ordering ? "Browse commissions →" : "Send an inquiry →"}
             </Link>
             <p className="max-w-sm text-body-sm text-ink-muted">
-              Commissions, retainers and collaborations. Replies within 2 working days.
+              {ordering
+                ? "Every commission is requested from its service page, so it's tracked, messaged and paid in one place."
+                : "Commissions, retainers and collaborations. Replies within 2 working days."}
             </p>
           </div>
         </div>
